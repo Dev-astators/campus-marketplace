@@ -203,7 +203,7 @@ bugfix/login-error
 Clone project
 
 ```
-git clone https://github.com/Kamogelobradley200/campus-marketplace.git
+git clone https://github.com/Dev-astators/campus-marketplace.git
 ```
 
 Install dependencies
