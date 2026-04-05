@@ -1,8 +1,9 @@
 const express = require('express');
+const cors = require('cors');
 const usersRouter = require('./src/routes/usersRoute');
 
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 8080;
 app.use(express.json());
 
 // setup CORS to allow requests from SWA and local development
