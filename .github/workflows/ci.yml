@@ -61,7 +61,7 @@ jobs:
 
       - name: Run tests
         working-directory: server
-        run: npm test --if-present
+        run: npm test
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
