@@ -17,13 +17,13 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '24'
+          node-version: '22'
           cache: 'npm'
           cache-dependency-path: client/package-lock.json
 
       - name: Install dependencies
         working-directory: client
-        run: npm install
+        run: npm ci
 
       - name: Lint
         working-directory: client
@@ -47,13 +47,13 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '24'
+          node-version: '22'
           cache: 'npm'
           cache-dependency-path: server/package-lock.json
 
       - name: Install dependencies
         working-directory: server
-        run: npm install
+        run: npm ci
 
       - name: Lint
         working-directory: server
@@ -61,7 +61,7 @@ jobs:
 
       - name: Run tests
         working-directory: server
-        run: npm test --if-present
+        run: npx jest --passWithNoTests
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
