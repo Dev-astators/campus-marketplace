@@ -1,11 +1,12 @@
 
 import './App.css'
+import WelcomePage from './pages/WelcomePage'
 
 function App() {
 
   return (
     <>
-      <h1 className='text-center text-3xl m-4'>Hello, World!</h1>
+      <WelcomePage />
     </>
   )
 }
