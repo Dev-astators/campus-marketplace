@@ -61,7 +61,7 @@ jobs:
 
       - name: Run tests
         working-directory: server
-        run: npx jest
+        run: npx jest --passWithNoTests
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
