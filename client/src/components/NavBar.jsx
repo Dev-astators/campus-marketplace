@@ -2,7 +2,6 @@ import { useState } from "react";
 
 
 export default function Navbar() {
-  const [activeNav, setActiveNav] = useState("Buy");
 
   return (
     <nav className="flex items-center justify-between px-16 py-5 border-b border-gray-100">

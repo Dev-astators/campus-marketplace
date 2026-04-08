@@ -23,7 +23,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: client
-        run: npm install
+        run: npm ci
 
       - name: Lint
         working-directory: client
@@ -53,7 +53,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: server
-        run: npm install
+        run: npm ci
 
       - name: Lint
         working-directory: server
@@ -61,7 +61,7 @@ jobs:
 
       - name: Run tests
         working-directory: server
-        run: npm test 
+        run: npx jest
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}

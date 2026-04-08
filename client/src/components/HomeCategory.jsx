@@ -3,7 +3,6 @@ const CATEGORIES = [
     id: "textbooks",
     title: "Academic Textbooks",
     description: "Save up to 70% on this semester's required reading from students who just finished.",
-    cta: "Shop Books",
     // Bento layout: top-left large card
     gridClass: "col-span-2 row-span-1",
     imageUrl: "https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=900&q=80",
@@ -14,7 +13,6 @@ const CATEGORIES = [
     id: "tech",
     title: "Tech & Electronics",
     description: "Certified gear for your digital workflow.",
-    cta: "Shop Tech",
     // Bento layout: top-right card
     gridClass: "col-span-1 row-span-1",
     imageUrl: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=700&q=80",
@@ -25,7 +23,6 @@ const CATEGORIES = [
     id: "dorm",
     title: "Clothing & Dorm Essentials",
     description: null,
-    cta: "Shop Dorm",
     // Bento layout: bottom-left small card
     gridClass: "col-span-1 row-span-1",
     imageUrl: "https://tse4.mm.bing.net/th/id/OIP.VHU4Gq5KHcx4OBY49_SExQHaLG?rs=1&pid=ImgDetMain&o=7&rm=3",
@@ -36,7 +33,6 @@ const CATEGORIES = [
     id: "furniture",
     title: "Premium Furniture",
     description: null,
-    cta: "Shop Furniture",
     // Bento layout: bottom-right large card
     gridClass: "col-span-2 row-span-1",
     imageUrl: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=900&q=80",
@@ -45,7 +41,7 @@ const CATEGORIES = [
   },
 ];
 
-function CategoryCard({ title, description, cta, imageUrl, imagePosition, overlayClass, gridClass }) {
+function CategoryCard({ title, description, imageUrl, imagePosition, overlayClass, gridClass }) {
   return (
     <div
       className={`relative rounded-2xl overflow-hidden cursor-pointer group ${gridClass}`}
