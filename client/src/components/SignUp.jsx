@@ -8,6 +8,8 @@ export default function SignUp() {
   const handleGoogle = () => {
     // TODO: trigger your Google OAuth flow here (e.g. Firebase, Supabase, Auth.js)
     console.log("Google sign-up clicked");
+
+    
   };
   const [signed, setSigned] = useState(false);
 
