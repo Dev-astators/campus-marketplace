@@ -1,9 +1,11 @@
+import { useNavigate } from "react-router-dom";
 import "../App.css";
 
 import { useState } from "react";
 
 export default function SignUp() {
-      const handleGoogle = () => {
+  const navigate = useNavigate();
+  const handleGoogle = () => {
     // TODO: trigger your Google OAuth flow here (e.g. Firebase, Supabase, Auth.js)
     console.log("Google sign-up clicked");
   };
@@ -64,7 +66,7 @@ export default function SignUp() {
           <p style={{ color: "#555", margin: "0 0 1.5rem", fontSize: 14 }}>Join your campus community today.</p>
           <p style={{ fontSize: 13, color: "#555", margin: "0 0 1.5rem" }}>
             Already have an account?{" "}
-            <a href="/signin" style={{ color: "#1a56db", fontWeight: 600, textDecoration: "none" }}>Sign In</a>
+            <a onClick={()=> navigate('/signin')} style={{ color: "#1a56db", fontWeight: 600, textDecoration: "none", cursor: "pointer" }}>Sign In</a>
           </p>
 
           {signed ? (
