@@ -1,69 +1,95 @@
-import "../App.css"; // import the CSS below
 import { useNavigate } from "react-router-dom";
+import "../App.css";
+
+import { useState } from "react";
+
 export default function SignUp() {
-
   const navigate = useNavigate();
-  const handleGoogle = () => {
-    // TODO: trigger your Google OAuth flow here (e.g. Firebase, Supabase, Auth.js)
-    console.log("Google sign-up clicked");
+  // const handleGoogle = () => {
+  //   // TODO: trigger your Google OAuth flow here (e.g. Firebase, Supabase, Auth.js)
+  //   console.log("Google sign-up clicked");
+  // };
 
-    
-  };
-  
+  const [signed, setSigned] = useState(false);
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#F4F6FB] px-4 py-10">
-      <div className="w-full max-w-md bg-white rounded-2xl border border-slate-200 shadow-[0_4px_24px_rgba(28,63,170,0.07)] p-8">
+    <section style={{ display: "flex", height: "100vh", fontFamily: "sans-serif" }}>
+      {/* Left Panel */}
+      <div style={{
+        flex: 1, position: "relative", background: `linear-gradient(rgba(10,40,150,0.75),rgba(10,40,150,0.85)),
+          url('https://images.unsplash.com/photo-1562774053-701939374585?w=900') center/cover`,
+        color: "#fff", display: "flex", flexDirection: "column", justifyContent: "space-between", padding: "2.5rem"
+      }}>
+        <div style={{ fontSize: 13, letterSpacing: 1, opacity: 0.7 }}>UNI SQUARE</div>
 
-        {/* ── Brand ── */}
-        <p className="text-[15px] font-bold text-[#1C3FAA] mb-7">Uni-Square</p>
+        <div>
+          <h1 style={{ fontSize: "2.6rem", fontWeight: 800, lineHeight: 1.15, margin: "0 0 1rem" }}>
+            Elevate your<br />
+            <span style={{ color: "#f97316" }}>Campus<br />Experience.</span>
+          </h1>
+          <span style={{ border: "1px solid rgba(255,255,255,0.5)", borderRadius: 20, padding: "4px 14px", fontSize: 11, letterSpacing: 1 }}>
+            EXCLUSIVE ACCESS
+          </span>
+          <p style={{ margin: "1rem 0 2rem", fontSize: 14, opacity: 0.85, lineHeight: 1.6, maxWidth: 320 }}>
+            Join a curated marketplace designed specifically for your university community. Secure, verified, and strictly academic.
+          </p>
+          <div style={{ display: "flex", gap: "2rem" }}>
+            {[
+              { icon: "🛡", title: ".students.wits.ac.za Verification", desc: "Every member is verified through their official university email for total trust." },
+              { icon: "👥", title: "Peer-to-Peer", desc: "Buy, sell, and trade directly with your colleagues and students on campus." }
+            ].map(f => (
+              <div key={f.title} style={{ display: "flex", gap: 10, maxWidth: 160 }}>
+                <span style={{ fontSize: 20 }}>{f.icon}</span>
+                <div>
+                  <p style={{ margin: 0, fontSize: 13, fontWeight: 700 }}>{f.title}</p>
+                  <p style={{ margin: "4px 0 0", fontSize: 12, opacity: 0.75, lineHeight: 1.4 }}>{f.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
 
-        {/* ── Heading ── */}
-        <h1 className="text-2xl font-extrabold text-[#0D1B4B] mb-1">Create Account</h1>
-        <p className="text-sm text-slate-500 mb-6">Join your campus community today.</p>
+        <div style={{ display: "flex", gap: "2rem", fontSize: 11, letterSpacing: 1, opacity: 0.6 }}>
+          <span>UNI SQUARE © 2026</span>
+          
+        </div>
+      </div>
 
-        {/* ── Google Button ── */}
-        <button 
-          type="button"
-          onClick={()=> navigate('/details')}
-          className="w-full flex items-center justify-center gap-2.5 py-2.75 bg-white border-[1.5px] border-slate-200 rounded-xl text-sm font-semibold text-[#0D1B4B] hover:bg-slate-50 active:scale-[.98] transition-all duration-150 mb-5 cursor-pointer"
-        >
-          <GoogleIcon />
-          Sign-up with Google
-        </button>
+      {/* Right Panel */}
+      <div style={{
+        width: 420, background: "#fff", display: "flex", flexDirection: "column",
+        justifyContent: "space-between", padding: "2.5rem", boxShadow: "-4px 0 20px rgba(0,0,0,0.08)"
+      }}>
+        <div style={{ fontSize: 15, fontWeight: 700, color: "#1a56db" }}>UniSquare</div>
 
-        {/* ── Sign In Link ── */}
-        <p className="text-center mt-5 text-sm text-slate-500">
-          Already have an account?{" "}
-          <a href="/signin" className="text-[#2350D4] font-bold hover:underline">
-            Sign In
-          </a>
-        </p>
+        <div>
+          <h2 style={{ fontSize: "1.8rem", fontWeight: 800, margin: "0 0 .5rem" }}>Create Account</h2>
+          <p style={{ color: "#555", margin: "0 0 1.5rem", fontSize: 14 }}>Join your campus community today.</p>
+          <p style={{ fontSize: 13, color: "#555", margin: "0 0 1.5rem" }}>
+            Already have an account?{" "}
+            <a onClick={()=> navigate('/signin')} style={{ color: "#1a56db", fontWeight: 600, textDecoration: "none", cursor: "pointer" }}>Sign In</a>
+          </p>
 
-        {/* ── Footer ── */}
-        <div className="flex items-center justify-center gap-2 mt-6 flex-wrap">
-          {["PRIVACY POLICY", "TERMS OF SERVICE", "CONTACT SUPPORT"].map((item, i) => (
-            <span key={item} className="flex items-center gap-2">
-              {i > 0 && <span className="text-[10px] text-slate-400">·</span>}
-              <a href="#" className="text-[10px] font-semibold text-slate-400 hover:text-slate-600 tracking-wide">
-                {item}
-              </a>
-            </span>
-          ))}
+          {signed ? (
+            <p style={{ color: "green", fontWeight: 600 }}>✅ Signed up successfully!</p>
+          ) : (
+            <button onClick={() => setSigned(true)} style={{
+              display: "flex", alignItems: "center", gap: 10, border: "1.5px solid #ddd",
+              borderRadius: 24, padding: "10px 22px", fontSize: 14, fontWeight: 500,
+              cursor: "pointer", background: "#fff", color: "#333", marginBottom: 150, transition: "all 0.15s ease"
+            }}>
+              <svg width="18" height="18" viewBox="0 0 48 48">
+                <path fill="#EA4335" d="M24 9.5c3.1 0 5.8 1.1 7.9 2.9l5.9-5.9C34.4 3.5 29.5 1.5 24 1.5 14.9 1.5 7.2 7 3.7 14.8l6.9 5.3C12.4 13.6 17.7 9.5 24 9.5z"/>
+                <path fill="#4285F4" d="M46.5 24c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.8 7.2l7.4 5.7C43.8 37 46.5 31 46.5 24z"/>
+                <path fill="#FBBC05" d="M10.6 28.1A14.5 14.5 0 0 1 9.5 24c0-1.4.2-2.8.6-4.1l-6.9-5.3A22.6 22.6 0 0 0 1.5 24c0 3.6.9 7 2.4 10l6.7-5.9z"/>
+                <path fill="#34A853" d="M24 46.5c5.5 0 10.1-1.8 13.5-4.9l-7.4-5.7c-1.8 1.2-4.2 2-6.1 2-6.3 0-11.6-4.1-13.4-9.8l-6.7 5.9C7.2 41 14.9 46.5 24 46.5z"/>
+              </svg>
+              Sign up with Google
+            </button>
+          )}
         </div>
 
       </div>
-    </div>
-  );
-}
-
-/* ── Google SVG Icon ── */
-function GoogleIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
-      <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-      <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
-      <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
-      <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
-    </svg>
+    </section>
   );
 }
