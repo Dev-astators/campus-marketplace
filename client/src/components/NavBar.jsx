@@ -19,7 +19,7 @@ export default function Navbar() {
           About
         </button>
 
-        <button className="text-sm font-['inter',sans-serif] font-medium text-gray-700 hover:text-blue-600 transition-colors cursor-pointer">
+        <button onClick={()=> navigate('/signin')} className="text-sm font-['inter',sans-serif] font-medium text-gray-700 hover:text-blue-600 transition-colors cursor-pointer">
           Sign In
         </button>
         <button onClick={()=> navigate('/signup')} className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-['inter',sans-serif] font-semibold px-5 py-2.5 rounded-full transition-colors shadow-sm cursor-pointer">
