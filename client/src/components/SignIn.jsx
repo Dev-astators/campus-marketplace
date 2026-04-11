@@ -1,7 +1,8 @@
+import { useNavigate } from "react-router-dom";
 import "../App.css"; // import the CSS below
 
 export default function SignIn() {
-
+  const navigate = useNavigate();
   const handleGoogle = () => {
     // TODO: trigger your Google OAuth flow here (e.g. Firebase, Supabase, Auth.js)
     console.log("Google sign-up clicked");
@@ -31,7 +32,7 @@ export default function SignIn() {
         {/* ── Sign In Link ── */}
         <p className="text-center mt-5 text-sm text-slate-500">
           Don't have an account?{" "}
-          <a href="/signin" className="text-[#2350D4] font-bold hover:underline">
+          <a onClick={() => navigate('/signup')} className="text-[#2350D4] font-bold hover:underline cursor-pointer">
             Sign Up
           </a>
         </p>
