@@ -1,10 +1,13 @@
 import "../App.css"; // import the CSS below
-
+import { useNavigate } from "react-router-dom";
 export default function SignUp() {
 
+  const navigate = useNavigate();
   const handleGoogle = () => {
     // TODO: trigger your Google OAuth flow here (e.g. Firebase, Supabase, Auth.js)
     console.log("Google sign-up clicked");
+
+    
   };
   
   return (
@@ -19,9 +22,9 @@ export default function SignUp() {
         <p className="text-sm text-slate-500 mb-6">Join your campus community today.</p>
 
         {/* ── Google Button ── */}
-        <button
+        <button 
           type="button"
-          onClick={handleGoogle}
+          onClick={()=> navigate('/details')}
           className="w-full flex items-center justify-center gap-2.5 py-2.75 bg-white border-[1.5px] border-slate-200 rounded-xl text-sm font-semibold text-[#0D1B4B] hover:bg-slate-50 active:scale-[.98] transition-all duration-150 mb-5 cursor-pointer"
         >
           <GoogleIcon />
