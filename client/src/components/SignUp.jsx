@@ -1,10 +1,19 @@
 import "../App.css"; // import the CSS below
-
+import { supabase } from "../config/supabaseClient";
 export default function SignUp() {
 
-  const handleGoogle = () => {
+  const handleGoogle = async () => {
     // TODO: trigger your Google OAuth flow here (e.g. Firebase, Supabase, Auth.js)
-    console.log("Google sign-up clicked");
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: window.location.origin
+      }
+    });
+
+    if (error) {
+      console.error("Google sign-up error:", error.message);
+    }
   };
   
   return (
