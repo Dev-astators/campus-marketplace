@@ -15,7 +15,7 @@ export default function SignUp() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: window.location.origin
+        redirectTo: 'https://nice-water-0d3098403.1.azurestaticapps.net/student-dashboard'
       }
     });
 

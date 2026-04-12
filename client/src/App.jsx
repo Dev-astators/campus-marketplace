@@ -5,7 +5,7 @@ import './App.css'
 import WelcomePage from './pages/WelcomePage'
 import SignInPage from './pages/SignInPage';
 import SignUpPage from './pages/SignUpPage';
-
+import StudentDashboard from './pages/StudentDashboard'
 
 function App() {
   const [session, setSession] = useState(null);
@@ -33,6 +33,8 @@ function App() {
           <Route path="/" element={<WelcomePage />} />
           <Route path="/signin" element={<SignInPage />} />
           <Route path="/signup" element={<SignUpPage />} />
+          <Route path="/student-dashboard" element={<StudentDashboard />} />
+
         </Routes>
       </BrowserRouter>
     </>
