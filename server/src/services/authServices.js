@@ -2,6 +2,7 @@
 
 const Wits_domain = 'students.wits.ac.za';
 
+// This function validates the email of the user & it should be a valid Wits email
 const validateUniversityEmail = (email) =>{
 
     if (!email || typeof email !== 'string'){
@@ -18,4 +19,15 @@ const validateUniversityEmail = (email) =>{
     return Wits_domain.includes(domain);
 };
 
-module.exports = {validateUniversityEmail};
+//getRoleRedirect-> Returns the correct route based on the role read for profiles
+const getRoleRedirect = (role) =>{
+    const redirectMap= {
+        student: '/student-dashboard',
+        facility_staff: '/facility-dashboard',
+        admin: '/admin-dashboard'
+    };
+
+    //return the route.
+    return redirectMap[role] || null;
+};
+module.exports = {validateUniversityEmail, getRoleRedirect};
