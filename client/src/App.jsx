@@ -6,6 +6,7 @@ import WelcomePage from './pages/WelcomePage'
 import SignInPage from './pages/SignInPage';
 import SignUpPage from './pages/SignUpPage';
 
+
 function App() {
   const [session, setSession] = useState(null);
 
@@ -36,7 +37,8 @@ function App() {
       </BrowserRouter>
     </>
   )
-}
 
+
+}
 
 export default App;
