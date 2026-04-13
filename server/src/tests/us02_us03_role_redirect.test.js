@@ -1,4 +1,4 @@
-const {getRoleRedirect} = require('../server/src/services/authServices');
+const {getRoleRedirect} = require('../../src/services/authServices');
 
 //testing for user story 2 and 3 
 
