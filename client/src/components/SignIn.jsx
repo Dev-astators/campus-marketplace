@@ -1,11 +1,26 @@
 import { useNavigate } from "react-router-dom";
+import { supabase } from "../config/supabaseClient";
+import { useState } from "react";
 import "../App.css"; // import the CSS below
 
 export default function SignIn() {
   const navigate = useNavigate();
-  const handleGoogle = () => {
-    // TODO: trigger your Google OAuth flow here (e.g. Firebase, Supabase, Auth.js)
-    console.log("Google sign-up clicked");
+  const [loading, setLoading] = useState(false);
+
+  const handleGoogle = async () => {
+    setLoading(true);
+
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: window.location.origin
+      }
+    });
+
+    if (error) {
+      console.error("Google sign-in error:", error.message);
+      setLoading(false);
+    }
   };
   
   return (
@@ -23,10 +38,11 @@ export default function SignIn() {
         <button
           type="button"
           onClick={handleGoogle}
+          disabled={loading}
           className="w-full flex items-center justify-center gap-2.5 py-2.75 bg-white border-[1.5px] border-slate-200 rounded-xl text-sm font-semibold text-[#0D1B4B] hover:bg-slate-50 active:scale-[.98] transition-all duration-150 mb-5 cursor-pointer"
         >
           <GoogleIcon />
-          Sign-in with Google
+          {loading ? "Redirecting..." : "Sign-in with Google"}
         </button>
 
         {/* ── Sign In Link ── */}
