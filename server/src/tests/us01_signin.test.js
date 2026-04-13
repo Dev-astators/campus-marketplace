@@ -1,4 +1,4 @@
-const {validateUniversityEmail} = require('../server/src/services/authServices');
+const {validateUniversityEmail} = require('../../src/services/authServices')
 
 describe('User Story 01 - Google Sign In With University email', () =>{
 
