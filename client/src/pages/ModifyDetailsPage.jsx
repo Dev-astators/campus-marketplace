@@ -1,10 +1,10 @@
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 import ModifyNavbar from "../components/modify-page/ModifyNavbar";
 import HeroPanel from "../components/modify-page/HeroSection";
 import ModifyDetailsForm from "../components/modify-page/ModifyDetailsForm";
 
 export default function ModifyDetailsPage() {
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
   const handleConfirm = ({ role, username }) => {
     console.log("User setup:", { role, username });

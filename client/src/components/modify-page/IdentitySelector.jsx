@@ -11,8 +11,8 @@ const FacilitatorIcon = () => (
 );
 
 const ROLES = [
-  { id: "student",     label: "Student",             Icon: StudentIcon     },
-  { id: "facilitator", label: "Trading Facilitator",  Icon: FacilitatorIcon },
+  { id: "student",     label: "Student",             icon: StudentIcon     },
+  { id: "facilitator", label: "Trading Facilitator",  icon: FacilitatorIcon },
 ];
 
 export default function IdentitySelector({ selected, onChange }) {
@@ -23,7 +23,9 @@ export default function IdentitySelector({ selected, onChange }) {
       </legend>
 
       <ul className="flex gap-4 list-none p-0 m-0">
-        {ROLES.map(({ id, label, Icon }) => {
+        {ROLES.map((role) => {
+          const { id, label } = role;
+          const Icon = role.icon;
           const isSelected = selected === id;
           return (
             <li key={id}>
