@@ -28,10 +28,17 @@ function App() {
     return () => listener.subscription.unsubscribe();
   }, []);
 
+    useEffect(() => {
+    if (session) {
+      console.log("Logged in:", session.user.email);
+    } else {
+      console.log("No user logged in");
+    }
+  }, [session]);
+
   return (
     <>
       <BrowserRouter>
-      {session ? console.log(session.user.email) : console.log("No user logged in")}
         <Routes>
           <Route path="/" element={<WelcomePage />} />
           <Route path="/signin" element={<SignInPage />} />
