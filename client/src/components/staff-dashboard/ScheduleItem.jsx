@@ -6,7 +6,7 @@ const boothStyles = {
   blue:  "bg-blue-50 text-blue-600",
 };
 
-export default function ScheduleItem({ id, time, period, item, seller, buyer, booth, boothVariant }) {
+export default function ScheduleItem({ time, period, item, seller, buyer, booth, boothVariant }) {
   const [checked, setChecked] = useState(false);
 
   return (
