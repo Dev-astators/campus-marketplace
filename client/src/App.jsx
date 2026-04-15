@@ -5,6 +5,7 @@ import './App.css'
 import WelcomePage from './pages/WelcomePage'
 import SignInPage from './pages/SignInPage';
 import SignUpPage from './pages/SignUpPage';
+import StaffDashboard from './pages/StaffDashboard';
 import StudentDashboard  from './pages/StudentDashboard';
 
 
@@ -41,6 +42,7 @@ function App() {
           <Route path="/" element={<WelcomePage />} />
           <Route path="/signin" element={<SignInPage />} />
           <Route path="/signup" element={<SignUpPage />} />
+          <Route path="/staff-dashboard" element={<StaffDashboard />} />
           <Route path="/student-dashboard" element={<StudentDashboard/>} />
         </Routes>
       </BrowserRouter>
