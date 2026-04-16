@@ -8,6 +8,7 @@ import SignUpPage from './pages/SignUpPage';
 import StaffDashboard from './pages/StaffDashboard';
 import ModifyDetailsPage from './pages/ModifyDetailsPage';
 import StudentDashboard  from './pages/StudentDashboard';
+import SellerProfilePage from './pages/SellerProfilePage';
 
 
 function App() {
@@ -46,6 +47,7 @@ function App() {
           <Route path="/staff-dashboard" element={<StaffDashboard />} />
           <Route path="/modify-details" element={<ModifyDetailsPage />} />
           <Route path="/student-dashboard" element={<StudentDashboard/>} />
+          <Route path="/seller-profile" element={<SellerProfilePage />} />
         </Routes>
       </BrowserRouter>
     </>
