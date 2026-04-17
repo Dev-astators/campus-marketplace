@@ -3,12 +3,13 @@ const express = require('express');
 const router = express.Router();
 const { getActiveListings, createListing } = require('../services/listingService');
 const { validateListingInput } = require('../services/listingValidator');
+const {verifySession, requireRole} = require('../middleware/authMiddleware');
 
 /**
  * GET /api/listings
  * Returns all active listings. Accessible to authenticated students.
  */
-router.get('/', async (req, res) => {
+router.get('/', verifySession,async (req, res) => {
   const { data, error } = await getActiveListings();
 
   if (error) {
@@ -18,13 +19,42 @@ router.get('/', async (req, res) => {
   return res.status(200).json({ listings: data });
 });
 
+
+/**
+ * GET /api/listings/suggested-price
+ * Returns a suggested price range based on Stats SA CPI data.
+ * Accessible to any authenticated user.
+ * Query params: category, askingPrice
+ */
+router.get('/suggested-price', verifySession, (req, res) => {
+  const { category, askingPrice } = req.query;
+
+  if (!category || !askingPrice) {
+    return res.status(400).json({ message: 'category and askingPrice are required' });
+  }
+
+  const price = parseFloat(askingPrice);
+
+  if (isNaN(price) || price <= 0) {
+    return res.status(400).json({ message: 'askingPrice must be a positive number' });
+  }
+
+  const suggestion = getSuggestedPriceRange(price, category);
+
+  if (!suggestion) {
+    return res.status(404).json({ message: `No CPI data available for category: ${category}` });
+  }
+
+  return res.status(200).json({ suggestion });
+});
+
 /**
  * POST /api/listings
  * Creates a new listing. Accessible to facility_staff only.
  */
-router.post('/', async (req, res) => {
+router.post('/',verifySession, requireRole('facility_staff') ,async (req, res) => {
   const { title, description, category, condition, askingPrice, listingType } = req.body;
-  const sellerId = req.body.sellerId;
+  const sellerId = req.user.id;
 
   if (!sellerId) {
     return res.status(400).json({ message: 'sellerId is required' });

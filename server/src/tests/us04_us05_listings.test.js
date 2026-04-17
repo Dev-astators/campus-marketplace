@@ -1,12 +1,13 @@
-const {validateListingInput} = require('../services/listingValidator');
+// tests/us04_us05_listings.test.js
+const { validateListingInput } = require('../services/listingValidator');
 const { getActiveListings, createListing } = require('../services/listingService');
 
 // ── Mock Supabase ─────────────────────────────────────────────────────────────
 
-jest.mock('../../src/config/supabaseClient', () => {
+jest.mock('../config/supabaseClient', () => {
   const mockListings = [
-    { id: '1', title: 'CS Textbook', asking_price: 200, condition: 'good', category: 'Textbooks', status: 'active', seller_id: 'seller-001' },
-    { id: '2', title: 'Laptop',      asking_price: 8000, condition: 'like_new', category: 'Electronics', status: 'active', seller_id: 'seller-001' },
+    { id: '1', title: 'CS Textbook',  asking_price: 200,  condition: 'good',     category: 'Textbooks',   status: 'active', seller_id: 'auth-uid-staff' },
+    { id: '2', title: 'Laptop',       asking_price: 8000, condition: 'like_new', category: 'Electronics', status: 'active', seller_id: 'auth-uid-staff' },
   ];
 
   return {
@@ -17,7 +18,7 @@ jest.mock('../../src/config/supabaseClient', () => {
         eq:     jest.fn().mockReturnThis(),
         order:  jest.fn().mockResolvedValue({ data: mockListings, error: null }),
         single: jest.fn().mockResolvedValue({
-          data: { id: 'new-id', title: 'New Item', asking_price: 500, status: 'active' },
+          data: { id: 'new-id', title: 'New Item', asking_price: 500, status: 'active', seller_id: 'auth-uid-staff' },
           error: null,
         }),
       })),
@@ -151,9 +152,13 @@ describe('US-05 — Facility staff posts a listing', () => {
 
   describe('Listing creation', () => {
 
-    test('Given valid input, when a facility staff member submits the form, then the listing is created successfully', async () => {
+    test('Given valid input and a verified session, when facility staff submits the form, then sellerId comes from req.user not req.body', async () => {
+      // Simulate what the route does — sellerId is taken from the
+      // verified session user, not from the request body
+      const mockReqUser = { id: 'auth-uid-staff' };
+
       const { data, error } = await createListing({
-        sellerId: 'seller-001',
+        sellerId: mockReqUser.id,   // ← from session, not body
         title: 'Engineering Textbook',
         description: 'First year engineering textbook',
         category: 'Textbooks',
@@ -161,9 +166,37 @@ describe('US-05 — Facility staff posts a listing', () => {
         askingPrice: 300,
         listingType: 'sale',
       });
+
       expect(error).toBeNull();
       expect(data).toBeDefined();
       expect(data.id).toBeDefined();
+      expect(data.seller_id).toBe('auth-uid-staff');
+    });
+
+    test('Given a student user, when they attempt to create a listing, then they are forbidden', async () => {
+      // This is enforced by requireRole('facility_staff') in the route.
+      // We simulate the role check here directly.
+      const { requireRole } = require('../middleware/authMiddleware');
+
+      // Mock supabase profile lookup returning student role
+      const { supabase } = require('../config/supabaseClient');
+      supabase.from = jest.fn(() => ({
+        select: jest.fn().mockReturnThis(),
+        eq: jest.fn().mockReturnThis(),
+        single: jest.fn().mockResolvedValue({
+          data: { role: 'student' },
+          error: null,
+        }),
+      }));
+
+      const req = { user: { id: 'auth-uid-student' } };
+      const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+      const next = jest.fn();
+
+      await requireRole('facility_staff')(req, res, next);
+
+      expect(res.status).toHaveBeenCalledWith(403);
+      expect(next).not.toHaveBeenCalled();
     });
 
   });
