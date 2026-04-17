@@ -1,10 +1,9 @@
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { supabase } from "../config/supabaseClient";
 import { useState } from "react";
 import "../App.css"; // import the CSS below
 
 export default function SignIn() {
-  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
   const handleGoogle = async () => {
@@ -24,38 +23,57 @@ export default function SignIn() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#F4F6FB] px-4 py-10">
-      <div className="w-full max-w-md bg-white rounded-2xl border border-slate-200 shadow-[0_4px_24px_rgba(28,63,170,0.07)] p-8">
+    <main className="min-h-screen flex items-center justify-center bg-[#F4F6FB] px-4 py-10">
+      <section
+        className="w-full max-w-md bg-white rounded-2xl border border-slate-200 shadow-[0_4px_24px_rgba(28,63,170,0.07)] p-8"
+        aria-labelledby="signin-heading"
+      >
         {/* ── Brand ── */}
-        <p className="text-[15px] font-bold text-[#1C3FAA] mb-7">Uni-Square</p>
-
-        {/* ── Heading ── */}
-        <h1 className="text-2xl font-extrabold text-[#0D1B4B] mb-2">Sign In</h1>
-        <p className="text-sm text-slate-500 mb-6">Welcome back.</p>
+        <header>
+          <p className="text-[15px] font-bold text-[#1C3FAA] mb-7">
+            Uni-Square
+          </p>
+          <h1
+            id="signin-heading"
+            className="text-2xl font-extrabold text-[#0D1B4B] mb-2"
+          >
+            Sign In
+          </h1>
+          <p className="text-sm text-slate-500 mb-6">Welcome back.</p>
+        </header>
 
         {/* ── Google Button ── */}
-        <button
-          type="button"
-          onClick={handleGoogle}
-          disabled={loading}
-          className="w-full flex items-center justify-center gap-2.5 py-2.75 bg-white border-[1.5px] border-slate-200 rounded-xl text-sm font-semibold text-[#0D1B4B] hover:bg-slate-50 active:scale-[.98] transition-all duration-150 mb-5 cursor-pointer"
+        <form
+          className="mb-5"
+          onSubmit={(event) => {
+            event.preventDefault();
+            handleGoogle();
+          }}
         >
-          <GoogleIcon />
-          {loading ? "Redirecting..." : "Sign-in with Google"}
-        </button>
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full flex items-center justify-center gap-2.5 py-2.75 bg-white border-[1.5px] border-slate-200 rounded-xl text-sm font-semibold text-[#0D1B4B] hover:bg-slate-50 active:scale-[.98] transition-all duration-150 cursor-pointer"
+          >
+            <GoogleIcon />
+            {loading ? "Redirecting..." : "Sign-in with Google"}
+          </button>
+        </form>
 
         {/* ── Sign In Link ── */}
-        <p className="text-center mt-5 text-sm text-slate-500">
-          Don't have an account?{" "}
-          <a
-            onClick={() => navigate("/signup")}
-            className="text-[#2350D4] font-bold hover:underline cursor-pointer"
-          >
-            Sign Up
-          </a>
-        </p>
-      </div>
-    </div>
+        <footer>
+          <p className="text-center mt-5 text-sm text-slate-500">
+            Don't have an account?{" "}
+            <Link
+              to="/signup"
+              className="text-[#2350D4] font-bold hover:underline cursor-pointer"
+            >
+              Sign Up
+            </Link>
+          </p>
+        </footer>
+      </section>
+    </main>
   );
 }
 

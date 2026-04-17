@@ -11,31 +11,40 @@ export default function StaffDashboard() {
   return (
     <div className="flex bg-slate-100 min-h-screen font-sans">
       {/* Sidebar */}
-      <Sidebar activeNav={activeNav} onNavChange={setActiveNav} />
- 
- 
+      <aside aria-label="Staff navigation">
+        <Sidebar activeNav={activeNav} onNavChange={setActiveNav} />
+      </aside>
+
       {/* Main content */}
-      <div className="ml-55 flex flex-col flex-1 min-h-screen">
+      <main className="ml-55 flex flex-col flex-1 min-h-screen">
         {/* Top bar */}
-        <Topbar />
+        <header>
+          <Topbar />
+        </header>
 
         {/* Page body */}
-        <main className="flex-1 p-7">
+        <section className="flex-1 p-7" aria-label="Staff dashboard panels">
           <div className="grid grid-cols-[1fr_308px] gap-6 items-start">
             {/* ── Column 1 ── */}
-            <div className="flex flex-col gap-6">
+            <section
+              className="flex flex-col gap-6"
+              aria-label="Schedule content"
+            >
               <HeroBanner />
               <TodaysSchedule />
-            </div>
+            </section>
 
             {/* ── Column 2 ── */}
-            <div className="flex flex-col gap-4">
+            <aside
+              className="flex flex-col gap-4"
+              aria-label="Verification and support"
+            >
               <VerificationQueue />
               <HelpDesk />
-            </div>
+            </aside>
           </div>
-        </main>
-      </div>
+        </section>
+      </main>
     </div>
   );
 }
