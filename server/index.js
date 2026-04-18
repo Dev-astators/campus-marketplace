@@ -9,11 +9,19 @@ const port = process.env.PORT || 8080;
 app.use(express.json());
 
 // setup CORS to allow requests from SWA and local development
+const allowedOrigins = [
+  'http://localhost:5173',
+  'https://nice-water-0d3098403.1.azurestaticapps.net'
+];
+
 app.use(cors({
-  origin: [
-    'https://nice-water-0d3098403.1.azurestaticapps.net', // replace with real SWA URL
-    'http://localhost:5173'
-  ]
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  }
 }));
 
 // Example route

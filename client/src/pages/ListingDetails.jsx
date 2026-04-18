@@ -105,7 +105,7 @@ export default function ListingDetails() {
       {userId === listing.seller?.id && (
         <button
           onClick={async () => {
-            await fetch(`http://localhost:8080/api/listings/${listing.id}`, {
+            await fetch(`${import.meta.env.VITE_API_URL}/api/listings/${listing.id}`, {
               method: 'DELETE'
             });
             window.location.href = '/student-dashboard';
