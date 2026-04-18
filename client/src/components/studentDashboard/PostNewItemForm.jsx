@@ -34,10 +34,52 @@ function createStoragePath(userId, fileName) {
 const LISTING_IMAGE_BUCKET =
   import.meta.env.VITE_LISTING_IMAGES_BUCKET || "listing-images";
 
+function getFriendlySubmitErrorMessage(
+  error,
+  fallback = "Could not publish listing. Please try again.",
+) {
+  const rawMessage = error?.message || "";
+  const normalized = rawMessage.toLowerCase();
+
+  if (
+    normalized.includes("failed to fetch") ||
+    normalized.includes("network") ||
+    normalized.includes("timeout")
+  ) {
+    return "Network issue while publishing. Check your internet connection and try again.";
+  }
+
+  if (
+    normalized.includes("jwt") ||
+    normalized.includes("not authenticated") ||
+    normalized.includes("token")
+  ) {
+    return "Your session has expired. Please sign in again and retry.";
+  }
+
+  if (
+    normalized.includes("row-level security") ||
+    normalized.includes("permission denied") ||
+    normalized.includes("insufficient privilege")
+  ) {
+    return "You do not have permission to post this listing. Please contact support if this continues.";
+  }
+
+  if (
+    normalized.includes("violates not-null constraint") ||
+    normalized.includes("violates check constraint") ||
+    normalized.includes("invalid input syntax")
+  ) {
+    return "Some listing details are invalid. Please review the form values and submit again.";
+  }
+
+  return rawMessage || fallback;
+}
+
 export default function PostNewItemForm({ user, categories = [], onPosted }) {
   const [formData, setFormData] = useState({
     title: "",
-    category: categories[0] ?? "Textbooks",
+    category: categories[0] ?? "",
     price: "",
     condition: "good",
     listingType: "sale",
@@ -56,6 +98,13 @@ export default function PostNewItemForm({ user, categories = [], onPosted }) {
       }
     };
   }, [previewUrl]);
+
+  const effectiveCategory =
+    categories.length > 0
+      ? categories.includes(formData.category)
+        ? formData.category
+        : categories[0]
+      : formData.category;
 
   const handleFieldChange = (event) => {
     const { name, value } = event.target;
@@ -80,7 +129,7 @@ export default function PostNewItemForm({ user, categories = [], onPosted }) {
   const resetForm = () => {
     setFormData({
       title: "",
-      category: categories[0] ?? "Textbooks",
+      category: categories[0] ?? "",
       price: "",
       condition: "good",
       listingType: "sale",
@@ -111,6 +160,11 @@ export default function PostNewItemForm({ user, categories = [], onPosted }) {
       return;
     }
 
+    if (!effectiveCategory.trim()) {
+      setErrorMessage("Category is required.");
+      return;
+    }
+
     if (!formData.price || Number(formData.price) <= 0) {
       setErrorMessage("Price must be greater than 0.");
       return;
@@ -130,8 +184,7 @@ export default function PostNewItemForm({ user, categories = [], onPosted }) {
         .upload(filePath, imageFile, { upsert: false });
 
       if (uploadError) {
-        imageUploadWarning =
-          "Image upload failed, so the listing was posted without an image.";
+        imageUploadWarning = `${getFriendlySubmitErrorMessage(uploadError, "Image upload failed.")} Listing was posted without an image.`;
       } else {
         uploadedStoragePath = filePath;
         const { data: publicUrlData } = supabase.storage
@@ -146,7 +199,7 @@ export default function PostNewItemForm({ user, categories = [], onPosted }) {
       seller_id: user.id,
       title: formData.title.trim(),
       description: formData.description.trim(),
-      category: formData.category,
+      category: effectiveCategory,
       condition: formData.condition,
       asking_price: Number(formData.price),
       listing_type: formData.listingType,
@@ -166,7 +219,12 @@ export default function PostNewItemForm({ user, categories = [], onPosted }) {
           .remove([uploadedStoragePath]);
       }
 
-      setErrorMessage(error.message || "Failed to publish listing.");
+      setErrorMessage(
+        getFriendlySubmitErrorMessage(
+          error,
+          "Failed to publish listing. Please try again.",
+        ),
+      );
       setIsSubmitting(false);
       return;
     }
@@ -192,7 +250,10 @@ export default function PostNewItemForm({ user, categories = [], onPosted }) {
         }
 
         setErrorMessage(
-          "Listing was created but could not be synced locally. Please refresh and try again.",
+          getFriendlySubmitErrorMessage(
+            recoverError,
+            "Listing was created but could not be synced locally. Please refresh and try again.",
+          ),
         );
         setIsSubmitting(false);
         return;
@@ -222,7 +283,7 @@ export default function PostNewItemForm({ user, categories = [], onPosted }) {
       title: data?.title ?? formData.title.trim(),
       price: data?.asking_price ?? Number(formData.price),
       condition: formatConditionLabel(data?.condition ?? formData.condition),
-      category: data?.category ?? formData.category,
+      category: data?.category ?? effectiveCategory,
       imageUrl,
       sellerId: data?.seller_id ?? user.id,
       status: data?.status ?? "active",
@@ -275,9 +336,11 @@ export default function PostNewItemForm({ user, categories = [], onPosted }) {
           <select
             id="item-category"
             name="category"
-            value={formData.category}
+            value={effectiveCategory}
             onChange={handleFieldChange}
             className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-300"
+            required
+            disabled={categories.length === 0}
           >
             {categories.map((category) => (
               <option key={category} value={category}>
@@ -285,6 +348,11 @@ export default function PostNewItemForm({ user, categories = [], onPosted }) {
               </option>
             ))}
           </select>
+          {categories.length === 0 ? (
+            <p className="mt-1 text-xs text-amber-700">
+              Category options are not available right now.
+            </p>
+          ) : null}
         </div>
 
         <div>

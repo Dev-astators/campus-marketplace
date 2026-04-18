@@ -4,8 +4,7 @@
  * StudentDashboard page
  * Bundles Navbar, Sidebar, CategoryFilter and ListingsGrid.
  *
- * In production, replace MOCK_USER and MOCK_LISTINGS with
- * real data from your Supabase hooks / API calls.
+ * Data is loaded from Supabase auth and database tables.
  */
 
 import { useEffect, useMemo, useState } from "react";
@@ -16,94 +15,17 @@ import ListingsGrid from "../components/studentDashboard/ListingsGrid";
 import PostNewItemForm from "../components/studentDashboard/PostNewItemForm";
 import { supabase } from "../config/supabaseClient";
 
-// ── Mock data (replace with real API data in production) ──────────────────────
-
-const FALLBACK_USER = {
-  id: null,
-  name: "Nkosinathi Khumalo",
-  avatarUrl: null,
-};
-
-const CATEGORIES = [
-  "All Categories",
-  "Textbooks",
-  "Electronics",
-  "Furniture",
-  "Clothing",
-  "Other",
-];
-
-const MOCK_LISTINGS = [
-  {
-    id: "1",
-    title: "Computer Science Textbook",
-    price: 200,
-    condition: "Good",
-    category: "Textbooks",
-    imageUrl: null,
-  },
-  {
-    id: "2",
-    title: "Introduction to Algorithms",
-    price: 150,
-    condition: "Like New",
-    category: "Textbooks",
-    imageUrl: null,
-  },
-  {
-    id: "3",
-    title: 'MacBook Pro 14"',
-    price: 12000,
-    condition: "Good",
-    category: "Electronics",
-    imageUrl: null,
-  },
-  {
-    id: "4",
-    title: "Wits Hoodie",
-    price: 350,
-    condition: "New",
-    category: "Clothing",
-    imageUrl: null,
-  },
-  {
-    id: "5",
-    title: "Data Structures Notes",
-    price: 80,
-    condition: "Fair",
-    category: "Textbooks",
-    imageUrl: null,
-  },
-  {
-    id: "6",
-    title: "Desk Lamp",
-    price: 120,
-    condition: "Good",
-    category: "Furniture",
-    imageUrl: null,
-  },
-  {
-    id: "7",
-    title: "ASUS VivoBook Laptop",
-    price: 7500,
-    condition: "Like New",
-    category: "Electronics",
-    imageUrl: null,
-  },
-  {
-    id: "8",
-    title: "Campus Jacket",
-    price: 400,
-    condition: "New",
-    category: "Clothing",
-    imageUrl: null,
-  },
-];
-
 const LISTING_SELECT_COLUMNS =
   "id, title, asking_price, condition, category, listing_type, seller_id, status, created_at";
 const LISTING_IMAGE_BUCKET =
   import.meta.env.VITE_LISTING_IMAGES_BUCKET || "listing-images";
+const LISTING_CATEGORIES = [
+  "Textbooks",
+  "Electronics",
+  "Clothing",
+  "Furniture",
+];
+const CATEGORY_FILTER_OPTIONS = ["All Categories", ...LISTING_CATEGORIES];
 
 function formatConditionLabel(condition) {
   if (!condition || typeof condition !== "string") {
@@ -116,13 +38,25 @@ function formatConditionLabel(condition) {
     .join(" ");
 }
 
+function formatCategoryLabel(category) {
+  if (!category || typeof category !== "string") {
+    return "";
+  }
+
+  return category
+    .trim()
+    .split(/[\s_]+/)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+    .join(" ");
+}
+
 function normalizeListing(listing) {
   return {
     id: String(listing.id),
     title: listing.title,
     price: listing.asking_price ?? listing.price ?? 0,
     condition: formatConditionLabel(listing.condition),
-    category: listing.category,
+    category: formatCategoryLabel(listing.category),
     imageUrl: listing.image_url ?? listing.imageUrl ?? null,
     listingType: listing.listing_type ?? listing.listingType ?? "sale",
     sellerId: listing.seller_id ?? listing.sellerId ?? null,
@@ -211,37 +145,59 @@ async function attachPrimaryImages(listingRows = []) {
 export default function StudentDashboard() {
   const [activeNav, setActiveNav] = useState("marketplace");
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
-  const [dashboardUser, setDashboardUser] = useState(FALLBACK_USER);
+  const [dashboardUser, setDashboardUser] = useState(null);
   const [listings, setListings] = useState([]);
   const [loadingListings, setLoadingListings] = useState(true);
+  const [dashboardError, setDashboardError] = useState("");
 
   // firstName derived from full name for the greeting
-  const firstName = dashboardUser.name.split(" ")[0];
+  const firstName = (dashboardUser?.name || "Student").split(" ")[0];
   const isPostNewItemTab = activeNav === "post-new-item";
+  const effectiveSelectedCategory = CATEGORY_FILTER_OPTIONS.includes(
+    selectedCategory,
+  )
+    ? selectedCategory
+    : "All Categories";
 
   useEffect(() => {
     let isMounted = true;
 
     const loadDashboardData = async () => {
-      const { data: authData } = await supabase.auth.getUser();
+      setDashboardError("");
+
+      const { data: authData, error: authError } =
+        await supabase.auth.getUser();
 
       if (!isMounted) {
         return;
       }
 
-      const user = authData?.user;
-      const userId = user?.id ?? null;
-
-      if (user) {
-        setDashboardUser({
-          id: userId,
-          name:
-            user.user_metadata?.full_name || user.email || FALLBACK_USER.name,
-          avatarUrl: user.user_metadata?.avatar_url || null,
-        });
-      } else {
-        setDashboardUser(FALLBACK_USER);
+      if (authError) {
+        setDashboardUser(null);
+        setListings([]);
+        setLoadingListings(false);
+        setDashboardError(
+          "Unable to verify your session. Please sign in again.",
+        );
+        return;
       }
+
+      const user = authData?.user;
+
+      if (!user?.id) {
+        setDashboardUser(null);
+        setListings([]);
+        setLoadingListings(false);
+        setDashboardError("Please sign in to view your dashboard.");
+        return;
+      }
+
+      const userId = user.id;
+      setDashboardUser({
+        id: userId,
+        name: user.user_metadata?.full_name || user.email || "Student",
+        avatarUrl: user.user_metadata?.avatar_url || null,
+      });
 
       const activeListingsRequest = supabase
         .from("listings")
@@ -283,7 +239,7 @@ export default function StudentDashboard() {
       if (activeResult.error && ownResult.error) {
         setListings([]);
         setLoadingListings(false);
-        window.alert(
+        setDashboardError(
           "Unable to load listings right now. Please check your connection and try again later.",
         );
         return;
@@ -296,6 +252,11 @@ export default function StudentDashboard() {
         }
 
         setListings(listingsWithImages);
+        if (activeResult.error || ownResult.error) {
+          setDashboardError(
+            "Some dashboard data could not be loaded. You may see partial results.",
+          );
+        }
       }
 
       setLoadingListings(false);
@@ -310,7 +271,9 @@ export default function StudentDashboard() {
 
   const visibleListings = useMemo(() => {
     const hasDashboardUserId =
-      dashboardUser.id !== null && dashboardUser.id !== undefined && dashboardUser.id !== "";
+      dashboardUser?.id !== null &&
+      dashboardUser?.id !== undefined &&
+      dashboardUser?.id !== "";
 
     if (activeNav === "my-listings" && !hasDashboardUserId) {
       return [];
@@ -318,31 +281,41 @@ export default function StudentDashboard() {
 
     const sourceListings =
       activeNav === "my-listings"
-        ? listings.filter((listing) => listing.sellerId === dashboardUser.id)
+        ? listings.filter((listing) => listing.sellerId === dashboardUser?.id)
         : listings.filter(
             (listing) => (listing.status ?? "active") === "active",
           );
 
-    if (selectedCategory === "All Categories") {
+    if (effectiveSelectedCategory === "All Categories") {
       return sourceListings;
     }
 
     return sourceListings.filter(
-      (listing) => listing.category === selectedCategory,
+      (listing) => listing.category === effectiveSelectedCategory,
     );
-  }, [activeNav, dashboardUser.id, listings, selectedCategory]);
+  }, [activeNav, dashboardUser?.id, listings, effectiveSelectedCategory]);
 
   const handleListingPosted = (postedListing) => {
-    setListings((previous) => [
-      {
-        ...postedListing,
-        status: postedListing.status ?? "active",
-      },
-      ...previous,
-    ]);
+    const nextListing = {
+      ...postedListing,
+      category: formatCategoryLabel(postedListing.category),
+      status: postedListing.status ?? "active",
+      sellerId: postedListing.sellerId ?? dashboardUser?.id ?? null,
+    };
+
+    setListings((previous) => [nextListing, ...previous]);
     setActiveNav("my-listings");
     setSelectedCategory("All Categories");
   };
+
+  const emptyStateMessage =
+    activeNav === "my-listings"
+      ? effectiveSelectedCategory === "All Categories"
+        ? "You have no listings available right now."
+        : `You have no ${effectiveSelectedCategory} listings available right now.`
+      : effectiveSelectedCategory === "All Categories"
+        ? "No listings available right now."
+        : `${effectiveSelectedCategory} listings are not available right now.`;
 
   const handleNavChange = (nextNav) => {
     setActiveNav(nextNav);
@@ -359,7 +332,7 @@ export default function StudentDashboard() {
     >
       {/* Top navbar — full width */}
       <header>
-        <Navbar user={dashboardUser} />
+        <Navbar user={dashboardUser || { name: "Student", avatarUrl: null }} />
       </header>
 
       {/* Body — sidebar + main content */}
@@ -370,7 +343,7 @@ export default function StudentDashboard() {
             activeItem={activeNav}
             onNavigate={(nextNav) => {
               handleNavChange(nextNav);
-              setSelectedCategory(CATEGORIES[0]);
+              setSelectedCategory("All Categories");
             }}
           />
         </aside>
@@ -394,12 +367,22 @@ export default function StudentDashboard() {
 
               <PostNewItemForm
                 user={dashboardUser}
-                categories={CATEGORIES.slice(1)}
+                categories={LISTING_CATEGORIES}
                 onPosted={handleListingPosted}
               />
             </section>
           ) : (
             <>
+              {dashboardError ? (
+                <section
+                  aria-label="Dashboard message"
+                  className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800"
+                  role="alert"
+                >
+                  {dashboardError}
+                </section>
+              ) : null}
+
               {/* Greeting */}
               <header aria-label="Welcome message">
                 <h1 className="text-2xl font-bold text-gray-800">
@@ -411,8 +394,8 @@ export default function StudentDashboard() {
               {/* Category filter */}
               <section aria-label="Category filter">
                 <CategoryFilter
-                  categories={CATEGORIES}
-                  selected={selectedCategory}
+                  categories={CATEGORY_FILTER_OPTIONS}
+                  selected={effectiveSelectedCategory}
                   onSelect={setSelectedCategory}
                 />
               </section>
@@ -422,6 +405,7 @@ export default function StudentDashboard() {
                 <ListingsGrid
                   listings={visibleListings}
                   loading={loadingListings}
+                  emptyMessage={emptyStateMessage}
                 />
               </section>
             </>
