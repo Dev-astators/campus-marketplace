@@ -1,0 +1,38 @@
+{
+  "source": "Statistics South Africa - Consumer Price Index (CPI)",
+  "url": "http://www.statssa.gov.za/?page_id=1854&PPN=P0141",
+  "reference_date": "2024-12",
+  "base_year": "2016=100",
+  "categories": {
+    "Textbooks": {
+      "statssa_category": "Education",
+      "cpi_index": 175.3,
+      "annual_change_percent": 6.2,
+      "description": "Tertiary education and study materials"
+    },
+    "Electronics": {
+      "statssa_category": "Communication & recreation equipment",
+      "cpi_index": 89.4,
+      "annual_change_percent": -2.1,
+      "description": "Communication devices, computers and recreational equipment"
+    },
+    "Furniture": {
+      "statssa_category": "Household contents & equipment",
+      "cpi_index": 158.7,
+      "annual_change_percent": 4.8,
+      "description": "Household furniture and equipment"
+    },
+    "Clothing": {
+      "statssa_category": "Clothing & footwear",
+      "cpi_index": 141.2,
+      "annual_change_percent": 3.9,
+      "description": "Clothing and footwear items"
+    },
+    "Other": {
+      "statssa_category": "Miscellaneous goods & services",
+      "cpi_index": 162.4,
+      "annual_change_percent": 5.1,
+      "description": "Miscellaneous goods and services"
+    }
+  }
+}
