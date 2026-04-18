@@ -1,35 +1,34 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "../config/supabaseClient";
 
 function Chat({ senderId, receiverId }) {
   const [text, setText] = useState("");
   const [messages, setMessages] = useState([]);
 
-  // ✅ FIX: wrap in useCallback
-  const loadMessages = useCallback(async () => {
-    const { data, error } = await supabase
-      .from("messages")
-      .select("*")
-      .or(
-        `and(sender_id.eq.${senderId},receiver_id.eq.${receiverId}),and(sender_id.eq.${receiverId},receiver_id.eq.${senderId})`
-      )
-      .order("sent_at", { ascending: true });
-
-    if (error) {
-      console.log("LOAD ERROR:", error.message);
-    } else {
-      setMessages(data || []);
-    }
-  }, [senderId, receiverId]); // ✅ dependencies here
-
-  // ✅ FIXED useEffect
+  // ✅ CLEAN: no external function
   useEffect(() => {
-    if (receiverId) {
-      loadMessages();
-    }
-  }, [receiverId, loadMessages]); // ✅ include loadMessages
+    if (!receiverId) return;
 
-  // 📤 Send message
+    const loadMessages = async () => {
+      const { data, error } = await supabase
+        .from("messages")
+        .select("*")
+        .or(
+          `and(sender_id.eq.${senderId},receiver_id.eq.${receiverId}),and(sender_id.eq.${receiverId},receiver_id.eq.${senderId})`
+        )
+        .order("sent_at", { ascending: true });
+
+      if (error) {
+        console.log(error.message);
+      } else {
+        setMessages(data || []);
+      }
+    };
+
+    loadMessages();
+  }, [receiverId, senderId]);
+
+  // ✅ USED function
   const sendMessage = async () => {
     if (!text.trim()) return;
 
@@ -44,11 +43,43 @@ function Chat({ senderId, receiverId }) {
       },
     ]);
 
-    if (error) {
-      console.log("INSERT ERROR:", error.message);
-    } else {
+    if (!error) {
       setText("");
-      loadMessages(); // ✅ safe now
+
+      // reload after send
+      const { data } = await supabase
+        .from("messages")
+        .select("*")
+        .or(
+          `and(sender_id.eq.${senderId},receiver_id.eq.${receiverId}),and(sender_id.eq.${receiverId},receiver_id.eq.${senderId})`
+        )
+        .order("sent_at", { ascending: true });
+
+      setMessages(data || []);
     }
   };
+
+  // ✅ USING messages + sendMessage
+  return (
+    <div>
+      <div>
+        {messages.map((msg) => (
+          <p key={msg.id}>
+            {msg.sender_id === senderId ? "You: " : "Them: "}
+            {msg.content}
+          </p>
+        ))}
+      </div>
+
+      <input
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+      />
+
+      <button onClick={sendMessage}>Send</button>
+    </div>
+  );
 }
+
+// ✅ REQUIRED EXPORT
+export default Chat;
