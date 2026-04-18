@@ -1,18 +1,21 @@
 # Campus Marketplace
 
+[![CI - Lint and Test](https://github.com/Dev-astators/campus-marketplace/actions/workflows/ci.yml/badge.svg)](https://github.com/Dev-astators/campus-marketplace/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/Dev-astators/campus-marketplace/branch/main/graph/badge.svg)](https://codecov.io/gh/Dev-astators/campus-marketplace)
+
 ## Overview
 
 Campus Marketplace is a secure peer-to-peer trading platform designed specifically for university students to buy, sell, and exchange items within their campus community.
 
 The system improves trust, safety, and convenience through:
 
-* verified student identity authentication
-* secure trade facility drop-off and collection workflow
-* integrated messaging between users
-* partial + full online payments
-* rating and trust system
-* analytics dashboards
-* South African price suggestion integration
+- verified student identity authentication
+- secure trade facility drop-off and collection workflow
+- integrated messaging between users
+- partial + full online payments
+- rating and trust system
+- analytics dashboards
+- South African price suggestion integration
 
 This project is developed using **Agile methodology**, **CI/CD principles**, and **test-driven development practices**.
 
@@ -35,20 +38,20 @@ CAMPUS-MARKETPLACE/
 
 Frontend
 
-* React (Vite)
-* Tailwind CSS
+- React (Vite)
+- Tailwind CSS
 
 Backend
 
-* Node.js
-* Express.js
+- Node.js
+- Express.js
 
 Future Integrations
 
-* 3rd-party authentication provider
-* payment gateway
-* analytics reporting engine
-* South African pricing datasets
+- 3rd-party authentication provider
+- payment gateway
+- analytics reporting engine
+- South African pricing datasets
 
 ---
 
@@ -60,13 +63,13 @@ The system supports three roles:
 
 Can:
 
-* create listings
-* browse listings
-* trade items
-* message users
-* book facility slots
-* make payments
-* rate transactions
+- create listings
+- browse listings
+- trade items
+- message users
+- book facility slots
+- make payments
+- rate transactions
 
 ---
 
@@ -74,10 +77,10 @@ Can:
 
 Can:
 
-* confirm item drop-off
-* confirm item collection
-* verify outstanding payments
-* update transaction status
+- confirm item drop-off
+- confirm item collection
+- verify outstanding payments
+- update transaction status
 
 ---
 
@@ -85,11 +88,11 @@ Can:
 
 Can:
 
-* configure facility operating hours
-* configure slot capacity
-* moderate ratings
-* manage flagged content
-* access analytics dashboards
+- configure facility operating hours
+- configure slot capacity
+- moderate ratings
+- manage flagged content
+- access analytics dashboards
 
 ---
 
@@ -99,12 +102,12 @@ Can:
 
 Students can:
 
-* upload images
-* add descriptions
-* choose category
-* choose condition
-* set price
-* choose sale or trade
+- upload images
+- add descriptions
+- choose category
+- choose condition
+- set price
+- choose sale or trade
 
 ---
 
@@ -112,10 +115,10 @@ Students can:
 
 Supports:
 
-* drop-off scheduling
-* collection scheduling
-* slot capacity tracking
-* transaction lifecycle updates
+- drop-off scheduling
+- collection scheduling
+- slot capacity tracking
+- transaction lifecycle updates
 
 ---
 
@@ -123,9 +126,9 @@ Supports:
 
 Allows:
 
-* negotiation between buyers and sellers
-* transaction coordination
-* secure in-app communication
+- negotiation between buyers and sellers
+- transaction coordination
+- secure in-app communication
 
 ---
 
@@ -133,10 +136,10 @@ Allows:
 
 Supports:
 
-* full online payment
-* partial payment tracking
-* recorded cash shortfall
-* settlement verification by staff
+- full online payment
+- partial payment tracking
+- recorded cash shortfall
+- settlement verification by staff
 
 ---
 
@@ -146,13 +149,13 @@ After transaction completion:
 
 Users can:
 
-* leave ratings
-* leave reviews
+- leave ratings
+- leave reviews
 
 Admins can:
 
-* remove abusive content
-* moderate flagged users
+- remove abusive content
+- moderate flagged users
 
 ---
 
@@ -170,8 +173,8 @@ Moderated content summary
 
 Reports exportable as:
 
-* CSV
-* PDF
+- CSV
+- PDF
 
 ---
 
@@ -261,9 +264,9 @@ Open Pull Request before merging.
 
 Each merge must:
 
-* pass ESLint
-* pass tests
-* build successfully
+- pass ESLint
+- pass tests
+- build successfully
 
 Deployment pipeline configured later.
 
@@ -273,8 +276,8 @@ Deployment pipeline configured later.
 
 Planned upgrades:
 
-* ML price suggestion model
-* recommendation engine
-* fraud detection indicators
-* push notifications
-* mobile optimisation
+- ML price suggestion model
+- recommendation engine
+- fraud detection indicators
+- push notifications
+- mobile optimisation
