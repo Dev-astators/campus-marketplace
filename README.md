@@ -1,7 +1,7 @@
 # Campus Marketplace
 
-[![CI - Lint and Test](https://github.com/Dev-astators/campus-marketplace/actions/workflows/ci.yml/badge.svg)](https://github.com/Dev-astators/campus-marketplace/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/Dev-astators/campus-marketplace/branch/main/graph/badge.svg)](https://codecov.io/gh/Dev-astators/campus-marketplace)
+[![CI - Lint and Test](https://github.com/Dev-astators/campus-marketplace/actions/workflows/ci.yml/badge.svg?event=pull_request)](https://github.com/Dev-astators/campus-marketplace/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/Dev-astators/campus-marketplace/graph/badge.svg?event=pull_request)](https://codecov.io/gh/Dev-astators/campus-marketplace)
 
 ## Overview
 
