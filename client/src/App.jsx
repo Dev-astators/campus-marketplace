@@ -7,6 +7,7 @@ import SignInPage from './pages/SignInPage';
 import SignUpPage from './pages/SignUpPage';
 import StaffDashboard from './pages/StaffDashboard';
 import StudentDashboard  from './pages/StudentDashboard';
+import SellerProfilePage from './pages/SellerProfilePage';
 
 
 function App() {
@@ -44,6 +45,7 @@ function App() {
           <Route path="/signup" element={<SignUpPage />} />
           <Route path="/staff-dashboard" element={<StaffDashboard />} />
           <Route path="/student-dashboard" element={<StudentDashboard/>} />
+          <Route path="/seller-profile" element={<SellerProfilePage />} />
         </Routes>
       </BrowserRouter>
     </>
