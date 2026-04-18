@@ -13,12 +13,21 @@
  *      category: string,
  *    }
  */
+import { useNavigate } from 'react-router-dom';
+
 
 export default function ListingCard({ listing }) {
-  const { title, price, condition, imageUrl } = listing;
+  const navigate = useNavigate();
+  const imageUrl = listing.listing_images?.[0]?.storage_path
+    ? `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/listing-images/${listing.listing_images[0].storage_path}`
+    : null;
+
+  const { title, price, condition } = listing;
 
   return (
-    <article className="bg-white rounded-2xl overflow-hidden border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all cursor-pointer">
+    <article 
+      onClick={() => navigate(`/listing/${listing.id}`)}
+      className="bg-white rounded-2xl overflow-hidden border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all cursor-pointer">
       {/* Image */}
       <figure className="bg-gray-100 h-44 flex items-center justify-center overflow-hidden">
         {imageUrl ? (
