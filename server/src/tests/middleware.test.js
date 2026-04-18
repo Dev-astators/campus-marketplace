@@ -1,4 +1,4 @@
-const { verifySession } = require('../middleware/authMiddleware');
+const { verifySession, requireRole,attachProfile } = require('../middleware/authMiddleware');
 
 // ── Mock Supabase ─────────────────────────────────────────────────────────────
 
@@ -130,3 +130,247 @@ describe('verifySession middleware', () => {
   });
 
 });
+
+// ── requireRole tests ─────────────────────────────────────────────────────────
+
+describe('requireRole middleware', () => {
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  // Helper — builds req with user already attached (as verifySession would)
+  const mockReqWithUser = (userId) => ({
+    headers: {},
+    user: { id: userId, email: 'user@students.wits.ac.za' },
+  });
+
+  test('Given a facility_staff user, when role is required, then next() is called', async () => {
+    supabase.from = jest.fn(() => ({
+      select: jest.fn().mockReturnThis(),
+      eq: jest.fn().mockReturnThis(),
+      single: jest.fn().mockResolvedValue({
+        data: { role: 'facility_staff' },
+        error: null,
+      }),
+    }));
+
+    const req = mockReqWithUser('auth-uid-staff');
+    const res = mockRes();
+    const next = jest.fn();
+
+    await requireRole('facility_staff')(req, res, next);
+
+    expect(next).toHaveBeenCalledTimes(1);
+    expect(req.userRole).toBe('facility_staff');
+  });
+
+  test('Given an admin user, when facility_staff or admin is required, then next() is called', async () => {
+    supabase.from = jest.fn(() => ({
+      select: jest.fn().mockReturnThis(),
+      eq: jest.fn().mockReturnThis(),
+      single: jest.fn().mockResolvedValue({
+        data: { role: 'admin' },
+        error: null,
+      }),
+    }));
+
+    const req = mockReqWithUser('auth-uid-admin');
+    const res = mockRes();
+    const next = jest.fn();
+
+    await requireRole('facility_staff', 'admin')(req, res, next);
+
+    expect(next).toHaveBeenCalledTimes(1);
+    expect(req.userRole).toBe('admin');
+  });
+
+  test('Given a student user, when facility_staff is required, then 403 is returned', async () => {
+    supabase.from = jest.fn(() => ({
+      select: jest.fn().mockReturnThis(),
+      eq: jest.fn().mockReturnThis(),
+      single: jest.fn().mockResolvedValue({
+        data: { role: 'student' },
+        error: null,
+      }),
+    }));
+
+    const req = mockReqWithUser('auth-uid-student');
+    const res = mockRes();
+    const next = jest.fn();
+
+    await requireRole('facility_staff')(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(403);
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  test('Given no user on request, when role is checked, then 401 is returned', async () => {
+    const req = { headers: {}, user: null };
+    const res = mockRes();
+    const next = jest.fn();
+
+    await requireRole('facility_staff')(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(401);
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  test('Given a profile lookup failure, when role is checked, then 500 is returned', async () => {
+    supabase.from = jest.fn(() => ({
+      select: jest.fn().mockReturnThis(),
+      eq: jest.fn().mockReturnThis(),
+      single: jest.fn().mockResolvedValue({
+        data: null,
+        error: { message: 'DB error' },
+      }),
+    }));
+
+    const req = mockReqWithUser('auth-uid-broken');
+    const res = mockRes();
+    const next = jest.fn();
+
+    await requireRole('facility_staff')(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  test('Given a Supabase crash, when role is checked, then 500 is returned', async () => {
+    supabase.from = jest.fn(() => {
+      throw new Error('Supabase unreachable');
+    });
+
+    const req = mockReqWithUser('auth-uid-crash');
+    const res = mockRes();
+    const next = jest.fn();
+
+    await requireRole('facility_staff')(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(next).not.toHaveBeenCalled();
+  });
+
+});
+
+// ── attachProfile tests ───────────────────────────────────────────────────────
+
+describe('attachProfile middleware', () => {
+ 
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  const mockReqWithUser = (userId) => ({
+    headers: {},
+    user: { id: userId },
+  });
+
+  test('Given a valid user with a complete profile, when attached, then req.profile is set and next() is called', async () => {
+    supabase.from = jest.fn(() => ({
+      select: jest.fn().mockReturnThis(),
+      eq: jest.fn().mockReturnThis(),
+      single: jest.fn().mockResolvedValue({
+        data: {
+          id: 'profile-uuid-001',
+          full_name: 'Nkosinathi Khumalo',
+          email: 'nkosinathi@students.wits.ac.za',
+          student_number: 'STU001',
+          university: 'Wits',
+          role: 'student',
+          average_rating: 0,
+        },
+        error: null,
+      }),
+    }));
+
+    const req = mockReqWithUser('auth-uid-001');
+    const res = mockRes();
+    const next = jest.fn();
+
+    await attachProfile(req, res, next);
+
+    expect(next).toHaveBeenCalledTimes(1);
+    expect(req.profile).toBeDefined();
+    expect(req.profile.role).toBe('student');
+    expect(req.profile.student_number).toBe('STU001');
+  });
+
+  test('Given a user with no profile, when attached, then 404 is returned', async () => {
+    supabase.from = jest.fn(() => ({
+      select: jest.fn().mockReturnThis(),
+      eq: jest.fn().mockReturnThis(),
+      single: jest.fn().mockResolvedValue({
+        data: null,
+        error: { message: 'No rows found' },
+      }),
+    }));
+
+    const req = mockReqWithUser('auth-uid-no-profile');
+    const res = mockRes();
+    const next = jest.fn();
+
+    await attachProfile(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(404);
+    expect(res.json).toHaveBeenCalledWith({ message: 'Profile not found: please complete onboarding' });
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  test('Given no user on request, when attached, then 401 is returned', async () => {
+    const req = { headers: {}, user: null };
+    const res = mockRes();
+    const next = jest.fn();
+
+    await attachProfile(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(401);
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  test('Given a Supabase crash, when profile is fetched, then 500 is returned', async () => {
+    supabase.from = jest.fn(() => {
+      throw new Error('Supabase unreachable');
+    });
+
+    const req = mockReqWithUser('auth-uid-crash');
+    const res = mockRes();
+    const next = jest.fn();
+
+    await attachProfile(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  test('Given a facility_staff profile, when attached, then req.profile.role is facility_staff', async () => {
+    supabase.from = jest.fn(() => ({
+      select: jest.fn().mockReturnThis(),
+      eq: jest.fn().mockReturnThis(),
+      single: jest.fn().mockResolvedValue({
+        data: {
+          id: 'profile-uuid-002',
+          full_name: 'Staff Member',
+          email: 'staff@students.wits.ac.za',
+          role: 'facility_staff',
+          average_rating: 0,
+        },
+        error: null,
+      }),
+    }));
+
+    const req = mockReqWithUser('auth-uid-staff');
+    const res = mockRes();
+    const next = jest.fn();
+
+    await attachProfile(req, res, next);
+
+    expect(next).toHaveBeenCalledTimes(1);
+    expect(req.profile.role).toBe('facility_staff');
+  });
+
+});
+
+
+

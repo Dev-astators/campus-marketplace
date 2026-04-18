@@ -93,4 +93,41 @@ const requireRole = (...allowedRoles) => {
   };
 };
 
-module.exports = { verifySession, requireRole };
+/**
+ * attachProfile middleware
+ * Fetches the authenticated user's profile from the profiles table
+ * and attaches it to req.profile.
+ * Must be used AFTER verifySession since it depends on req.user.
+ *
+ * Responds with:
+ *   404 — if no profile exists for this user (onboarding not complete)
+ *   500 — if the profile lookup fails
+ */
+
+const attachProfile = async (req, res, next) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ message: 'Unauthorised: no user on request' });
+    }
+
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, full_name, email, student_number, university, role, average_rating')
+      .eq('auth_user_id', req.user.id)
+      .single();
+
+    if (error || !data) {
+      return res.status(404).json({ message: 'Profile not found: please complete onboarding' });
+    }
+
+    // Attach profile to request for use in downstream middleware and route handlers
+    req.profile = data;
+
+    next();
+
+  } catch (err) {
+    return res.status(500).json({ message: 'Internal server error while fetching profile' });
+  }
+};
+
+module.exports = { verifySession, requireRole ,attachProfile};

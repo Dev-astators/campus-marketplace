@@ -25,14 +25,14 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/34</span>
+                <span class='fraction'>0/28</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/18</span>
+                <span class='fraction'>0/14</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/34</span>
+                <span class='fraction'>0/28</span>
             </div>
         
             
@@ -141,20 +141,13 @@
 <a name='L76'></a><a href='#L76'>76</a>
 <a name='L77'></a><a href='#L77'>77</a>
 <a name='L78'></a><a href='#L78'>78</a>
-<a name='L79'></a><a href='#L79'>79</a>
-<a name='L80'></a><a href='#L80'>80</a>
-<a name='L81'></a><a href='#L81'>81</a>
-<a name='L82'></a><a href='#L82'>82</a>
-<a name='L83'></a><a href='#L83'>83</a>
-<a name='L84'></a><a href='#L84'>84</a>
-<a name='L85'></a><a href='#L85'>85</a>
-<a name='L86'></a><a href='#L86'>86</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L79'></a><a href='#L79'>79</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -202,23 +195,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -227,10 +203,20 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">// server/routes/listings.js
@@ -238,13 +224,13 @@ const express = <span class="cstat-no" title="statement not covered" >require('e
 const router = <span class="cstat-no" title="statement not covered" >express.Router();</span>
 const { getActiveListings, createListing } = <span class="cstat-no" title="statement not covered" >require('../services/listingService');</span>
 const { validateListingInput } = <span class="cstat-no" title="statement not covered" >require('../services/listingValidator');</span>
-const {verifySession, requireRole} = <span class="cstat-no" title="statement not covered" >require('../middleware/authMiddleware');</span>
-&nbsp;
+const {verifySession, requireRole, attachProfile} = <span class="cstat-no" title="statement not covered" >require('../middleware/authMiddleware');</span>
+const {validateListing} = <span class="cstat-no" title="statement not covered" >require('../middleware/validateListing');</span>
 /**
  * GET /api/listings
  * Returns all active listings. Accessible to authenticated students.
  */
-<span class="cstat-no" title="statement not covered" >router.get('/', verifySession,<span class="fstat-no" title="function not covered" >as</span>ync (req, res) =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >router.get('/', verifySession,attachProfile,<span class="fstat-no" title="function not covered" >as</span>ync (req, res) =&gt; {</span>
   const { data, error } = <span class="cstat-no" title="statement not covered" >await getActiveListings();</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  if (error) {</span>
@@ -261,7 +247,7 @@ const {verifySession, requireRole} = <span class="cstat-no" title="statement not
  * Accessible to any authenticated user.
  * Query params: category, askingPrice
  */
-<span class="cstat-no" title="statement not covered" >router.get('/suggested-price', verifySession, <span class="fstat-no" title="function not covered" >(r</span>eq, res) =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >router.get('/suggested-price', verifySession, attachProfile,<span class="fstat-no" title="function not covered" >(r</span>eq, res) =&gt; {</span>
   const { category, askingPrice } = <span class="cstat-no" title="statement not covered" >req.query;</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  if (!category || !askingPrice) {</span>
@@ -285,38 +271,31 @@ const {verifySession, requireRole} = <span class="cstat-no" title="statement not
 &nbsp;
 /**
  * POST /api/listings
- * Creates a new listing. Accessible to facility_staff only.
+ * Creates a new listing.
+ * Accessible to students only.
+ * Middleware chain:
+ *   1. verifySession   — is the user signed in?
+ *   2. attachProfile   — who are they? sets req.profile
+ *   3. requireRole     — are they a student?
+ *   4. validateListing — is the input valid? sets req.validatedListing
+ *   5. handler         — just does the DB insert
  */
-<span class="cstat-no" title="statement not covered" >router.post('/',verifySession, requireRole('facility_staff') ,<span class="fstat-no" title="function not covered" >as</span>ync (req, res) =&gt; {</span>
-  const { title, description, category, condition, askingPrice, listingType } = <span class="cstat-no" title="statement not covered" >req.body;</span>
-  const sellerId = <span class="cstat-no" title="statement not covered" >req.user.id;</span>
+<span class="cstat-no" title="statement not covered" >router.post(</span>
+  '/',
+  verifySession,
+  attachProfile,
+  requireRole('student'),
+  validateListing,
+<span class="fstat-no" title="function not covered" >  as</span>ync (req, res) =&gt; {
+    const { data, error } = <span class="cstat-no" title="statement not covered" >await createListing(req.validatedListing);</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  if (!sellerId) {</span>
-<span class="cstat-no" title="statement not covered" >    return res.status(400).json({ message: 'sellerId is required' });</span>
+<span class="cstat-no" title="statement not covered" >    if (error) {</span>
+<span class="cstat-no" title="statement not covered" >      return res.status(500).json({ message: 'Failed to create listing', error: error.message });</span>
+    }
+&nbsp;
+<span class="cstat-no" title="statement not covered" >    return res.status(201).json({ listing: data });</span>
   }
-&nbsp;
-  const { valid, errors } = <span class="cstat-no" title="statement not covered" >validateListingInput({ title, category, condition, askingPrice, listingType });</span>
-&nbsp;
-<span class="cstat-no" title="statement not covered" >  if (!valid) {</span>
-<span class="cstat-no" title="statement not covered" >    return res.status(400).json({ message: 'Validation failed', errors });</span>
-  }
-&nbsp;
-  const { data, error } = <span class="cstat-no" title="statement not covered" >await createListing({</span>
-    sellerId,
-    title,
-    description,
-    category,
-    condition,
-    askingPrice,
-    listingType,
-  });
-&nbsp;
-<span class="cstat-no" title="statement not covered" >  if (error) {</span>
-<span class="cstat-no" title="statement not covered" >    return res.status(500).json({ message: 'Failed to create listing', error: error.message });</span>
-  }
-&nbsp;
-<span class="cstat-no" title="statement not covered" >  return res.status(201).json({ listing: data });</span>
-});
+);
 &nbsp;
 <span class="cstat-no" title="statement not covered" >module.exports = router;</span></pre></td></tr></table></pre>
 
@@ -325,7 +304,7 @@ const {verifySession, requireRole} = <span class="cstat-no" title="statement not
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-04-17T23:05:54.726Z
+                at 2026-04-18T19:15:20.928Z
             </div>
         <script src="../prettify.js"></script>
         <script>
