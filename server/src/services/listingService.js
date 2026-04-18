@@ -17,7 +17,8 @@ const getActiveListings = async() =>{
       listing_type,
       status,
       created_at,
-      seller_id
+      seller_id,
+      listing_images (storage_path)
     `)
     .eq('status', 'active')
     .order('created_at', { ascending: false });
@@ -30,8 +31,19 @@ const getActiveListings = async() =>{
  * Returns: { data: Listing, error }
  */
 
-const createListing = async ({ sellerId, title, description, category, condition, askingPrice, listingType })=>{
-    const { data, error } = await supabase
+const createListing = async ({
+  sellerId,
+  title,
+  description,
+  category,
+  condition,
+  askingPrice,
+  listingType,
+  images = []
+}) => {
+
+  // 1. Create listing
+  const { data: listing, error } = await supabase
     .from('listings')
     .insert({
       seller_id: sellerId,
@@ -46,8 +58,20 @@ const createListing = async ({ sellerId, title, description, category, condition
     .select()
     .single();
 
-    return { data, error };
+  if (error) return { error };
 
+  // 2. Insert images
+  if (images.length > 0) {
+    const imageRows = images.map((path, index) => ({
+      listing_id: listing.id,
+      storage_path: path,
+      display_order: index
+    }));
+
+    await supabase.from('listing_images').insert(imageRows);
+  }
+
+  return { data: listing };
 };
 
 module.exports = {getActiveListings, createListing};

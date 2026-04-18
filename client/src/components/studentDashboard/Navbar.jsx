@@ -7,7 +7,7 @@
  *  - user: { name: string, avatarUrl: string | null }
  */
 
-export default function Navbar({ user }) {
+export default function Navbar({ user, onSearch }) {
   return (
     <header className="w-full bg-gray-100 px-6 py-3 flex items-center gap-6 border-b border-gray-200">
       {/* Brand */}
@@ -34,6 +34,7 @@ export default function Navbar({ user }) {
             id="search-input"
             type="search"
             placeholder="Search"
+            onChange={(e) => onSearch(e.target.value)}
             className="w-full pl-9 pr-4 py-2 rounded-full bg-white border border-gray-200 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-300"
           />
         </div>

@@ -1,6 +1,8 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const usersRouter = require('./src/routes/usersRoute');
+const listingsRouter = require('./src/routes/listing');
 
 const app = express();
 const port = process.env.PORT || 8080;
@@ -17,6 +19,7 @@ app.use(cors({
 // Example route
 
 app.use('/users', usersRouter);
+app.use('/api/listings', listingsRouter);
 
 app.get('/', (req, res) => {
     res.json({ message: "Hello, World!" });

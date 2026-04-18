@@ -7,6 +7,8 @@ import SignInPage from './pages/SignInPage';
 import SignUpPage from './pages/SignUpPage';
 import StaffDashboard from './pages/StaffDashboard';
 import StudentDashboard  from './pages/StudentDashboard';
+import ListingDetails from './pages/ListingDetails';
+import CreateListing from './pages/CreateListing';
 
 
 function App() {
@@ -44,6 +46,8 @@ function App() {
           <Route path="/signup" element={<SignUpPage />} />
           <Route path="/staff-dashboard" element={<StaffDashboard />} />
           <Route path="/student-dashboard" element={<StudentDashboard/>} />
+          <Route path="/listing/:id" element={<ListingDetails />} />
+          <Route path="/create-listing" element={<CreateListing />} />
         </Routes>
       </BrowserRouter>
     </>
