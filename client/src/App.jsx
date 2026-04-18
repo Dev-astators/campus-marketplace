@@ -11,6 +11,7 @@ import ListingDetails from './pages/ListingDetails';
 import CreateListing from './pages/CreateListing';
 import ChatPage from './pages/ChatPage';
 import SellerProfilePage from './pages/SellerProfilePage';
+import MessagesPage from './pages/MessagesPage';
 
 
 function App() {
@@ -52,6 +53,7 @@ function App() {
           <Route path="/create-listing" element={<CreateListing />} />
           <Route path="/chat" element={<ChatPage/>}/>
           <Route path="/seller-profile" element={<SellerProfilePage />} />
+          <Route path="/messages" element={<MessagesPage />} />
         </Routes>
       </BrowserRouter>
     </>
