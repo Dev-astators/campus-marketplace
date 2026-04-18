@@ -5,14 +5,14 @@ on:
     branches:
       - main
     paths:
-      - 'client/**'
-      - '.github/workflows/client.yml'
+      - "client/**"
+      - ".github/workflows/client.yml"
   pull_request:
     types: [opened, synchronize, reopened, closed]
     branches:
       - main
     paths:
-      - 'client/**'
+      - "client/**"
 
 jobs:
   build_and_deploy:
@@ -26,7 +26,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: "22"
 
       - name: Install dependencies
         working-directory: client
@@ -44,9 +44,9 @@ jobs:
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          action: 'upload'
-          app_location: 'client/dist'
-          output_location: ''
+          action: "upload"
+          app_location: "client/dist"
+          output_location: ""
           skip_app_build: true
 
   close_pull_request:
@@ -59,5 +59,5 @@ jobs:
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          action: 'close'
-          
+          action: "close"
+          app_location: "/"
