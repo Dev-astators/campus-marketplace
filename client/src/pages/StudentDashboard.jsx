@@ -8,61 +8,99 @@
  * real data from your Supabase hooks / API calls.
  */
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Navbar from '../components/studentDashboard/Navbar';
 import Sidebar from '../components/studentDashboard/Sidebar';
 import CategoryFilter from '../components/studentDashboard/CategoryFilter';
 import ListingsGrid from '../components/studentDashboard/ListingsGrid';
-
-// ── Mock data (replace with real API data in production) ──────────────────────
-
-const MOCK_USER = {
-  name: 'Nkosinathi Khumalo',
-  avatarUrl: null,
-};
+import { supabase } from '../config/supabaseClient';
+import { useNavigate } from 'react-router-dom';
 
 const CATEGORIES = ['All Categories', 'Textbooks', 'Electronics', 'Furniture', 'Clothing'];
 
-const MOCK_LISTINGS = [
-  { id: '1', title: 'Computer Science Textbook', price: 200, condition: 'Good', category: 'Textbooks', imageUrl: null },
-  { id: '2', title: 'Introduction to Algorithms', price: 150, condition: 'Like New', category: 'Textbooks', imageUrl: null },
-  { id: '3', title: 'MacBook Pro 14"', price: 12000, condition: 'Good', category: 'Electronics', imageUrl: null },
-  { id: '4', title: 'Wits Hoodie', price: 350, condition: 'New', category: 'Clothing', imageUrl: null },
-  { id: '5', title: 'Data Structures Notes', price: 80, condition: 'Fair', category: 'Textbooks', imageUrl: null },
-  { id: '6', title: 'Desk Lamp', price: 120, condition: 'Good', category: 'Furniture', imageUrl: null },
-  { id: '7', title: 'ASUS VivoBook Laptop', price: 7500, condition: 'Like New', category: 'Electronics', imageUrl: null },
-  { id: '8', title: 'Campus Jacket', price: 400, condition: 'New', category: 'Clothing', imageUrl: null },
-];
-
-// ─────────────────────────────────────────────────────────────────────────────
-
 export default function StudentDashboard() {
+  const navigate = useNavigate();
   const [activeNav, setActiveNav] = useState('marketplace');
   const [selectedCategory, setSelectedCategory] = useState('All Categories');
+  // const [search, setSearch] = useState(''); // for future search feature
+  const [search, setSearch] = useState('');
 
-  // firstName derived from full name for the greeting
-  const firstName = MOCK_USER.name.split(' ')[0];
+  const [user, setUser] = useState(null);
+  const [listings, setListings] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // ─────────────────────────────────────────────
+  // Fetch logged-in user
+  useEffect(() => {
+    const getUser = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
+        setUser({
+          name: data.session.user.email,
+          id: data.session.user.id
+        });
+      }
+    };
+    getUser();
+  }, []);
+
+  // ─────────────────────────────────────────────
+  // Fetch listings from backend
+  const fetchListings = async () => {
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/listings`);
+      const data = await res.json();
+      setListings(data.listings || []);
+    } catch (err) {
+      console.error('Failed to fetch listings:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchListings();
+  }, []);
+
+  // ─────────────────────────────────────────────
+  // Filter listings
+  const filteredListings = listings
+    .filter(l =>
+      selectedCategory === 'All Categories' ||
+      l.category === selectedCategory
+    )
+    .filter(l =>
+      l.title.toLowerCase().includes(search.toLowerCase())
+    );
+
+  const firstName = user?.name?.split('@')[0] || 'Student';
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50" style={{ fontFamily: 'Inter, sans-serif' }}>
+    <div className="min-h-screen flex flex-col bg-gray-50">
 
-      {/* Top navbar — full width */}
-      <Navbar user={MOCK_USER} />
+      <Navbar user={user} onSearch={setSearch} />
 
-      {/* Body — sidebar + main content */}
       <div className="flex flex-1 overflow-hidden">
 
-        {/* Sidebar */}
         <Sidebar activeItem={activeNav} onNavigate={setActiveNav} />
 
-        {/* Main content */}
         <main className="flex-1 overflow-y-auto px-8 py-6 flex flex-col gap-6">
 
           {/* Greeting */}
-          <section aria-label="Welcome message">
-            <h1 className="text-2xl font-bold text-gray-800">Hello, {firstName}</h1>
-            <p className="text-sm text-gray-400 mt-0.5">Welcome Back!</p>
+          <section>
+            <h1 className="text-2xl font-bold text-gray-800">
+              Hello, {firstName}
+            </h1>
+            <p className="text-sm text-gray-400">Welcome Back!</p>
           </section>
+
+          {/* Create listing button */}
+          <button
+            onClick={() => navigate('/create-listing')}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg w-fit"
+          >
+            + Create Listing
+          </button>
 
           {/* Category filter */}
           <CategoryFilter
@@ -71,11 +109,8 @@ export default function StudentDashboard() {
             onSelect={setSelectedCategory}
           />
 
-          {/* Listings grid */}
-          <ListingsGrid
-            listings={MOCK_LISTINGS}
-            loading={false}
-          />
+          {/* Listings */}
+          <ListingsGrid listings={filteredListings} loading={loading} />
 
         </main>
       </div>
