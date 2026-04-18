@@ -9,6 +9,7 @@ import StaffDashboard from './pages/StaffDashboard';
 import ModifyDetailsPage from './pages/ModifyDetailsPage';
 import StudentDashboard  from './pages/StudentDashboard';
 import SellerProfilePage from './pages/SellerProfilePage';
+import MessagesPage from './pages/MessagesPage';
 
 
 function App() {
@@ -48,6 +49,7 @@ function App() {
           <Route path="/modify-details" element={<ModifyDetailsPage />} />
           <Route path="/student-dashboard" element={<StudentDashboard/>} />
           <Route path="/seller-profile" element={<SellerProfilePage />} />
+          <Route path="/messages" element={<MessagesPage />} />
         </Routes>
       </BrowserRouter>
     </>
