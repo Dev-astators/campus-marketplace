@@ -9,6 +9,7 @@ import StaffDashboard from './pages/StaffDashboard';
 import StudentDashboard  from './pages/StudentDashboard';
 import ListingDetails from './pages/ListingDetails';
 import CreateListing from './pages/CreateListing';
+import SellerProfilePage from './pages/SellerProfilePage';
 
 
 function App() {
@@ -48,6 +49,7 @@ function App() {
           <Route path="/student-dashboard" element={<StudentDashboard/>} />
           <Route path="/listing/:id" element={<ListingDetails />} />
           <Route path="/create-listing" element={<CreateListing />} />
+          <Route path="/seller-profile" element={<SellerProfilePage />} />
         </Routes>
       </BrowserRouter>
     </>
