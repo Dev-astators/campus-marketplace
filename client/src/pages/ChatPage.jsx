@@ -1,80 +1,86 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import { supabase } from "../config/supabaseClient";
 import Chat from "../components/Chat";
 
 export default function ChatPage() {
-  // 🧪 Logged-in user (YOU)
-  const senderId = "090a96d0-6db1-4062-86ce-96bf4e14e499";
-  //const senderId = "ef1d2dba-75f0-43a6-8719-0fbdf53be3a8";
+  const { id } = useParams();
 
-  // 🧪 Hardcoded people (receivers)
-  const users = [
-    {
-      id: "ef1d2dba-75f0-43a6-8719-0fbdf53be3a8",
-      name: "User 1",
-      
-      //id : "090a96d0-6db1-4062-86ce-96bf4e14e499",
-      //name : "User 1"
-      //hello
-      //hiii
+  const [senderId, setSenderId] = useState(null);
+  const [receiverId, setReceiverId] = useState(null);
+  const [listingTitle, setListingTitle] = useState("");
+  const [sellerName, setSellerName] = useState("");
 
-    },
-    {
-      id: "6fb9d3bf-dc02-43f0-80db-695a34465f71",
-      name: "User 2",
-    },
-    {
-      id: "acb72f25-d32a-4a0a-855b-f58d509c2a2d",
-      name: "User 3",
-    },
-  ];
+  // ✅ Get logged-in user
+  useEffect(() => {
+    const getUser = async () => {
+      const { data } = await supabase.auth.getSession();
+      setSenderId(data.session?.user?.id);
+    };
 
-  const [selectedUser, setSelectedUser] = useState(null);
+    getUser();
+  }, []);
+
+  // ✅ FETCH FROM YOUR BACKEND (same as ListingDetails.jsx)
+  useEffect(() => {
+    const fetchListing = async () => {
+      try {
+        const res = await fetch(
+          `${import.meta.env.VITE_API_URL}/api/listings/${id}`
+        );
+
+        if (!res.ok) {
+          throw new Error("Failed to fetch listing");
+        }
+
+        const data = await res.json();
+
+        const listing = data.listing;
+
+        // ✅ THESE MATCH YOUR WORKING PAGE
+        setListingTitle(listing.title);
+        setReceiverId(listing.seller?.id);
+        setSellerName(listing.seller?.full_name || "Seller");
+
+      } catch (err) {
+        console.error("Fetch error:", err);
+      }
+    };
+
+    if (id) fetchListing();
+  }, [id]);
+
+  if (!senderId || !receiverId || !listingTitle) {
+    return <p className="p-6">Loading chat...</p>;
+  }
 
   return (
-    <div style={{ display: "flex", height: "100vh" }}>
+    <div style={{ display: "flex", flexDirection: "column", height: "100vh" }}>
       
-      {/* 👥 LEFT PANEL */}
+      {/* ✅ HEADER (NOW SAME AS LISTING PAGE) */}
       <div
         style={{
-          width: "30%",
-          borderRight: "1px solid #ccc",
-          padding: 10,
+          padding: "12px",
+          borderBottom: "1px solid #ccc",
+          background: "#fff",
         }}
       >
-        <h3>Chats</h3>
+        <h3 style={{ margin: 0 }}>
+          👤 {sellerName}
+        </h3>
 
-        {users.map((user) => (
-          <div
-            key={user.id}
-            onClick={() => setSelectedUser(user)}
-            style={{
-              padding: 10,
-              cursor: "pointer",
-              marginBottom: 5,
-              borderRadius: 5,
-              backgroundColor:
-                selectedUser?.id === user.id ? "#ddd" : "transparent",
-            }}
-          >
-            {user.name}
-          </div>
-        ))}
+        <p style={{ margin: 0, fontSize: "14px", color: "gray" }}>
+          📦 {listingTitle}
+        </p>
       </div>
 
-      {/* 💬 RIGHT PANEL */}
-      <div style={{ flex: 1, padding: 10 }}>
-        {selectedUser ? (
-          <>
-            <h3>Chat with {selectedUser.name}</h3>
-
-            <Chat
-              senderId={senderId}
-              receiverId={selectedUser.id}
-            />
-          </>
-        ) : (
-          <p>Select a user to start chatting</p>
-        )}
+      {/* Chat */}
+      <div style={{ flex: 1 }}>
+        <Chat
+          senderId={senderId}
+          receiverId={receiverId}
+          listingId={id}
+        />
       </div>
     </div>
   );

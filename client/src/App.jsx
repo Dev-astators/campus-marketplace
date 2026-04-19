@@ -51,7 +51,7 @@ function App() {
           <Route path="/student-dashboard" element={<StudentDashboard/>} />
           <Route path="/listing/:id" element={<ListingDetails />} />
           <Route path="/create-listing" element={<CreateListing />} />
-          <Route path="/chat" element={<ChatPage/>}/>
+          <Route path="/chat/:id" element={<ChatPage/>}/>
           <Route path="/seller-profile" element={<SellerProfilePage />} />
           <Route path="/messages" element={<MessagesPage />} />
         </Routes>

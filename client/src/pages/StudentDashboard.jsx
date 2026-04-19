@@ -1,13 +1,5 @@
 // src/pages/StudentDashboard.jsx
 
-/**
- * StudentDashboard page
- * Bundles Navbar, Sidebar, CategoryFilter and ListingsGrid.
- *
- * In production, replace MOCK_USER and MOCK_LISTINGS with
- * real data from your Supabase hooks / API calls.
- */
-
 import { useEffect, useState } from 'react';
 import Navbar from '../components/studentDashboard/Navbar';
 import Sidebar from '../components/studentDashboard/Sidebar';
@@ -20,17 +12,17 @@ const CATEGORIES = ['All Categories', 'Textbooks', 'Electronics', 'Furniture', '
 
 export default function StudentDashboard() {
   const navigate = useNavigate();
+
   const [activeNav, setActiveNav] = useState('marketplace');
   const [selectedCategory, setSelectedCategory] = useState('All Categories');
-  // const [search, setSearch] = useState(''); // for future search feature
   const [search, setSearch] = useState('');
 
   const [user, setUser] = useState(null);
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // ─────────────────────────────────────────────
-  // Fetch logged-in user
+  // ─────────────────────────────
+  // USER
   useEffect(() => {
     const getUser = async () => {
       const { data } = await supabase.auth.getSession();
@@ -44,8 +36,8 @@ export default function StudentDashboard() {
     getUser();
   }, []);
 
-  // ─────────────────────────────────────────────
-  // Fetch listings from backend
+  // ─────────────────────────────
+  // LISTINGS
   const fetchListings = async () => {
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/listings`);
@@ -62,8 +54,17 @@ export default function StudentDashboard() {
     fetchListings();
   }, []);
 
-  // ─────────────────────────────────────────────
-  // Filter listings
+  // ─────────────────────────────
+  // NAVIGATION HANDLER (🔥 THIS IS THE FIX)
+  const handleNavigate = (item) => {
+    setActiveNav(item);
+
+    if (item === 'messages') {
+      navigate('/messages');   // ✅ THIS MAKES IT WORK
+    }
+  };
+
+  // ─────────────────────────────
   const filteredListings = listings
     .filter(l =>
       selectedCategory === 'All Categories' ||
@@ -82,11 +83,14 @@ export default function StudentDashboard() {
 
       <div className="flex flex-1 overflow-hidden">
 
-        <Sidebar activeItem={activeNav} onNavigate={setActiveNav} />
+        {/* 🔥 IMPORTANT FIX HERE */}
+        <Sidebar
+          activeItem={activeNav}
+          onNavigate={handleNavigate}
+        />
 
         <main className="flex-1 overflow-y-auto px-8 py-6 flex flex-col gap-6">
 
-          {/* Greeting */}
           <section>
             <h1 className="text-2xl font-bold text-gray-800">
               Hello, {firstName}
@@ -94,7 +98,6 @@ export default function StudentDashboard() {
             <p className="text-sm text-gray-400">Welcome Back!</p>
           </section>
 
-          {/* Create listing button */}
           <button
             onClick={() => navigate('/create-listing')}
             className="bg-blue-600 text-white px-4 py-2 rounded-lg w-fit"
@@ -102,14 +105,12 @@ export default function StudentDashboard() {
             + Create Listing
           </button>
 
-          {/* Category filter */}
           <CategoryFilter
             categories={CATEGORIES}
             selected={selectedCategory}
             onSelect={setSelectedCategory}
           />
 
-          {/* Listings */}
           <ListingsGrid listings={filteredListings} loading={loading} />
 
         </main>
