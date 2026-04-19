@@ -66,7 +66,7 @@ export default function ListingDetails() {
 
   // Contact seller handler
   const handleContactSeller = () => {
-    navigate(`/chat/${listing.id}`);
+    navigate(`/chat/${listing.id}?seller=${listing.seller.id}`);
   };
 
   if (error) return <p className="p-6 text-red-500">Error: {error}</p>;
