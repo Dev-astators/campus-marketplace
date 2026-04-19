@@ -1,34 +1,30 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../config/supabaseClient";
 
-function Chat({ senderId, receiverId }) {
+function Chat({ senderId, receiverId, listingId }) {
   const [text, setText] = useState("");
   const [messages, setMessages] = useState([]);
 
-  // ✅ Load messages (lint-safe)
   useEffect(() => {
-    if (!receiverId) return;
+    if (!receiverId || !listingId) return;
 
     const fetchMessages = async () => {
       const { data, error } = await supabase
         .from("messages")
         .select("*")
+        .eq("listing_id", listingId)
         .or(
           `and(sender_id.eq.${senderId},receiver_id.eq.${receiverId}),and(sender_id.eq.${receiverId},receiver_id.eq.${senderId})`
         )
         .order("sent_at", { ascending: true });
 
-      if (!error) {
-        setMessages(data || []);
-      } else {
-        console.log(error.message);
-      }
+      if (!error) setMessages(data || []);
+      else console.log(error.message);
     };
 
     fetchMessages();
-  }, [receiverId, senderId]);
+  }, [receiverId, senderId, listingId]);
 
-  // 📤 Send message
   const sendMessage = async () => {
     if (!text.trim()) return;
 
@@ -37,7 +33,7 @@ function Chat({ senderId, receiverId }) {
         sender_id: senderId,
         receiver_id: receiverId,
         content: text,
-        listing_id: null,
+        listing_id: listingId,
         is_read: false,
         sent_at: new Date().toISOString(),
       },
@@ -50,10 +46,10 @@ function Chat({ senderId, receiverId }) {
 
     setText("");
 
-    // reload messages after sending
     const { data } = await supabase
       .from("messages")
       .select("*")
+      .eq("listing_id", listingId)
       .or(
         `and(sender_id.eq.${senderId},receiver_id.eq.${receiverId}),and(sender_id.eq.${receiverId},receiver_id.eq.${senderId})`
       )
@@ -65,15 +61,7 @@ function Chat({ senderId, receiverId }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
       
-      {/* 💬 CHAT AREA */}
-      <div
-        style={{
-          flex: 1,
-          overflowY: "auto",
-          padding: "10px",
-          background: "#f5f5f5",
-        }}
-      >
+      <div style={{ flex: 1, overflowY: "auto", padding: "10px", background: "#f5f5f5" }}>
         {messages.length === 0 && <p>No messages yet</p>}
 
         {messages.map((msg) => (
@@ -81,8 +69,7 @@ function Chat({ senderId, receiverId }) {
             key={msg.id}
             style={{
               marginBottom: "10px",
-              textAlign:
-                msg.sender_id === senderId ? "right" : "left",
+              textAlign: msg.sender_id === senderId ? "right" : "left",
             }}
           >
             <div
@@ -99,7 +86,6 @@ function Chat({ senderId, receiverId }) {
             </div>
 
             <br />
-
             <small style={{ fontSize: "10px" }}>
               {msg.sent_at
                 ? new Date(msg.sent_at).toLocaleTimeString()
@@ -109,27 +95,13 @@ function Chat({ senderId, receiverId }) {
         ))}
       </div>
 
-      {/* ✍️ INPUT AREA */}
-      <div
-        style={{
-          display: "flex",
-          gap: "10px",
-          padding: "10px",
-          borderTop: "1px solid #ccc",
-          background: "#fff",
-        }}
-      >
+      <div style={{ display: "flex", gap: "10px", padding: "10px", borderTop: "1px solid #ccc" }}>
         <input
           type="text"
           placeholder="Type a message..."
           value={text}
           onChange={(e) => setText(e.target.value)}
-          style={{
-            flex: 1,
-            padding: "10px",
-            borderRadius: "20px",
-            border: "1px solid #ccc",
-          }}
+          style={{ flex: 1, padding: "10px", borderRadius: "20px", border: "1px solid #ccc" }}
         />
 
         <button
@@ -140,7 +112,6 @@ function Chat({ senderId, receiverId }) {
             background: "#25D366",
             color: "#fff",
             border: "none",
-            cursor: "pointer",
           }}
         >
           Send
