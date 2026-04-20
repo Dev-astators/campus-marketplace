@@ -8,8 +8,6 @@ export default function MessagesPage() {
   const [selectedChatId, setSelectedChatId] = useState(null);
   const [newMessage, setNewMessage] = useState('');
 
-  // ─────────────────────────────
-  // GET USER (same as ChatPage dependency)
   useEffect(() => {
     const getUser = async () => {
       const { data } = await supabase.auth.getSession();
@@ -18,13 +16,10 @@ export default function MessagesPage() {
     getUser();
   }, []);
 
-  // ─────────────────────────────
-  // FETCH CHATS (FORCED CHAT-LIKE BEHAVIOR)
   useEffect(() => {
     const fetchChats = async () => {
       if (!currentUser) return;
 
-      // 1. MESSAGES (same as Chat.jsx logic base)
       const { data: messages, error } = await supabase
         .from('messages')
         .select(`
@@ -40,50 +35,47 @@ export default function MessagesPage() {
             seller_id
           )
         `)
-        .or(
-          `sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`
-        )
+        .or(`sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`)
         .order('sent_at', { ascending: true });
 
       if (error) {
-        console.error(error.message);
+        console.error("MESSAGES ERROR:", error.message);
         return;
       }
 
       if (!messages?.length) return;
 
-      // ─────────────────────────────
-      // 2. FORCE CHATPAGE STYLE SELLER LOOKUP
-      const sellerIds = [
-        ...new Set(messages.map(m => m.listings?.seller_id).filter(Boolean))
-      ];
-
+      // 🔥 Collect ALL user IDs
       const userIds = [
-        ...new Set([
-          ...messages.flatMap(m => [m.sender_id, m.receiver_id]),
-          ...sellerIds
-        ])
+        ...new Set(
+          messages.flatMap(m => [
+            m.sender_id,
+            m.receiver_id,
+            m.listings?.seller_id
+          ])
+        )
       ];
 
+      // 🔥 Fetch profiles
       const { data: profiles } = await supabase
         .from('profiles')
-        .select('auth_user_id, full_name')
+        .select('auth_user_id, full_name, email, username')
         .in('auth_user_id', userIds);
 
+      // 🔥 Create map
       const profileMap = new Map(
-        (profiles || []).map(p => [p.auth_user_id, p.full_name])
+        (profiles || []).map(p => [
+          p.auth_user_id,
+          p.full_name || p.username || p.email || null
+        ])
       );
 
-      // ─────────────────────────────
-      // CHAT GROUPING (Chat.jsx style grouping logic)
       const chatsMap = {};
 
       messages.forEach(msg => {
         const listing = msg.listings;
-
         if (!listing) return;
 
-        // FORCE seller as primary chat identity (ChatPage behavior)
         const sellerId = listing.seller_id;
 
         const otherUserId =
@@ -91,27 +83,28 @@ export default function MessagesPage() {
             ? msg.receiver_id
             : msg.sender_id;
 
-        // chat key = listing-based (same conversation scope as Chat.jsx)
-        const chatKey = listing.id;
+        const isCurrentUserSeller = currentUser.id === sellerId;
 
-        // FORCE name priority:
-        // 1. seller name (ChatPage style)
-        // 2. other user
-        const chatPartnerName =
-          profileMap.get(sellerId) ||
-          profileMap.get(otherUserId) ||
-          'Unknown User';
+        const chatPartnerId = isCurrentUserSeller
+          ? otherUserId
+          : sellerId;
+
+        // 🔥 SMART FALLBACK FIX
+        let chatPartnerName = profileMap.get(chatPartnerId);
+
+        if (!chatPartnerName) {
+          chatPartnerName = `User (${chatPartnerId.slice(0, 6)})`;
+        }
+
+        const chatKey = `${listing.id}-${chatPartnerId}`;
 
         if (!chatsMap[chatKey]) {
           chatsMap[chatKey] = {
             id: chatKey,
             listingId: listing.id,
             listingTitle: listing.title,
-
-            sellerId: sellerId,
-            chatPartnerId: sellerId, // FORCE seller dependency like ChatPage
+            chatPartnerId,
             chatPartnerName,
-
             messages: [],
           };
         }
@@ -127,20 +120,20 @@ export default function MessagesPage() {
         });
       });
 
-      setChats(Object.values(chatsMap));
-      setSelectedChatId(Object.keys(chatsMap)[0] || null);
+      const chatsArray = Object.values(chatsMap);
+
+      setChats(chatsArray);
+      setSelectedChatId(chatsArray[0]?.id || null);
     };
 
     fetchChats();
   }, [currentUser]);
 
-  // ─────────────────────────────
   const selectedChat = useMemo(
     () => chats.find(c => c.id === selectedChatId),
     [chats, selectedChatId]
   );
 
-  // ─────────────────────────────
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!newMessage.trim() || !selectedChat) return;
@@ -166,7 +159,6 @@ export default function MessagesPage() {
       <main className="flex-1 px-6 py-6">
         <div className="bg-white border rounded-2xl h-[calc(100vh-120px)] flex">
 
-          {/* LEFT */}
           <aside className="w-[320px] border-r overflow-y-auto">
             <div className="p-4 border-b">
               <h1 className="text-xl font-bold">Messages</h1>
@@ -188,9 +180,7 @@ export default function MessagesPage() {
             ))}
           </aside>
 
-          {/* RIGHT */}
           <section className="flex-1 flex flex-col">
-
             {selectedChat && (
               <>
                 <div className="p-4 border-b">
@@ -229,7 +219,6 @@ export default function MessagesPage() {
                 </form>
               </>
             )}
-
           </section>
         </div>
       </main>
