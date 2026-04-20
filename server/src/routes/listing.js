@@ -9,6 +9,7 @@ const {
   createListing,
 } = require("../services/listingService");
 const { validateListingInput } = require("../services/listingValidator");
+const { verifySession } = require("../middleware/authMiddleware");
 
 /**
  * GET /api/listings
@@ -29,26 +30,30 @@ router.get("/", async (req, res) => {
 /**
  * GET /api/listings/my/:sellerId
  * Returns active listings created by the authenticated seller.
+ * Auth is token-based (verifySession) and uses auth user id for authorization.
  */
-router.get("/my/:sellerId", async (req, res) => {
+router.get("/my/:sellerId", verifySession, async (req, res) => {
   const { sellerId } = req.params;
-  const authenticatedSellerId = req.profile?.id || req.user?.id;
+  const authenticatedAuthUserId = req.user?.id;
 
   if (!sellerId) {
     return res.status(400).json({ message: "sellerId is required" });
   }
 
-  if (!authenticatedSellerId) {
+  if (!authenticatedAuthUserId) {
     return res.status(401).json({ message: "Authentication required" });
   }
 
-  if (String(sellerId) !== String(authenticatedSellerId)) {
+  const isAuthorizedForSeller =
+    String(sellerId) === String(authenticatedAuthUserId);
+
+  if (!isAuthorizedForSeller) {
     return res.status(403).json({
       message: "You are not authorized to access another seller's listings",
     });
   }
 
-  const { data, error } = await getListingsBySellerId(authenticatedSellerId);
+  const { data, error } = await getListingsBySellerId(authenticatedAuthUserId);
   if (error) {
     return res.status(500).json({
       message: "Failed to fetch seller listings",
@@ -56,7 +61,7 @@ router.get("/my/:sellerId", async (req, res) => {
     });
   }
 
-  return res.status(200).json({ listings: data });
+  return res.status(200).json({ listings: data || [] });
 });
 
 /**
