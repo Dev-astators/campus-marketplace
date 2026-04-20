@@ -1,96 +1,67 @@
 // src/pages/StudentDashboard.jsx
 
-import { useEffect, useState } from 'react';
-import Navbar from '../components/studentDashboard/Navbar';
-import Sidebar from '../components/studentDashboard/Sidebar';
-import CategoryFilter from '../components/studentDashboard/CategoryFilter';
-import ListingsGrid from '../components/studentDashboard/ListingsGrid';
-import { supabase } from '../config/supabaseClient';
-import { useNavigate } from 'react-router-dom';
-
-const CATEGORIES = ['All Categories', 'Textbooks', 'Electronics', 'Furniture', 'Clothing'];
+import { useState } from "react";
+import Navbar from "../components/studentDashboard/Navbar";
+import Sidebar from "../components/studentDashboard/Sidebar";
+import CategoryFilter from "../components/studentDashboard/CategoryFilter";
+import ListingsGrid from "../components/studentDashboard/ListingsGrid";
+import ListingsFiltersPanel from "../components/studentDashboard/ListingsFiltersPanel";
+import { CATEGORIES } from "../components/studentDashboard/listingFiltersConfig";
+import useDashboardListings from "../hooks/useDashboardListings";
+import useListingFilters from "../hooks/useListingFilters";
+import { useNavigate } from "react-router-dom";
 
 export default function StudentDashboard() {
   const navigate = useNavigate();
 
-  const [activeNav, setActiveNav] = useState('marketplace');
-  const [selectedCategory, setSelectedCategory] = useState('All Categories');
-  const [search, setSearch] = useState('');
+  const [activeNav, setActiveNav] = useState("marketplace");
 
-  const [user, setUser] = useState(null);
-  const [listings, setListings] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // The dashboard page now acts as an orchestrator: hooks manage state/data,
+  // while child components handle presentation.
+  const { user, listings, loading } = useDashboardListings(activeNav);
+  const {
+    search,
+    setSearch,
+    selectedCategory,
+    setSelectedCategory,
+    selectedCondition,
+    setSelectedCondition,
+    minPrice,
+    setMinPrice,
+    maxPrice,
+    setMaxPrice,
+    sortBy,
+    setSortBy,
+    clearFilters,
+    filteredListings,
+    listingsHeading,
+  } = useListingFilters({ listings, activeNav });
 
-  // ─────────────────────────────
-  // USER
-  useEffect(() => {
-    const getUser = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (data.session) {
-        setUser({
-          name: data.session.user.email,
-          id: data.session.user.id
-        });
-      }
-    };
-    getUser();
-  }, []);
-
-  // ─────────────────────────────
-  // LISTINGS
-  const fetchListings = async () => {
-    try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/listings`);
-      const data = await res.json();
-      setListings(data.listings || []);
-    } catch (err) {
-      console.error('Failed to fetch listings:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchListings();
-  }, []);
-
-  // ─────────────────────────────
-  // NAVIGATION HANDLER (🔥 THIS IS THE FIX)
+  // Keep local tab navigation in-page, but route to dedicated pages where needed.
   const handleNavigate = (item) => {
     setActiveNav(item);
 
-    if (item === 'messages') {
-      navigate('/messages');   // ✅ THIS MAKES IT WORK
+    if (item === "messages") {
+      navigate("/messages"); // ✅ THIS MAKES IT WORK
     }
   };
 
-  // ─────────────────────────────
-  const filteredListings = listings
-    .filter(l =>
-      selectedCategory === 'All Categories' ||
-      l.category === selectedCategory
-    )
-    .filter(l =>
-      l.title.toLowerCase().includes(search.toLowerCase())
-    );
-
-  const firstName = user?.name?.split('@')[0] || 'Student';
+  const firstName = user?.name?.split("@")[0] || "Student";
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <section
+      className="min-h-screen flex flex-col bg-gray-50"
+      aria-label="Student dashboard"
+    >
+      <Navbar user={user} searchValue={search} onSearch={setSearch} />
 
-      <Navbar user={user} onSearch={setSearch} />
-
-      <div className="flex flex-1 overflow-hidden">
-
-        {/* 🔥 IMPORTANT FIX HERE */}
-        <Sidebar
-          activeItem={activeNav}
-          onNavigate={handleNavigate}
-        />
+      <section
+        className="flex flex-1 overflow-hidden"
+        aria-label="Dashboard workspace"
+      >
+        <Sidebar activeItem={activeNav} onNavigate={handleNavigate} />
 
         <main className="flex-1 overflow-y-auto px-8 py-6 flex flex-col gap-6">
-
           <section>
             <h1 className="text-2xl font-bold text-gray-800">
               Hello, {firstName}
@@ -99,7 +70,7 @@ export default function StudentDashboard() {
           </section>
 
           <button
-            onClick={() => navigate('/create-listing')}
+            onClick={() => navigate("/create-listing")}
             className="bg-blue-600 text-white px-4 py-2 rounded-lg w-fit"
           >
             + Create Listing
@@ -111,10 +82,25 @@ export default function StudentDashboard() {
             onSelect={setSelectedCategory}
           />
 
-          <ListingsGrid listings={filteredListings} loading={loading} />
+          <ListingsFiltersPanel
+            selectedCondition={selectedCondition}
+            onConditionChange={setSelectedCondition}
+            minPrice={minPrice}
+            onMinPriceChange={setMinPrice}
+            maxPrice={maxPrice}
+            onMaxPriceChange={setMaxPrice}
+            sortBy={sortBy}
+            onSortByChange={setSortBy}
+            onClearFilters={clearFilters}
+          />
 
+          <h2 className="text-lg font-semibold text-gray-700">
+            {listingsHeading}
+          </h2>
+
+          <ListingsGrid listings={filteredListings} loading={loading} />
         </main>
-      </div>
-    </div>
+      </section>
+    </section>
   );
 }

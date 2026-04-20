@@ -1,87 +1,128 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { supabase } from "../config/supabaseClient";
 import Chat from "../components/Chat";
+import { API_BASE_URL } from "../config/apiBaseUrl";
 
 export default function ChatPage() {
-  const { id } = useParams();
+  const { id: listingId } = useParams();
+  const [searchParams] = useSearchParams();
+  const sellerId = searchParams.get("seller");
 
-  const [senderId, setSenderId] = useState(null);
-  const [receiverId, setReceiverId] = useState(null);
-  const [listingTitle, setListingTitle] = useState("");
-  const [sellerName, setSellerName] = useState("");
+  const [user, setUser] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState("");
 
-  // ✅ Get logged-in user
+  // ─────────────────────────────
+  // GET CURRENT USER
   useEffect(() => {
     const getUser = async () => {
       const { data } = await supabase.auth.getSession();
-      setSenderId(data.session?.user?.id);
+      setUser(data.session?.user);
     };
 
     getUser();
   }, []);
 
-  // ✅ FETCH FROM YOUR BACKEND (same as ListingDetails.jsx)
+  // ─────────────────────────────
+  // FETCH MESSAGES (FIXED - no hook warnings)
   useEffect(() => {
-    const fetchListing = async () => {
+    if (!user || !sellerId || !listingId) return;
+
+    const fetchMessages = async () => {
       try {
         const res = await fetch(
-          `${import.meta.env.VITE_API_URL}/api/listings/${id}`
+          `${API_BASE_URL}/api/messages/${listingId}/${user.id}/${sellerId}`,
         );
 
-        if (!res.ok) {
-          throw new Error("Failed to fetch listing");
-        }
-
         const data = await res.json();
-
-        const listing = data.listing;
-
-        // ✅ THESE MATCH YOUR WORKING PAGE
-        setListingTitle(listing.title);
-        setReceiverId(listing.seller?.id);
-        setSellerName(listing.seller?.full_name || "Seller");
-
+        setMessages(data.messages || []);
       } catch (err) {
-        console.error("Fetch error:", err);
+        console.error("Error fetching messages:", err);
       }
     };
 
-    if (id) fetchListing();
-  }, [id]);
+    fetchMessages();
+  }, [user, sellerId, listingId]);
 
-  if (!senderId || !receiverId || !listingTitle) {
+  // ─────────────────────────────
+  // SEND MESSAGE
+  const handleSend = async () => {
+    if (!input.trim() || !user) return;
+
+    try {
+      await fetch(`${API_BASE_URL}/api/messages`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          listing_id: listingId,
+          sender_id: user.id,
+          receiver_id: sellerId,
+          content: input,
+        }),
+      });
+
+      setInput("");
+      // ❌ Do NOT refetch (Realtime will handle it)
+    } catch (err) {
+      console.error("Send message error:", err);
+    }
+  };
+
+  // ─────────────────────────────
+  // REALTIME SUBSCRIPTION (NO DUPLICATES)
+  useEffect(() => {
+    if (!user || !listingId) return;
+
+    const channel = supabase
+      .channel(`chat-${listingId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "messages",
+          filter: `listing_id=eq.${listingId}`,
+        },
+        (payload) => {
+          const newMessage = payload.new;
+
+          // 🔥 Prevent duplicates
+          setMessages((prev) => {
+            const exists = prev.some((msg) => msg.id === newMessage.id);
+            if (exists) return prev;
+            return [...prev, newMessage];
+          });
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, listingId]);
+
+  // ─────────────────────────────
+  if (!user) {
     return <p className="p-6">Loading chat...</p>;
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100vh" }}>
-      
-      {/* ✅ HEADER (NOW SAME AS LISTING PAGE) */}
-      <div
-        style={{
-          padding: "12px",
-          borderBottom: "1px solid #ccc",
-          background: "#fff",
-        }}
-      >
-        <h3 style={{ margin: 0 }}>
-          👤 {sellerName}
-        </h3>
+    <main
+      className="h-screen flex flex-col p-6 bg-gray-50"
+      aria-label="Chat page"
+    >
+      <h1 className="text-lg font-semibold mb-4">Chat</h1>
 
-        <p style={{ margin: 0, fontSize: "14px", color: "gray" }}>
-          📦 {listingTitle}
-        </p>
-      </div>
-
-      {/* Chat */}
-      <div style={{ flex: 1 }}>
+      <section className="flex-1" aria-label="Chat conversation">
         <Chat
-          senderId={senderId}
-          receiverId={receiverId}
-          listingId={id}
+          messages={messages}
+          currentUserId={user.id}
+          input={input}
+          setInput={setInput}
+          onSend={handleSend}
         />
-      </div>
-    </div>
+      </section>
+    </main>
   );
 }
