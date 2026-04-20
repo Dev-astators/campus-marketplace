@@ -9,10 +9,6 @@ export default function MessagesPage() {
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
 
-<<<<<<< HEAD
-=======
-  // ─────────────────────────────
->>>>>>> cb97de530d3673664b81f269e4d43623ffec2dc1
   useEffect(() => {
     const getUser = async () => {
       const { data } = await supabase.auth.getSession();
@@ -21,14 +17,9 @@ export default function MessagesPage() {
     getUser();
   }, []);
 
-<<<<<<< HEAD
-=======
-  // ─────────────────────────────
->>>>>>> cb97de530d3673664b81f269e4d43623ffec2dc1
   useEffect(() => {
     if (!user) return;
 
-<<<<<<< HEAD
       const { data: messages, error } = await supabase
         .from('messages')
         .select(`
@@ -51,28 +42,10 @@ export default function MessagesPage() {
         console.error("MESSAGES ERROR:", error.message);
         return;
       }
-=======
-    const fetchConversations = async () => {
-      try {
-        // 🔥 Get messages + listing + profiles
-        const { data, error } = await supabase
-          .from('messages')
-          .select(`
-            *,
-            listing:listings(title),
-            sender:profiles!messages_sender_id_fkey(full_name),
-            receiver:profiles!messages_receiver_id_fkey(full_name)
-          `)
-          .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
-          .order('sent_at', { ascending: false });
-
-        if (error) throw error;
->>>>>>> cb97de530d3673664b81f269e4d43623ffec2dc1
 
         // 🔥 GROUP CONVERSATIONS
         const grouped = {};
 
-<<<<<<< HEAD
       // 🔥 Collect ALL user IDs
       const userIds = [
         ...new Set(
@@ -145,52 +118,17 @@ export default function MessagesPage() {
             hour: '2-digit',
             minute: '2-digit',
           }),
-=======
-        data.forEach((msg) => {
-          const isSender = msg.sender_id === user.id;
-
-          const otherUserId = isSender
-            ? msg.receiver_id
-            : msg.sender_id;
-
-          const otherUserName = isSender
-            ? msg.receiver?.full_name
-            : msg.sender?.full_name;
-
-          const key = `${msg.listing_id}-${otherUserId}`;
-
-          if (!grouped[key]) {
-            grouped[key] = {
-              listing_id: msg.listing_id,
-              listing_title: msg.listing?.title,
-              otherUserId,
-              otherUserName,
-              lastMessage: msg.content,
-              sent_at: msg.sent_at,
-            };
-          }
->>>>>>> cb97de530d3673664b81f269e4d43623ffec2dc1
         });
 
-<<<<<<< HEAD
       const chatsArray = Object.values(chatsMap);
 
       setChats(chatsArray);
       setSelectedChatId(chatsArray[0]?.id || null);
-=======
-        setConversations(Object.values(grouped));
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
->>>>>>> cb97de530d3673664b81f269e4d43623ffec2dc1
     };
 
     fetchConversations();
   }, [user]);
 
-<<<<<<< HEAD
   const selectedChat = useMemo(
     () => chats.find(c => c.id === selectedChatId),
     [chats, selectedChatId]
@@ -212,11 +150,6 @@ export default function MessagesPage() {
 
     setNewMessage('');
     window.location.reload();
-=======
-  // ─────────────────────────────
-  const openChat = (conv) => {
-    navigate(`/chat/${conv.listing_id}?seller=${conv.otherUserId}`);
->>>>>>> cb97de530d3673664b81f269e4d43623ffec2dc1
   };
 
   // ─────────────────────────────
@@ -241,7 +174,6 @@ export default function MessagesPage() {
                 {conv.listing_title}
               </p>
 
-<<<<<<< HEAD
           <aside className="w-[320px] border-r overflow-y-auto">
             <div className="p-4 border-b">
               <h1 className="text-xl font-bold">Messages</h1>
@@ -303,24 +235,6 @@ export default function MessagesPage() {
               </>
             )}
           </section>
-=======
-              {/* User */}
-              <p className="text-sm font-semibold text-gray-800">
-                {conv.otherUserName}
-              </p>
-
-              {/* Last message */}
-              <p className="text-sm text-gray-600 truncate">
-                {conv.lastMessage}
-              </p>
-
-              {/* Time */}
-              <p className="text-xs text-gray-400 mt-1">
-                {new Date(conv.sent_at).toLocaleString()}
-              </p>
-            </div>
-          ))}
->>>>>>> cb97de530d3673664b81f269e4d43623ffec2dc1
         </div>
       )}
     </div>
