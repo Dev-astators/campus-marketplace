@@ -6,12 +6,14 @@ const { supabase } = require("../config/supabaseClient");
  */
 
 const getActiveListings = async () => {
+  // Description is selected so client keyword search can match title and description.
   const { data, error } = await supabase
     .from("listings")
     .select(
       `
       id,
       title,
+      description,
       price: asking_price,
       condition,
       category,
@@ -23,6 +25,36 @@ const getActiveListings = async () => {
     `,
     )
     .eq("status", "active")
+    .order("created_at", { ascending: false });
+
+  return { data, error };
+};
+
+/**
+ * Fetches active listings for a specific seller.
+ * Returns: { data: Listing[], error }
+ */
+const getListingsBySellerId = async (sellerId) => {
+  const { data, error } = await supabase
+    .from("listings")
+    .select(
+      `
+      id,
+      title,
+      description,
+      price: asking_price,
+      condition,
+      category,
+      listing_type,
+      status,
+      created_at,
+      seller_id,
+      listing_images (storage_path)
+    `,
+    )
+    // My Listings tab should only show listings created by the signed-in seller.
+    .eq("status", "active")
+    .eq("seller_id", sellerId)
     .order("created_at", { ascending: false });
 
   return { data, error };
@@ -78,4 +110,4 @@ const createListing = async ({
   return { data: listing, error: null };
 };
 
-module.exports = { getActiveListings, createListing };
+module.exports = { getActiveListings, getListingsBySellerId, createListing };

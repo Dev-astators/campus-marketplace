@@ -1,18 +1,19 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { supabase } from '../config/supabaseClient';
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "../config/supabaseClient";
+import { API_BASE_URL } from "../config/apiBaseUrl";
 
 export default function CreateListing() {
   const navigate = useNavigate();
   const [image, setImage] = useState(null);
 
   const [form, setForm] = useState({
-    title: '',
-    description: '',
-    category: 'Textbooks',
-    condition: 'good',
-    askingPrice: '',
-    listingType: 'sale'
+    title: "",
+    description: "",
+    category: "Textbooks",
+    condition: "good",
+    askingPrice: "",
+    listingType: "sale",
   });
 
   const handleChange = (e) => {
@@ -26,76 +27,74 @@ export default function CreateListing() {
     const sellerId = data.session?.user?.id;
 
     if (!sellerId) {
-        alert("You must be logged in");
-        return;
+      alert("You must be logged in");
+      return;
     }
 
     try {
-        // 1️⃣ Create listing FIRST
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/listings`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      // Persist the listing first, then attach image metadata if upload succeeds.
+      const res = await fetch(`${API_BASE_URL}/api/listings`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-            ...form,
-            askingPrice: Number(form.askingPrice),
-            sellerId
-        })
-        });
+          ...form,
+          askingPrice: Number(form.askingPrice),
+          sellerId,
+        }),
+      });
 
-        const dataRes = await res.json();
+      const dataRes = await res.json();
 
-        if (!res.ok) {
+      if (!res.ok) {
         console.error(dataRes);
         alert("Failed to create listing");
         return;
-        }
+      }
 
-        const listingId = dataRes.listing.id;
+      const listingId = dataRes.listing.id;
 
-        // 2️⃣ Upload image (if exists)
-        if (image) {
-        const fileExt = image.name.split('.').pop();
+      // 2️⃣ Upload image (if exists)
+      if (image) {
+        const fileExt = image.name.split(".").pop();
         const fileName = `${listingId}.${fileExt}`;
 
         const { error: uploadError } = await supabase.storage
-            .from('listing-images')
-            .upload(fileName, image);
+          .from("listing-images")
+          .upload(fileName, image);
 
         if (uploadError) {
-            console.error(uploadError);
-            alert("Image upload failed");
-            return;
+          console.error(uploadError);
+          alert("Image upload failed");
+          return;
         }
 
         // 3️⃣ Save image path in DB
-        await fetch(`${import.meta.env.VITE_API_URL}/api/listings/${listingId}/images`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-            storage_path: fileName
-            })
+        await fetch(`${API_BASE_URL}/api/listings/${listingId}/images`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            storage_path: fileName,
+          }),
         });
-        }
+      }
 
-        navigate('/student-dashboard');
-
+      navigate("/student-dashboard");
     } catch (err) {
-        console.error(err);
-        alert("Error creating listing");
+      console.error(err);
+      alert("Error creating listing");
     }
-    };
+  };
 
   return (
-    <div className="p-8 max-w-xl mx-auto">
+    <main className="p-8 max-w-xl mx-auto" aria-label="Create listing page">
       <h1 className="text-2xl font-bold mb-6">Create Listing</h1>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-
         <input
-        type="file"
-        accept="image/*"
-        onChange={(e) => setImage(e.target.files[0])}
-        className="border p-2 rounded"
+          type="file"
+          accept="image/*"
+          onChange={(e) => setImage(e.target.files[0])}
+          className="border p-2 rounded"
         />
 
         <input
@@ -115,15 +114,24 @@ export default function CreateListing() {
           className="border p-2 rounded"
         />
 
-        <select name="category" value={form.category} onChange={handleChange} className="border p-2 rounded">
+        <select
+          name="category"
+          value={form.category}
+          onChange={handleChange}
+          className="border p-2 rounded"
+        >
           <option>Textbooks</option>
           <option>Electronics</option>
           <option>Furniture</option>
           <option>Clothing</option>
-          <option>Other</option>
         </select>
 
-        <select name="condition" value={form.condition} onChange={handleChange} className="border p-2 rounded">
+        <select
+          name="condition"
+          value={form.condition}
+          onChange={handleChange}
+          className="border p-2 rounded"
+        >
           <option value="new">New</option>
           <option value="like_new">Like New</option>
           <option value="good">Good</option>
@@ -141,20 +149,21 @@ export default function CreateListing() {
           required
         />
 
-        <select name="listingType" value={form.listingType} onChange={handleChange} className="border p-2 rounded">
+        <select
+          name="listingType"
+          value={form.listingType}
+          onChange={handleChange}
+          className="border p-2 rounded"
+        >
           <option value="sale">Sale</option>
           <option value="trade">Trade</option>
           <option value="both">Both</option>
         </select>
 
-        <button
-          type="submit"
-          className="bg-blue-600 text-white py-2 rounded"
-        >
+        <button type="submit" className="bg-blue-600 text-white py-2 rounded">
           Create Listing
         </button>
-
       </form>
-    </div>
+    </main>
   );
 }
