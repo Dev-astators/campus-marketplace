@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { supabase } from '../config/supabaseClient';
+import { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { supabase } from "../config/supabaseClient";
+import { API_BASE_URL } from "../config/apiBaseUrl";
 
 export default function ListingDetails() {
   const { id } = useParams();
@@ -24,7 +25,7 @@ export default function ListingDetails() {
   useEffect(() => {
     const fetchListing = async () => {
       try {
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/listings/${id}`);
+        const res = await fetch(`${API_BASE_URL}/api/listings/${id}`);
 
         if (!res.ok) {
           const text = await res.text();
@@ -45,18 +46,20 @@ export default function ListingDetails() {
 
   // Delete handler
   const handleDelete = async () => {
-    const confirmed = window.confirm("Are you sure you want to delete this listing?");
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this listing?",
+    );
     if (!confirmed) return;
 
     setDeleting(true);
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/listings/${listing.id}`, {
-        method: 'DELETE',
+      const res = await fetch(`${API_BASE_URL}/api/listings/${listing.id}`, {
+        method: "DELETE",
       });
 
       if (!res.ok) throw new Error("Failed to delete listing");
 
-      navigate('/student-dashboard');
+      navigate("/student-dashboard");
     } catch (err) {
       console.error("Delete error:", err);
       alert("Something went wrong while deleting. Please try again.");
@@ -80,29 +83,27 @@ export default function ListingDetails() {
   const isLoggedInBuyer = userId && !isOwner;
 
   return (
-    <div className="p-8 max-w-2xl">
-
+    <article className="p-8 max-w-2xl" aria-label="Listing details">
       {/* Title */}
       <h1 className="text-2xl font-bold">{listing.title}</h1>
 
       {/* Seller info */}
-      <div className="mt-2">
+      <section className="mt-2" aria-label="Seller information">
         <p className="text-sm text-gray-700">
-          Sold by: <span className="font-medium">{listing.seller?.full_name || 'Unknown'}</span>
+          Sold by:{" "}
+          <span className="font-medium">
+            {listing.seller?.full_name || "Unknown"}
+          </span>
         </p>
         <p className="text-sm text-yellow-600">
-          ⭐ {listing.seller?.average_rating?.toFixed(1) || '0.0'}
-          ({listing.seller?.total_ratings || 0} reviews)
+          ⭐ {listing.seller?.average_rating?.toFixed(1) || "0.0"}(
+          {listing.seller?.total_ratings || 0} reviews)
         </p>
-      </div>
+      </section>
 
       {/* Image */}
       {imageUrl && (
-        <img
-          src={imageUrl}
-          className="w-96 mt-4 rounded-xl"
-          alt="listing"
-        />
+        <img src={imageUrl} className="w-96 mt-4 rounded-xl" alt="listing" />
       )}
 
       {/* Description */}
@@ -116,8 +117,10 @@ export default function ListingDetails() {
       <p className="text-sm text-gray-500">{listing.category}</p>
 
       {/* ── Action Buttons ── */}
-      <div className="mt-6 flex flex-wrap gap-3">
-
+      <footer
+        className="mt-6 flex flex-wrap gap-3"
+        aria-label="Listing actions"
+      >
         {/* Delete — only visible to the owner */}
         {isOwner && (
           <button
@@ -125,7 +128,7 @@ export default function ListingDetails() {
             disabled={deleting}
             className="bg-red-500 hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium px-5 py-2 rounded-lg transition-colors"
           >
-            {deleting ? 'Deleting...' : 'Delete Listing'}
+            {deleting ? "Deleting..." : "Delete Listing"}
           </button>
         )}
 
@@ -138,8 +141,7 @@ export default function ListingDetails() {
             Contact Seller
           </button>
         )}
-
-      </div>
-    </div>
+      </footer>
+    </article>
   );
 }

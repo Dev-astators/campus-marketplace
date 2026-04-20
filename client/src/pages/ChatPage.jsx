@@ -1,16 +1,17 @@
-import { useEffect, useState } from 'react';
-import { useParams, useSearchParams } from 'react-router-dom';
-import { supabase } from '../config/supabaseClient';
-import Chat from '../components/Chat';
+import { useEffect, useState } from "react";
+import { useParams, useSearchParams } from "react-router-dom";
+import { supabase } from "../config/supabaseClient";
+import Chat from "../components/Chat";
+import { API_BASE_URL } from "../config/apiBaseUrl";
 
 export default function ChatPage() {
   const { id: listingId } = useParams();
   const [searchParams] = useSearchParams();
-  const sellerId = searchParams.get('seller');
+  const sellerId = searchParams.get("seller");
 
   const [user, setUser] = useState(null);
   const [messages, setMessages] = useState([]);
-  const [input, setInput] = useState('');
+  const [input, setInput] = useState("");
 
   // ─────────────────────────────
   // GET CURRENT USER
@@ -31,13 +32,13 @@ export default function ChatPage() {
     const fetchMessages = async () => {
       try {
         const res = await fetch(
-          `${import.meta.env.VITE_API_URL}/api/messages/${listingId}/${user.id}/${sellerId}`
+          `${API_BASE_URL}/api/messages/${listingId}/${user.id}/${sellerId}`,
         );
 
         const data = await res.json();
         setMessages(data.messages || []);
       } catch (err) {
-        console.error('Error fetching messages:', err);
+        console.error("Error fetching messages:", err);
       }
     };
 
@@ -50,21 +51,21 @@ export default function ChatPage() {
     if (!input.trim() || !user) return;
 
     try {
-      await fetch(`${import.meta.env.VITE_API_URL}/api/messages`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      await fetch(`${API_BASE_URL}/api/messages`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           listing_id: listingId,
           sender_id: user.id,
           receiver_id: sellerId,
-          content: input
-        })
+          content: input,
+        }),
       });
 
-      setInput('');
+      setInput("");
       // ❌ Do NOT refetch (Realtime will handle it)
     } catch (err) {
-      console.error('Send message error:', err);
+      console.error("Send message error:", err);
     }
   };
 
@@ -76,12 +77,12 @@ export default function ChatPage() {
     const channel = supabase
       .channel(`chat-${listingId}`)
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'messages',
-          filter: `listing_id=eq.${listingId}`
+          event: "INSERT",
+          schema: "public",
+          table: "messages",
+          filter: `listing_id=eq.${listingId}`,
         },
         (payload) => {
           const newMessage = payload.new;
@@ -92,7 +93,7 @@ export default function ChatPage() {
             if (exists) return prev;
             return [...prev, newMessage];
           });
-        }
+        },
       )
       .subscribe();
 
@@ -107,10 +108,13 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="h-screen flex flex-col p-6 bg-gray-50">
+    <main
+      className="h-screen flex flex-col p-6 bg-gray-50"
+      aria-label="Chat page"
+    >
       <h1 className="text-lg font-semibold mb-4">Chat</h1>
 
-      <div className="flex-1">
+      <section className="flex-1" aria-label="Chat conversation">
         <Chat
           messages={messages}
           currentUserId={user.id}
@@ -118,7 +122,7 @@ export default function ChatPage() {
           setInput={setInput}
           onSend={handleSend}
         />
-      </div>
-    </div>
+      </section>
+    </main>
   );
 }
