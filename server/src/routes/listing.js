@@ -28,17 +28,27 @@ router.get("/", async (req, res) => {
 
 /**
  * GET /api/listings/my/:sellerId
- * Returns active listings created by a specific seller.
+ * Returns active listings created by the authenticated seller.
  */
 router.get("/my/:sellerId", async (req, res) => {
   const { sellerId } = req.params;
+  const authenticatedSellerId = req.profile?.id || req.user?.id;
 
   if (!sellerId) {
     return res.status(400).json({ message: "sellerId is required" });
   }
 
-  const { data, error } = await getListingsBySellerId(sellerId);
+  if (!authenticatedSellerId) {
+    return res.status(401).json({ message: "Authentication required" });
+  }
 
+  if (String(sellerId) !== String(authenticatedSellerId)) {
+    return res.status(403).json({
+      message: "You are not authorized to access another seller's listings",
+    });
+  }
+
+  const { data, error } = await getListingsBySellerId(authenticatedSellerId);
   if (error) {
     return res.status(500).json({
       message: "Failed to fetch seller listings",
