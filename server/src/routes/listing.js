@@ -40,12 +40,10 @@ router.get("/my/:sellerId", async (req, res) => {
   const { data, error } = await getListingsBySellerId(sellerId);
 
   if (error) {
-    return res
-      .status(500)
-      .json({
-        message: "Failed to fetch seller listings",
-        error: error.message,
-      });
+    return res.status(500).json({
+      message: "Failed to fetch seller listings",
+      error: error.message,
+    });
   }
 
   return res.status(200).json({ listings: data });
@@ -110,6 +108,7 @@ router.get("/:id", async (req, res) => {
         price: asking_price,
         condition,
         category,
+        listing_type,
         seller:profiles!listings_seller_id_fkey (
           id,
           full_name,
@@ -150,11 +149,25 @@ router.delete("/:id", async (req, res) => {
   res.json({ success: true });
 });
 
-// Update listing (for testing purposes)
+// Update listing details from the owner edit form on ListingDetails page.
+// Accepts the same editable fields shown in the client UI.
 router.put("/:id", async (req, res) => {
   const { id } = req.params;
 
-  const { title, description, askingPrice } = req.body;
+  const { title, description, askingPrice, category, condition, listingType } =
+    req.body;
+
+  const { valid, errors } = validateListingInput({
+    title,
+    category,
+    condition,
+    askingPrice,
+    listingType,
+  });
+
+  if (!valid) {
+    return res.status(400).json({ message: "Validation failed", errors });
+  }
 
   const { data, error } = await supabase
     .from("listings")
@@ -162,12 +175,15 @@ router.put("/:id", async (req, res) => {
       title,
       description,
       asking_price: askingPrice,
+      category,
+      condition,
+      listing_type: listingType,
     })
     .eq("id", id)
     .select()
     .single();
 
-  if (error) return res.status(500).json({ error });
+  if (error) return res.status(500).json({ error: error.message });
 
   res.json({ listing: data });
 });
