@@ -43,7 +43,24 @@ export default function useDashboardListings(activeNav) {
     setLoading(true);
 
     try {
-      const res = await fetch(endpoint);
+      let requestOptions = undefined;
+
+      if (navItem === "my-listings") {
+        const { data } = await supabase.auth.getSession();
+        const accessToken = data.session?.access_token;
+
+        if (!accessToken) {
+          throw new Error("Missing access token for My Listings");
+        }
+
+        requestOptions = {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        };
+      }
+
+      const res = await fetch(endpoint, requestOptions);
 
       if (!res.ok) {
         throw new Error(`Failed to fetch listings: ${res.status}`);
