@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { supabase } from './config/supabaseClient';
 import './App.css'
@@ -12,10 +12,15 @@ import CreateListing from './pages/CreateListing';
 import ChatPage from './pages/ChatPage';
 import SellerProfilePage from './pages/SellerProfilePage';
 import MessagesPage from './pages/MessagesPage';
+import AuthCallback from './pages/AuthCallback';
+import ProtectedRoute from "./components/ProtectedRoute";
+import Onboarding from "./components/Onboarding";
 
 
 function App() {
   const [session, setSession] = useState(null);
+  const [hasRedirected, setHasRedirected] = useState(false);
+  const navigate = useNavigate(); // ✅
 
   useEffect(() => {
     const getSession = async () => {
@@ -40,22 +45,60 @@ function App() {
     }
   }, [session]);
 
+  useEffect(() => {
+    const checkUserRole = async () => {
+      if (!session || hasRedirected) return;
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", session.user.id)
+        .single();
+
+      if (!profile) return;
+
+      setHasRedirected(true); // ✅ prevents loop
+
+      if (profile.role === "student") {
+        navigate("/student-dashboard");
+      } else if (profile.role === "facility_staff") {
+        navigate("/staff-dashboard");
+      }
+    };
+
+    checkUserRole();
+  }, [session, hasRedirected, navigate]);
+
   return (
     <>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<WelcomePage />} />
-          <Route path="/signin" element={<SignInPage />} />
-          <Route path="/signup" element={<SignUpPage />} />
-          <Route path="/staff-dashboard" element={<StaffDashboard />} />
-          <Route path="/student-dashboard" element={<StudentDashboard/>} />
-          <Route path="/listing/:id" element={<ListingDetails />} />
-          <Route path="/create-listing" element={<CreateListing />} />
-          <Route path="/chat/:id" element={<ChatPage/>}/>
-          <Route path="/seller-profile" element={<SellerProfilePage />} />
-          <Route path="/messages" element={<MessagesPage />} />
-        </Routes>
-      </BrowserRouter>
+      <Routes>
+        <Route path="/" element={<WelcomePage />} />
+        <Route path="/signin" element={<SignInPage />} />
+        <Route path="/signup" element={<SignUpPage />} />
+
+        <Route path="/staff-dashboard" element={
+          <ProtectedRoute allowedRoles={["facility_staff"]}>
+            <StaffDashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/student-dashboard" element={
+          <ProtectedRoute allowedRoles={["student"]}>
+            <StudentDashboard />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/listing/:id" element={<ListingDetails />} />
+        <Route path="/create-listing" element={<CreateListing />} />
+        <Route path="/chat/:id" element={<ChatPage/>}/>
+        <Route path="/seller-profile" element={<SellerProfilePage />} />
+        <Route path="/messages" element={<MessagesPage />} />
+        <Route path="/auth/callback" element={<AuthCallback />} />
+        <Route path="/onboarding" element={
+          <ProtectedRoute allowedRoles={["student", "facility_staff"]}>
+            <Onboarding />
+          </ProtectedRoute>
+        } />
+      </Routes>
     </>
   )
 
