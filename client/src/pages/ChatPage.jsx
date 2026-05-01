@@ -14,25 +14,22 @@ export default function ChatPage() {
   const [input, setInput] = useState("");
 
   // ─────────────────────────────
-  // GET CURRENT USER
   useEffect(() => {
     const getUser = async () => {
       const { data } = await supabase.auth.getSession();
       setUser(data.session?.user);
     };
-
     getUser();
   }, []);
 
   // ─────────────────────────────
-  // FETCH MESSAGES (FIXED - no hook warnings)
   useEffect(() => {
     if (!user || !sellerId || !listingId) return;
 
     const fetchMessages = async () => {
       try {
         const res = await fetch(
-          `${API_BASE_URL}/api/messages/${listingId}/${user.id}/${sellerId}`,
+          `${API_BASE_URL}/api/messages/${listingId}/${user.id}/${sellerId}`
         );
 
         const data = await res.json();
@@ -46,9 +43,21 @@ export default function ChatPage() {
   }, [user, sellerId, listingId]);
 
   // ─────────────────────────────
-  // SEND MESSAGE
+  // ✅ FIXED: Optimistic UI update
   const handleSend = async () => {
     if (!input.trim() || !user) return;
+
+    const tempMessage = {
+      id: Date.now(), // temporary unique id
+      listing_id: listingId,
+      sender_id: user.id,
+      receiver_id: sellerId,
+      content: input,
+      sent_at: new Date().toISOString(),
+    };
+
+    // 🔥 Show immediately
+    setMessages((prev) => [...prev, tempMessage]);
 
     try {
       await fetch(`${API_BASE_URL}/api/messages`, {
@@ -63,14 +72,12 @@ export default function ChatPage() {
       });
 
       setInput("");
-      // ❌ Do NOT refetch (Realtime will handle it)
     } catch (err) {
       console.error("Send message error:", err);
     }
   };
 
   // ─────────────────────────────
-  // REALTIME SUBSCRIPTION (NO DUPLICATES)
   useEffect(() => {
     if (!user || !listingId) return;
 
@@ -87,13 +94,12 @@ export default function ChatPage() {
         (payload) => {
           const newMessage = payload.new;
 
-          // 🔥 Prevent duplicates
           setMessages((prev) => {
             const exists = prev.some((msg) => msg.id === newMessage.id);
             if (exists) return prev;
             return [...prev, newMessage];
           });
-        },
+        }
       )
       .subscribe();
 
@@ -108,13 +114,10 @@ export default function ChatPage() {
   }
 
   return (
-    <main
-      className="h-screen flex flex-col p-6 bg-gray-50"
-      aria-label="Chat page"
-    >
+    <main className="h-screen flex flex-col p-6 bg-gray-50">
       <h1 className="text-lg font-semibold mb-4">Chat</h1>
 
-      <section className="flex-1" aria-label="Chat conversation">
+      <section className="flex-1">
         <Chat
           messages={messages}
           currentUserId={user.id}

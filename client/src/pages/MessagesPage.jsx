@@ -19,62 +19,81 @@ export default function MessagesPage() {
   }, []);
 
   // ─────────────────────────────
+  const fetchConversations = async (currentUser) => {
+    try {
+      const { data, error } = await supabase
+        .from('messages')
+        .select(`
+          *,
+          listing:listings(title),
+          sender:profiles!messages_sender_id_fkey(full_name),
+          receiver:profiles!messages_receiver_id_fkey(full_name)
+        `)
+        .or(`sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`)
+        .order('sent_at', { ascending: false });
+
+      if (error) throw error;
+
+      const grouped = {};
+
+      data.forEach((msg) => {
+        const isSender = msg.sender_id === currentUser.id;
+
+        const otherUserId = isSender
+          ? msg.receiver_id
+          : msg.sender_id;
+
+        const otherUserName = isSender
+          ? msg.receiver?.full_name
+          : msg.sender?.full_name;
+
+        const key = `${msg.listing_id}-${otherUserId}`;
+
+        if (!grouped[key]) {
+          grouped[key] = {
+            listing_id: msg.listing_id,
+            listing_title: msg.listing?.title,
+            otherUserId,
+            otherUserName,
+            lastMessage: msg.content,
+            sent_at: msg.sent_at,
+          };
+        }
+      });
+
+      setConversations(Object.values(grouped));
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ─────────────────────────────
   useEffect(() => {
     if (!user) return;
 
-    const fetchConversations = async () => {
-      try {
-        // 🔥 Get messages + listing + profiles
-        const { data, error } = await supabase
-          .from('messages')
-          .select(`
-            *,
-            listing:listings(title),
-            sender:profiles!messages_sender_id_fkey(full_name),
-            receiver:profiles!messages_receiver_id_fkey(full_name)
-          `)
-          .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
-          .order('sent_at', { ascending: false });
+    fetchConversations(user);
 
-        if (error) throw error;
+    // ✅ REALTIME FIX
+    const channel = supabase
+      .channel('messages-page')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+        },
+        () => {
+          fetchConversations(user); // 🔥 refresh automatically
+        }
+      )
+      .subscribe();
 
-        // 🔥 GROUP CONVERSATIONS
-        const grouped = {};
-
-        data.forEach((msg) => {
-          const isSender = msg.sender_id === user.id;
-
-          const otherUserId = isSender
-            ? msg.receiver_id
-            : msg.sender_id;
-
-          const otherUserName = isSender
-            ? msg.receiver?.full_name
-            : msg.sender?.full_name;
-
-          const key = `${msg.listing_id}-${otherUserId}`;
-
-          if (!grouped[key]) {
-            grouped[key] = {
-              listing_id: msg.listing_id,
-              listing_title: msg.listing?.title,
-              otherUserId,
-              otherUserName,
-              lastMessage: msg.content,
-              sent_at: msg.sent_at,
-            };
-          }
-        });
-
-        setConversations(Object.values(grouped));
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
+    return () => {
+      supabase.removeChannel(channel);
     };
-
-    fetchConversations();
   }, [user]);
 
   // ─────────────────────────────
@@ -99,22 +118,18 @@ export default function MessagesPage() {
               onClick={() => openChat(conv)}
               className="bg-white p-4 rounded-xl border hover:shadow cursor-pointer transition"
             >
-              {/* Listing */}
               <p className="text-xs text-blue-600 font-medium">
                 {conv.listing_title}
               </p>
 
-              {/* User */}
               <p className="text-sm font-semibold text-gray-800">
                 {conv.otherUserName}
               </p>
 
-              {/* Last message */}
               <p className="text-sm text-gray-600 truncate">
                 {conv.lastMessage}
               </p>
 
-              {/* Time */}
               <p className="text-xs text-gray-400 mt-1">
                 {new Date(conv.sent_at).toLocaleString()}
               </p>
