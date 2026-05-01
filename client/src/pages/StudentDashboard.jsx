@@ -50,7 +50,7 @@ export default function StudentDashboard() {
 
   return (
     <section
-      className="min-h-screen flex flex-col bg-gray-50"
+      className="h-screen flex flex-col bg-gray-50 overflow-hidden"
       aria-label="Student dashboard"
     >
       <Navbar user={user} searchValue={search} onSearch={setSearch} />

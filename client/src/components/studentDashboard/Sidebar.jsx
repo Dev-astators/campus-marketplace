@@ -73,27 +73,6 @@ const NAV_ITEMS = [
     ),
   },
   {
-    key: "post-new-item",
-    label: "Post New Item",
-    icon: (
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-        strokeWidth={1.8}
-        stroke="currentColor"
-        className="w-5 h-5"
-        aria-hidden="true"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M12 4.5v15m7.5-7.5h-15"
-        />
-      </svg>
-    ),
-  },
-  {
     key: "profile",
     label: "Profile Settings",
     icon: (
@@ -118,7 +97,7 @@ const NAV_ITEMS = [
 
 export default function Sidebar({ activeItem = "marketplace", onNavigate }) {
   return (
-    <aside className="w-44 shrink-0 bg-white border-r border-gray-200 flex flex-col pt-6 px-3">
+    <aside className="w-44 shrink-0 bg-white border-r border-gray-200 flex flex-col pt-6 px-3 sticky top-0 h-full">
       {/* Dashboard label */}
       <header className="px-2 mb-6">
         <p className="text-sm font-bold text-blue-700">Student Dashboard</p>
