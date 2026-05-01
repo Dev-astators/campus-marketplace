@@ -3,12 +3,13 @@ const express = require('express');
 const router = express.Router();
 const { getActiveListings, createListing } = require('../services/listingService');
 const { validateListingInput } = require('../services/listingValidator');
-
+const {verifySession, requireRole, attachProfile} = require('../middleware/authMiddleware');
+const {validateListing} = require('../middleware/validateListing');
 /**
  * GET /api/listings
  * Returns all active listings. Accessible to authenticated students.
  */
-router.get('/', async (req, res) => {
+router.get('/', verifySession,attachProfile,async (req, res) => {
   const { data, error } = await getActiveListings();
 
   if (error) {
@@ -18,39 +19,61 @@ router.get('/', async (req, res) => {
   return res.status(200).json({ listings: data });
 });
 
+
+/**
+ * GET /api/listings/suggested-price
+ * Returns a suggested price range based on Stats SA CPI data.
+ * Accessible to any authenticated user.
+ * Query params: category, askingPrice
+ */
+router.get('/suggested-price', verifySession, attachProfile,(req, res) => {
+  const { category, askingPrice } = req.query;
+
+  if (!category || !askingPrice) {
+    return res.status(400).json({ message: 'category and askingPrice are required' });
+  }
+
+  const price = parseFloat(askingPrice);
+
+  if (isNaN(price) || price <= 0) {
+    return res.status(400).json({ message: 'askingPrice must be a positive number' });
+  }
+
+  const suggestion = getSuggestedPriceRange(price, category);
+
+  if (!suggestion) {
+    return res.status(404).json({ message: `No CPI data available for category: ${category}` });
+  }
+
+  return res.status(200).json({ suggestion });
+});
+
 /**
  * POST /api/listings
- * Creates a new listing. Accessible to facility_staff only.
+ * Creates a new listing.
+ * Accessible to students only.
+ * Middleware chain:
+ *   1. verifySession   — is the user signed in?
+ *   2. attachProfile   — who are they? sets req.profile
+ *   3. requireRole     — are they a student?
+ *   4. validateListing — is the input valid? sets req.validatedListing
+ *   5. handler         — just does the DB insert
  */
-router.post('/', async (req, res) => {
-  const { title, description, category, condition, askingPrice, listingType } = req.body;
-  const sellerId = req.body.sellerId;
+router.post(
+  '/',
+  verifySession,
+  attachProfile,
+  requireRole('student'),
+  validateListing,
+  async (req, res) => {
+    const { data, error } = await createListing(req.validatedListing);
 
-  if (!sellerId) {
-    return res.status(400).json({ message: 'sellerId is required' });
+    if (error) {
+      return res.status(500).json({ message: 'Failed to create listing', error: error.message });
+    }
+
+    return res.status(201).json({ listing: data });
   }
-
-  const { valid, errors } = validateListingInput({ title, category, condition, askingPrice, listingType });
-
-  if (!valid) {
-    return res.status(400).json({ message: 'Validation failed', errors });
-  }
-
-  const { data, error } = await createListing({
-    sellerId,
-    title,
-    description,
-    category,
-    condition,
-    askingPrice,
-    listingType,
-  });
-
-  if (error) {
-    return res.status(500).json({ message: 'Failed to create listing', error: error.message });
-  }
-
-  return res.status(201).json({ listing: data });
-});
+);
 
 module.exports = router;

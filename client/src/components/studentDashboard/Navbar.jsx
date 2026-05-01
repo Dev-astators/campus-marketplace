@@ -7,7 +7,7 @@
  *  - user: { name: string, avatarUrl: string | null }
  */
 
-export default function Navbar({ user }) {
+export default function Navbar({ user, searchValue = "", onSearch }) {
   return (
     <header className="w-full bg-gray-100 px-6 py-3 flex items-center gap-6 border-b border-gray-200">
       {/* Brand */}
@@ -23,12 +23,10 @@ export default function Navbar({ user }) {
       <form
         className="flex-1 max-w-xl"
         role="search"
-        onSubmit={(event) => event.preventDefault()}
+        onSubmit={(e) => e.preventDefault()}
       >
-        <label htmlFor="search-input" className="sr-only">
-          Search listings
-        </label>
-        <div className="relative">
+        <fieldset className="relative border-0 m-0 p-0">
+          <legend className="sr-only">Search listings</legend>
           <svg
             className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4"
             xmlns="http://www.w3.org/2000/svg"
@@ -48,9 +46,11 @@ export default function Navbar({ user }) {
             id="search-input"
             type="search"
             placeholder="Search"
+            value={searchValue}
+            onChange={(e) => onSearch(e.target.value)}
             className="w-full pl-9 pr-4 py-2 rounded-full bg-white border border-gray-200 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-300"
           />
-        </div>
+        </fieldset>
       </form>
 
       {/* User info */}
