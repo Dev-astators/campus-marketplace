@@ -2,7 +2,10 @@ import { HERO_STATS } from "./dashboardData";
 
 export default function HeroBanner() {
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-[#1a2744] px-9 py-8 flex items-center justify-between gap-6">
+    <section
+      className="relative overflow-hidden rounded-2xl bg-[#1a2744] px-9 py-8 flex items-center justify-between gap-6"
+      aria-label="Staff overview"
+    >
       {/* Background glows */}
       <div className="pointer-events-none absolute -top-16 -right-16 w-72 h-72 rounded-full bg-blue-500/20 blur-3xl" />
       <div className="pointer-events-none absolute -bottom-12 left-1/3 w-52 h-52 rounded-full bg-sky-400/10 blur-2xl" />
@@ -19,18 +22,18 @@ export default function HeroBanner() {
       </div>
 
       {/* Stats */}
-      <div className="relative z-10 flex gap-3 shrink-0">
+      <ul className="relative z-10 flex gap-3 shrink-0" role="list">
         {HERO_STATS.map((stat) => (
           <StatCard key={stat.label} {...stat} />
         ))}
-      </div>
-    </div>
+      </ul>
+    </section>
   );
 }
 
 function StatCard({ label, value, sub }) {
   return (
-    <div className="min-w-32.5 bg-white/[0.07] border border-white/10 rounded-xl px-6 py-4 text-center backdrop-blur-md">
+    <li className="min-w-32.5 bg-white/[0.07] border border-white/10 rounded-xl px-6 py-4 text-center backdrop-blur-md">
       <div className="text-[30px] font-extrabold text-white leading-none tracking-tight mb-1">
         {value}
       </div>
@@ -38,6 +41,6 @@ function StatCard({ label, value, sub }) {
         {label}
       </div>
       <div className="text-[11px] text-white/30 mt-0.5">{sub}</div>
-    </div>
+    </li>
   );
 }

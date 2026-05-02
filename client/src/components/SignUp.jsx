@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../config/supabaseClient";
-import bgImage from "../assets/wits_great_hall.jpg"
+import bgImage from "../assets/wits_great_hall.jpg";
 import { useState } from "react";
 
 export default function SignUp() {
@@ -23,7 +23,6 @@ export default function SignUp() {
 
   return (
     <main className="flex h-screen font-['inter',sans-serif]">
-
       {/* ── Left Panel — hidden on mobile, visible md+ ── */}
       <aside
         className="hidden md:flex flex-1 flex-col justify-between p-10 text-white"
@@ -32,13 +31,18 @@ export default function SignUp() {
             url('${bgImage}') center/cover no-repeat`,
         }}
       >
-        <p className="text-xs tracking-widest opacity-70 uppercase">Uni Square</p>
+        <p className="text-xs tracking-widest opacity-70 uppercase">
+          Uni Square
+        </p>
 
         <section>
           <h1 className="text-5xl font-extrabold leading-tight mb-5">
-            Elevate your<br />
+            Elevate your
+            <br />
             <mark className="bg-transparent text-orange-300">
-              Campus<br />Experience.
+              Campus
+              <br />
+              Experience.
             </mark>
           </h1>
 
@@ -65,7 +69,9 @@ export default function SignUp() {
               <li key={f.title} className="flex gap-3 max-w-40">
                 <article>
                   <p className="text-[13px] font-bold m-0">{f.title}</p>
-                  <p className="text-[12px] opacity-75 leading-snug mt-1 m-0">{f.desc}</p>
+                  <p className="text-[12px] opacity-75 leading-snug mt-1 m-0">
+                    {f.desc}
+                  </p>
                 </article>
               </li>
             ))}
@@ -81,17 +87,22 @@ export default function SignUp() {
 
       {/* ── Right Panel — full width on mobile, fixed width on md+ ── */}
       <section className="flex-1 md:flex-none md:w-105 bg-white flex flex-col justify-between p-8 md:p-10 md:shadow-[-4px_0_20px_rgba(0,0,0,0.08)]">
-
         {/* Logo */}
         <header>
-          <a href="/" className="text-[15px] font-bold text-blue-600 no-underline hover:opacity-80 transition-opacity">
+          <a
+            href="/"
+            className="text-[15px] font-bold text-blue-600 no-underline hover:opacity-80 transition-opacity"
+          >
             UniSquare
           </a>
         </header>
 
         {/* Form area */}
         <form
-          onSubmit={(e) => { e.preventDefault(); handleGoogle(); }}
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleGoogle();
+          }}
           noValidate
           className="flex flex-col gap-5"
         >
@@ -106,12 +117,13 @@ export default function SignUp() {
 
           <p className="text-[13px] text-gray-500 m-0">
             Already have an account?{" "}
-            <a
+            <button
+              type="button"
               onClick={() => navigate("/signin")}
-              className="text-blue-600 font-semibold cursor-pointer hover:underline"
+              className="text-blue-600 font-semibold hover:underline"
             >
               Sign In
-            </a>
+            </button>
           </p>
 
           <button
@@ -123,7 +135,6 @@ export default function SignUp() {
             {loading ? "Redirecting..." : "Sign up with Google"}
           </button>
         </form>
-
       </section>
     </main>
   );
@@ -131,11 +142,29 @@ export default function SignUp() {
 
 function GoogleIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true" focusable="false">
-      <path fill="#EA4335" d="M24 9.5c3.1 0 5.8 1.1 7.9 2.9l5.9-5.9C34.4 3.5 29.5 1.5 24 1.5 14.9 1.5 7.2 7 3.7 14.8l6.9 5.3C12.4 13.6 17.7 9.5 24 9.5z"/>
-      <path fill="#4285F4" d="M46.5 24c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.8 7.2l7.4 5.7C43.8 37 46.5 31 46.5 24z"/>
-      <path fill="#FBBC05" d="M10.6 28.1A14.5 14.5 0 0 1 9.5 24c0-1.4.2-2.8.6-4.1l-6.9-5.3A22.6 22.6 0 0 0 1.5 24c0 3.6.9 7 2.4 10l6.7-5.9z"/>
-      <path fill="#34A853" d="M24 46.5c5.5 0 10.1-1.8 13.5-4.9l-7.4-5.7c-1.8 1.2-4.2 2-6.1 2-6.3 0-11.6-4.1-13.4-9.8l-6.7 5.9C7.2 41 14.9 46.5 24 46.5z"/>
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 48 48"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path
+        fill="#EA4335"
+        d="M24 9.5c3.1 0 5.8 1.1 7.9 2.9l5.9-5.9C34.4 3.5 29.5 1.5 24 1.5 14.9 1.5 7.2 7 3.7 14.8l6.9 5.3C12.4 13.6 17.7 9.5 24 9.5z"
+      />
+      <path
+        fill="#4285F4"
+        d="M46.5 24c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.8 7.2l7.4 5.7C43.8 37 46.5 31 46.5 24z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M10.6 28.1A14.5 14.5 0 0 1 9.5 24c0-1.4.2-2.8.6-4.1l-6.9-5.3A22.6 22.6 0 0 0 1.5 24c0 3.6.9 7 2.4 10l6.7-5.9z"
+      />
+      <path
+        fill="#34A853"
+        d="M24 46.5c5.5 0 10.1-1.8 13.5-4.9l-7.4-5.7c-1.8 1.2-4.2 2-6.1 2-6.3 0-11.6-4.1-13.4-9.8l-6.7 5.9C7.2 41 14.9 46.5 24 46.5z"
+      />
     </svg>
   );
 }

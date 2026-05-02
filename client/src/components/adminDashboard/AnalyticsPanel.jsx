@@ -37,9 +37,9 @@ export default function AnalyticsPanel({
             </button>
           </div>
         </header>
-        <div className="mt-5 flex flex-col gap-3">
+        <ul className="mt-5 flex flex-col gap-3" role="list">
           {popularCategories.map((item) => (
-            <div key={item.label} className="flex items-center gap-4">
+            <li key={item.label} className="flex items-center gap-4">
               <div className="min-w-30">
                 <p className="text-sm font-semibold text-gray-700">
                   {item.label}
@@ -52,9 +52,9 @@ export default function AnalyticsPanel({
                   style={{ width: `${item.count * 2}%` }}
                 />
               </div>
-            </div>
+            </li>
           ))}
-        </div>
+        </ul>
       </article>
 
       <article className="rounded-lg border border-gray-200 bg-white p-6">
@@ -82,9 +82,9 @@ export default function AnalyticsPanel({
             </button>
           </div>
         </header>
-        <div className="mt-5 flex flex-col gap-3">
+        <ul className="mt-5 flex flex-col gap-3" role="list">
           {transactionsOverTime.map((item) => (
-            <div key={item.label} className="flex items-center gap-4">
+            <li key={item.label} className="flex items-center gap-4">
               <div className="min-w-30">
                 <p className="text-sm font-semibold text-gray-700">
                   {item.label}
@@ -99,9 +99,9 @@ export default function AnalyticsPanel({
                   style={{ width: `${item.count * 2}%` }}
                 />
               </div>
-            </div>
+            </li>
           ))}
-        </div>
+        </ul>
       </article>
 
       <article className="rounded-lg border border-gray-200 bg-white p-6">
@@ -175,32 +175,32 @@ export default function AnalyticsPanel({
             </button>
           </div>
         </header>
-        <div className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3">
-          <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 text-center">
+        <ul className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3" role="list">
+          <li className="rounded-lg border border-gray-200 bg-gray-50 p-4 text-center">
             <p className="text-2xl font-bold text-gray-900">
               {flaggedSummary.listings}
             </p>
             <p className="text-xs uppercase tracking-wide text-gray-500">
               Listings
             </p>
-          </div>
-          <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 text-center">
+          </li>
+          <li className="rounded-lg border border-gray-200 bg-gray-50 p-4 text-center">
             <p className="text-2xl font-bold text-gray-900">
               {flaggedSummary.reviews}
             </p>
             <p className="text-xs uppercase tracking-wide text-gray-500">
               Reviews
             </p>
-          </div>
-          <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 text-center">
+          </li>
+          <li className="rounded-lg border border-gray-200 bg-gray-50 p-4 text-center">
             <p className="text-2xl font-bold text-gray-900">
               {flaggedSummary.messages}
             </p>
             <p className="text-xs uppercase tracking-wide text-gray-500">
               Messages
             </p>
-          </div>
-        </div>
+          </li>
+        </ul>
       </article>
     </section>
   );

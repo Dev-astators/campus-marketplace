@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { supabase } from "../config/supabaseClient";
 import { API_BASE_URL } from "../config/apiBaseUrl";
+import useProfile from "./useProfile";
 
 // Helper keeps UI defaults and payload shaping in one place.
 const createEditFormFromListing = (listing) => ({
   title: listing?.title || "",
   description: listing?.description || "",
-  askingPrice: String(listing?.price ?? ""),
+  askingPrice: String(listing?.asking_price ?? ""),
   category: listing?.category || "Textbooks",
   condition: listing?.condition || "good",
   listingType: listing?.listing_type || "sale",
@@ -14,7 +14,7 @@ const createEditFormFromListing = (listing) => ({
 
 export default function useListingDetails({ listingId, onDeleteSuccess }) {
   const [listing, setListing] = useState(null);
-  const [userId, setUserId] = useState(null);
+  const { profile, accessToken } = useProfile();
   const [error, setError] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -22,20 +22,14 @@ export default function useListingDetails({ listingId, onDeleteSuccess }) {
   const [saveError, setSaveError] = useState("");
   const [editForm, setEditForm] = useState(createEditFormFromListing(null));
 
-  // Session lookup is independent from listing fetch and only needed for
-  // owner-vs-buyer action gating.
-  useEffect(() => {
-    const getUser = async () => {
-      const { data } = await supabase.auth.getSession();
-      setUserId(data.session?.user?.id);
-    };
-
-    getUser();
-  }, []);
-
   const fetchListing = useCallback(async () => {
+    if (!accessToken) return;
     try {
-      const res = await fetch(`${API_BASE_URL}/api/listings/${listingId}`);
+      const res = await fetch(`${API_BASE_URL}/api/listings/${listingId}`, {
+        headers: accessToken
+          ? { Authorization: `Bearer ${accessToken}` }
+          : undefined,
+      });
 
       if (!res.ok) {
         const text = await res.text();
@@ -50,7 +44,7 @@ export default function useListingDetails({ listingId, onDeleteSuccess }) {
       console.error("Fetch error:", err);
       setError(err.message);
     }
-  }, [listingId]);
+  }, [listingId, accessToken]);
 
   useEffect(() => {
     fetchListing();
@@ -68,8 +62,8 @@ export default function useListingDetails({ listingId, onDeleteSuccess }) {
     return `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/listing-images/${listing.listing_images[0].storage_path}`;
   }, [listing]);
 
-  const isOwner = userId === listing?.seller?.id;
-  const isLoggedInBuyer = Boolean(userId && !isOwner);
+  const isOwner = profile?.id === listing?.seller?.id;
+  const isLoggedInBuyer = Boolean(profile?.id && !isOwner);
 
   // Delete action is encapsulated here so page/components remain presentational.
   const handleDelete = async () => {
@@ -82,6 +76,9 @@ export default function useListingDetails({ listingId, onDeleteSuccess }) {
     try {
       const res = await fetch(`${API_BASE_URL}/api/listings/${listing.id}`, {
         method: "DELETE",
+        headers: accessToken
+          ? { Authorization: `Bearer ${accessToken}` }
+          : undefined,
       });
 
       if (!res.ok) throw new Error("Failed to delete listing");
@@ -127,7 +124,10 @@ export default function useListingDetails({ listingId, onDeleteSuccess }) {
     try {
       const res = await fetch(`${API_BASE_URL}/api/listings/${listing.id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+        },
         body: JSON.stringify({
           title: editForm.title,
           description: editForm.description,

@@ -1,43 +1,52 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef } from "react";
 
-export default function Chat({ messages, currentUserId, input, setInput, onSend }) {
+export default function Chat({
+  messages,
+  currentUserId,
+  input,
+  setInput,
+  onSend,
+}) {
   const bottomRef = useRef(null);
 
   // Auto-scroll
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   return (
-    <div className="flex flex-col h-full border rounded-xl bg-white">
-
+    <section
+      className="flex flex-col h-full border rounded-xl bg-white"
+      aria-label="Chat thread"
+    >
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-2">
+      <ul className="flex-1 overflow-y-auto p-4 space-y-2" role="list">
         {messages.map((msg) => {
           const isMe = msg.sender_id === currentUserId;
 
           return (
-            <div
+            <li
               key={msg.id}
-              className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}
+              className={`flex ${isMe ? "justify-end" : "justify-start"}`}
             >
-              <div
-                className={`px-4 py-2 rounded-xl text-sm max-w-xs break-words
-                  ${isMe
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-200 text-gray-900'
+              <p
+                className={`px-4 py-2 rounded-xl text-sm max-w-xs wrap-break-word
+                  ${
+                    isMe
+                      ? "bg-blue-600 text-white"
+                      : "bg-gray-200 text-gray-900"
                   }`}
               >
                 {msg.content}
-              </div>
-            </div>
+              </p>
+            </li>
           );
         })}
-        <div ref={bottomRef} />
-      </div>
+        <li ref={bottomRef} aria-hidden="true" />
+      </ul>
 
       {/* Input */}
-      <div className="border-t p-3 flex gap-2">
+      <footer className="border-t p-3 flex gap-2">
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
@@ -46,13 +55,13 @@ export default function Chat({ messages, currentUserId, input, setInput, onSend 
         />
 
         <button
+          type="button"
           onClick={onSend}
           className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm"
         >
           Send
         </button>
-      </div>
-
-    </div>
+      </footer>
+    </section>
   );
 }

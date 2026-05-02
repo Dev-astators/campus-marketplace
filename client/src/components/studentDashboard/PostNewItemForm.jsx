@@ -281,7 +281,7 @@ export default function PostNewItemForm({ user, categories = [], onPosted }) {
     const postedListing = {
       id: String(data.id),
       title: data?.title ?? formData.title.trim(),
-      price: data?.asking_price ?? Number(formData.price),
+      asking_price: data?.asking_price ?? Number(formData.price),
       condition: formatConditionLabel(data?.condition ?? formData.condition),
       category: data?.category ?? effectiveCategory,
       imageUrl,

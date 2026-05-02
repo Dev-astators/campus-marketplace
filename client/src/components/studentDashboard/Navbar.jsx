@@ -4,7 +4,7 @@
  * Navbar component
  * Displays the UniSquare brand, search bar and user profile info.
  * Props:
- *  - user: { name: string, avatarUrl: string | null }
+ *  - user: { fullName?: string, email?: string, avatarUrl?: string }
  */
 
 export default function Navbar({ user, searchValue = "", onSearch }) {
@@ -59,13 +59,13 @@ export default function Navbar({ user, searchValue = "", onSearch }) {
         className="flex items-center gap-3 ml-auto shrink-0"
       >
         <span className="text-sm font-medium text-gray-800">
-          {user?.name ?? "Student"}
+          {user?.fullName ?? user?.email ?? "Student"}
         </span>
         <figure className="w-9 h-9 rounded-full bg-gray-300 overflow-hidden flex items-center justify-center">
           {user?.avatarUrl ? (
             <img
               src={user.avatarUrl}
-              alt={`${user.name} avatar`}
+              alt={`${user?.fullName ?? user?.email} avatar`}
               className="w-full h-full object-cover"
             />
           ) : (
@@ -84,7 +84,7 @@ export default function Navbar({ user, searchValue = "", onSearch }) {
             </svg>
           )}
           <figcaption className="sr-only">
-            {user?.name ?? "Student"} profile picture
+            {user?.fullName ?? user?.email ?? "Student"} profile picture
           </figcaption>
         </figure>
       </nav>

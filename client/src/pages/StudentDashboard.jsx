@@ -10,6 +10,7 @@ import { CATEGORIES } from "../components/studentDashboard/listingFiltersConfig"
 import useDashboardListings from "../hooks/useDashboardListings";
 import useListingFilters from "../hooks/useListingFilters";
 import { useNavigate } from "react-router-dom";
+import ProfileSettings from "../components/studentDashboard/ProfileSettings";
 
 export default function StudentDashboard() {
   const navigate = useNavigate();
@@ -46,7 +47,8 @@ export default function StudentDashboard() {
     }
   };
 
-  const firstName = user?.name?.split("@")[0] || "Student";
+  const firstName =
+    user?.fullName?.split(" ")[0] || user?.email?.split("@")[0] || "Student";
 
   return (
     <section
@@ -76,29 +78,37 @@ export default function StudentDashboard() {
             + Create Listing
           </button>
 
-          <CategoryFilter
-            categories={CATEGORIES}
-            selected={selectedCategory}
-            onSelect={setSelectedCategory}
-          />
+          {activeNav === "profile" ? (
+            <ProfileSettings user={user} />
+          ) : (
+            <>
+              <CategoryFilter
+                categories={CATEGORIES}
+                selected={selectedCategory}
+                onSelect={setSelectedCategory}
+              />
 
-          <ListingsFiltersPanel
-            selectedCondition={selectedCondition}
-            onConditionChange={setSelectedCondition}
-            minPrice={minPrice}
-            onMinPriceChange={setMinPrice}
-            maxPrice={maxPrice}
-            onMaxPriceChange={setMaxPrice}
-            sortBy={sortBy}
-            onSortByChange={setSortBy}
-            onClearFilters={clearFilters}
-          />
+              <ListingsFiltersPanel
+                selectedCondition={selectedCondition}
+                onConditionChange={setSelectedCondition}
+                minPrice={minPrice}
+                onMinPriceChange={setMinPrice}
+                maxPrice={maxPrice}
+                onMaxPriceChange={setMaxPrice}
+                sortBy={sortBy}
+                onSortByChange={setSortBy}
+                onClearFilters={clearFilters}
+              />
 
-          <h2 className="text-lg font-semibold text-gray-700">
-            {listingsHeading}
-          </h2>
+              <section aria-label="Listings">
+                <h2 className="text-lg font-semibold text-gray-700">
+                  {listingsHeading}
+                </h2>
 
-          <ListingsGrid listings={filteredListings} loading={loading} />
+                <ListingsGrid listings={filteredListings} loading={loading} />
+              </section>
+            </>
+          )}
         </main>
       </section>
     </section>

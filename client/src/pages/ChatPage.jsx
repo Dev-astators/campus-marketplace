@@ -3,33 +3,31 @@ import { useParams, useSearchParams } from "react-router-dom";
 import { supabase } from "../config/supabaseClient";
 import Chat from "../components/Chat";
 import { API_BASE_URL } from "../config/apiBaseUrl";
+import useProfile from "../hooks/useProfile";
 
 export default function ChatPage() {
   const { id: listingId } = useParams();
   const [searchParams] = useSearchParams();
   const sellerId = searchParams.get("seller");
 
-  const [user, setUser] = useState(null);
+  const { profile, accessToken, loading: profileLoading } = useProfile();
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
 
   // ─────────────────────────────
   useEffect(() => {
-    const getUser = async () => {
-      const { data } = await supabase.auth.getSession();
-      setUser(data.session?.user);
-    };
-    getUser();
-  }, []);
-
-  // ─────────────────────────────
-  useEffect(() => {
-    if (!user || !sellerId || !listingId) return;
+    if (!profile || !sellerId || !listingId) return;
+    if (!accessToken) return;
 
     const fetchMessages = async () => {
       try {
         const res = await fetch(
-          `${API_BASE_URL}/api/messages/${listingId}/${user.id}/${sellerId}`
+          `${API_BASE_URL}/api/messages/${listingId}/${profile.id}/${sellerId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          },
         );
 
         const data = await res.json();
@@ -40,17 +38,18 @@ export default function ChatPage() {
     };
 
     fetchMessages();
-  }, [user, sellerId, listingId]);
+  }, [profile, sellerId, listingId, accessToken]);
 
   // ─────────────────────────────
   // ✅ FIXED: Optimistic UI update
   const handleSend = async () => {
-    if (!input.trim() || !user) return;
+    if (!input.trim() || !profile) return;
+    if (!accessToken) return;
 
     const tempMessage = {
       id: Date.now(), // temporary unique id
       listing_id: listingId,
-      sender_id: user.id,
+      sender_id: profile.id,
       receiver_id: sellerId,
       content: input,
       sent_at: new Date().toISOString(),
@@ -62,10 +61,13 @@ export default function ChatPage() {
     try {
       await fetch(`${API_BASE_URL}/api/messages`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
         body: JSON.stringify({
           listing_id: listingId,
-          sender_id: user.id,
+          sender_id: profile.id,
           receiver_id: sellerId,
           content: input,
         }),
@@ -79,7 +81,7 @@ export default function ChatPage() {
 
   // ─────────────────────────────
   useEffect(() => {
-    if (!user || !listingId) return;
+    if (!profile || !listingId) return;
 
     const channel = supabase
       .channel(`chat-${listingId}`)
@@ -99,28 +101,30 @@ export default function ChatPage() {
             if (exists) return prev;
             return [...prev, newMessage];
           });
-        }
+        },
       )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, listingId]);
+  }, [profile, listingId]);
 
   // ─────────────────────────────
-  if (!user) {
+  if (profileLoading || !profile) {
     return <p className="p-6">Loading chat...</p>;
   }
 
   return (
     <main className="h-screen flex flex-col p-6 bg-gray-50">
-      <h1 className="text-lg font-semibold mb-4">Chat</h1>
+      <header>
+        <h1 className="text-lg font-semibold mb-4">Chat</h1>
+      </header>
 
-      <section className="flex-1">
+      <section className="flex-1" aria-label="Chat messages">
         <Chat
           messages={messages}
-          currentUserId={user.id}
+          currentUserId={profile.id}
           input={input}
           setInput={setInput}
           onSend={handleSend}

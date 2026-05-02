@@ -9,7 +9,10 @@ import HelpDesk from "../components/staff-dashboard/HelpDesk";
 export default function StaffDashboard() {
   const [activeNav, setActiveNav] = useState("meetups");
   return (
-    <div className="flex bg-slate-100 min-h-screen font-sans">
+    <section
+      className="flex bg-slate-100 min-h-screen font-sans"
+      aria-label="Staff dashboard"
+    >
       {/* Sidebar */}
       <aside aria-label="Staff navigation">
         <Sidebar activeNav={activeNav} onNavChange={setActiveNav} />
@@ -45,6 +48,6 @@ export default function StaffDashboard() {
           </div>
         </section>
       </main>
-    </div>
+    </section>
   );
 }

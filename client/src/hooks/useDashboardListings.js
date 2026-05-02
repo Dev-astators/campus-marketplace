@@ -1,80 +1,84 @@
-import { useCallback, useEffect, useState } from "react";
-import { supabase } from "../config/supabaseClient";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { API_BASE_URL } from "../config/apiBaseUrl";
+import { supabase } from "../config/supabaseClient";
+import useProfile from "./useProfile";
 
 // Encapsulates dashboard data concerns:
 // 1) current authenticated user
 // 2) listings fetch for marketplace vs my-listings tab
 export default function useDashboardListings(activeNav) {
-  const [user, setUser] = useState(null);
+  const { profile, authUser, accessToken } = useProfile();
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Session is read once on mount; tab changes do not require re-reading auth.
-  useEffect(() => {
-    const getUser = async () => {
-      const { data } = await supabase.auth.getSession();
+  const user = useMemo(() => {
+    if (!profile) return null;
 
-      if (!data.session) return;
-
-      setUser({
-        name: data.session.user.email,
-        id: data.session.user.id,
-      });
+    return {
+      id: profile.id,
+      authUserId: authUser?.id || profile.auth_user_id,
+      email: profile.email || authUser?.email,
+      fullName: profile.full_name || profile.email?.split("@")[0],
+      avatarUrl: profile.avatar_url || null,
+      role: profile.role,
+      averageRating: profile.average_rating,
+      totalRatings: profile.total_ratings,
+      createdAt: profile.created_at,
     };
+  }, [profile, authUser]);
 
-    getUser();
-  }, []);
+  const fetchListings = useCallback(
+    async (navItem, currentUserId) => {
+      // My Listings depends on the logged-in user id. If unavailable, return empty state.
+      if (navItem === "my-listings" && !currentUserId) {
+        setListings([]);
+        setLoading(false);
+        return;
+      }
 
-  const fetchListings = useCallback(async (navItem, currentUserId) => {
-    // My Listings depends on the logged-in user id. If unavailable, return empty state.
-    if (navItem === "my-listings" && !currentUserId) {
-      setListings([]);
-      setLoading(false);
-      return;
-    }
+      let token = accessToken;
 
-    // Choose API endpoint based on active dashboard tab.
-    const endpoint =
-      navItem === "my-listings"
-        ? `${API_BASE_URL}/api/listings/my/${currentUserId}`
-        : `${API_BASE_URL}/api/listings`;
-
-    setLoading(true);
-
-    try {
-      let requestOptions = undefined;
-
-      if (navItem === "my-listings") {
+      if (!token) {
         const { data } = await supabase.auth.getSession();
-        const accessToken = data.session?.access_token;
+        token = data.session?.access_token || null;
+      }
 
-        if (!accessToken) {
-          throw new Error("Missing access token for My Listings");
+      if (!token) {
+        setListings([]);
+        setLoading(false);
+        return;
+      }
+
+      // Choose API endpoint based on active dashboard tab.
+      const endpoint =
+        navItem === "my-listings"
+          ? `${API_BASE_URL}/api/listings/my/${currentUserId}`
+          : `${API_BASE_URL}/api/listings`;
+
+      setLoading(true);
+
+      try {
+        const res = await fetch(endpoint, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!res.ok) {
+          throw new Error(`Failed to fetch listings: ${res.status}`);
         }
 
-        requestOptions = {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        };
+        const data = await res.json();
+        setListings(data.listings || []);
+      } catch (err) {
+        console.error("Failed to fetch listings:", err);
+        setListings([]);
+      } finally {
+        setLoading(false);
       }
-
-      const res = await fetch(endpoint, requestOptions);
-
-      if (!res.ok) {
-        throw new Error(`Failed to fetch listings: ${res.status}`);
-      }
-
-      const data = await res.json();
-      setListings(data.listings || []);
-    } catch (err) {
-      console.error("Failed to fetch listings:", err);
-      setListings([]);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    },
+    [accessToken],
+  );
 
   useEffect(() => {
     // Refetch when tab changes or when user identity becomes available.

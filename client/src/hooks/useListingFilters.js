@@ -50,7 +50,7 @@ export default function useListingFilters({ listings, activeNav }) {
           listing.condition === selectedCondition,
       )
       .filter((listing) => {
-        const price = Number(listing.price);
+        const price = Number(listing.asking_price);
         if (!Number.isFinite(price)) return false;
 
         if (hasMinPrice && Number.isFinite(min) && price < min) return false;
@@ -59,8 +59,8 @@ export default function useListingFilters({ listings, activeNav }) {
         return true;
       })
       .sort((a, b) => {
-        const priceA = Number(a.price) || 0;
-        const priceB = Number(b.price) || 0;
+        const priceA = Number(a.asking_price) || 0;
+        const priceB = Number(b.asking_price) || 0;
         const titleA = a.title || "";
         const titleB = b.title || "";
         const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;

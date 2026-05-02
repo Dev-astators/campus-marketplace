@@ -23,7 +23,10 @@ export default function Topbar() {
       </div>
 
       {/* Actions */}
-      <div className="flex items-center gap-1.5 ml-auto">
+      <nav
+        className="flex items-center gap-1.5 ml-auto"
+        aria-label="Topbar actions"
+      >
         <IconButton>
           <div className="relative">
             <Icon name="bell" size={18} />
@@ -38,7 +41,7 @@ export default function Topbar() {
         <div className="w-9 h-9 rounded-full bg-linear-to-br from-indigo-400 to-purple-600 border-2 border-slate-200 flex items-center justify-center text-white text-[12px] font-bold cursor-pointer hover:border-blue-400 transition-colors duration-150 ml-1 select-none">
           ST
         </div>
-      </div>
+      </nav>
     </header>
   );
 }
@@ -46,6 +49,7 @@ export default function Topbar() {
 function IconButton({ children, onClick }) {
   return (
     <button
+      type="button"
       onClick={onClick}
       className="w-9 h-9 rounded-xl bg-slate-50 border border-transparent flex items-center justify-center text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-all duration-150"
     >

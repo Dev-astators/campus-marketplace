@@ -81,9 +81,9 @@ export default function FacilitySettingsPanel({
               </span>
             )}
           </div>
-          <div className="mt-3 flex flex-col gap-3">
+          <ul className="mt-3 flex flex-col gap-3" role="list">
             {operatingHours.map((entry) => (
-              <div
+              <li
                 className="grid grid-cols-1 items-center gap-3 md:grid-cols-[160px_1fr_1fr]"
                 key={entry.day}
               >
@@ -120,9 +120,9 @@ export default function FacilitySettingsPanel({
                     onHoursChange(entry.day, "close", e.target.value)
                   }
                 />
-              </div>
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
       </div>
     </article>

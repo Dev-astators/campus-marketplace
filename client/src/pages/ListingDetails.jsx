@@ -46,7 +46,8 @@ export default function ListingDetails() {
   if (!listing) return <p className="p-6">Loading...</p>;
 
   return (
-    <article className="p-8 max-w-2xl" aria-label="Listing details">
+    <main className="p-8 max-w-2xl" aria-label="Listing details">
+      <article>
       {/* Title */}
       {!editing && <h1 className="text-2xl font-bold">{listing.title}</h1>}
 
@@ -66,7 +67,14 @@ export default function ListingDetails() {
 
       {/* Image */}
       {imageUrl && (
-        <img src={imageUrl} className="w-96 mt-4 rounded-xl" alt="listing" />
+        <figure className="mt-4">
+          <img
+            src={imageUrl}
+            className="w-96 rounded-xl"
+            alt="listing"
+          />
+          <figcaption className="sr-only">Listing image</figcaption>
+        </figure>
       )}
 
       {editing ? (
@@ -91,6 +99,7 @@ export default function ListingDetails() {
         isLoggedInBuyer={isLoggedInBuyer}
         onContactSeller={handleContactSeller}
       />
-    </article>
+      </article>
+    </main>
   );
 }

@@ -9,13 +9,19 @@ const {
   createListing,
 } = require("../services/listingService");
 const { validateListingInput } = require("../services/listingValidator");
-const { verifySession } = require("../middleware/authMiddleware");
+const {
+  verifySession,
+  attachProfile,
+  requireRole,
+} = require("../middleware/authMiddleware");
+const { validateListing } = require("../middleware/validateListing");
+const { getSuggestedPriceRange } = require("../services/cpiService");
 
 /**
  * GET /api/listings
  * Returns all active listings. Accessible to authenticated students.
  */
-router.get("/", async (req, res) => {
+router.get("/", verifySession, attachProfile, async (req, res) => {
   const { data, error } = await getActiveListings();
 
   if (error) {
@@ -32,20 +38,20 @@ router.get("/", async (req, res) => {
  * Returns active listings created by the authenticated seller.
  * Auth is token-based (verifySession) and uses auth user id for authorization.
  */
-router.get("/my/:sellerId", verifySession, async (req, res) => {
+router.get("/my/:sellerId", verifySession, attachProfile, async (req, res) => {
   const { sellerId } = req.params;
-  const authenticatedAuthUserId = req.user?.id;
+  const authenticatedProfileId = req.profile?.id;
 
   if (!sellerId) {
     return res.status(400).json({ message: "sellerId is required" });
   }
 
-  if (!authenticatedAuthUserId) {
+  if (!authenticatedProfileId) {
     return res.status(401).json({ message: "Authentication required" });
   }
 
   const isAuthorizedForSeller =
-    String(sellerId) === String(authenticatedAuthUserId);
+    String(sellerId) === String(authenticatedProfileId);
 
   if (!isAuthorizedForSeller) {
     return res.status(403).json({
@@ -53,7 +59,7 @@ router.get("/my/:sellerId", verifySession, async (req, res) => {
     });
   }
 
-  const { data, error } = await getListingsBySellerId(authenticatedAuthUserId);
+  const { data, error } = await getListingsBySellerId(authenticatedProfileId);
   if (error) {
     return res.status(500).json({
       message: "Failed to fetch seller listings",
@@ -68,48 +74,61 @@ router.get("/my/:sellerId", verifySession, async (req, res) => {
  * POST /api/listings
  * Creates a new listing. Accessible to facility_staff only.
  */
-router.post("/", async (req, res) => {
-  const { title, description, category, condition, askingPrice, listingType } =
-    req.body;
-  const sellerId = req.body.sellerId;
+router.post(
+  "/",
+  verifySession,
+  attachProfile,
+  requireRole("student"),
+  validateListing,
+  async (req, res) => {
+    const { data, error } = await createListing(req.validatedListing);
 
-  if (!sellerId) {
-    return res.status(400).json({ message: "sellerId is required" });
-  }
+    if (error) {
+      return res
+        .status(500)
+        .json({ message: "Failed to create listing", error: error.message });
+    }
 
-  const { valid, errors } = validateListingInput({
-    title,
-    category,
-    condition,
-    askingPrice,
-    listingType,
-  });
+    return res.status(201).json({ listing: data });
+  },
+);
 
-  if (!valid) {
-    return res.status(400).json({ message: "Validation failed", errors });
-  }
+/**
+ * GET /api/listings/suggested-price
+ * Returns a suggested price range based on Stats SA CPI data.
+ * Accessible to any authenticated user.
+ * Query params: category, askingPrice
+ */
+router.get("/suggested-price", verifySession, attachProfile, (req, res) => {
+  const { category, askingPrice } = req.query;
 
-  const { data, error } = await createListing({
-    sellerId,
-    title,
-    description,
-    category,
-    condition,
-    askingPrice,
-    listingType,
-  });
-
-  if (error) {
+  if (!category || !askingPrice) {
     return res
-      .status(500)
-      .json({ message: "Failed to create listing", error: error.message });
+      .status(400)
+      .json({ message: "category and askingPrice are required" });
   }
 
-  return res.status(201).json({ listing: data });
+  const price = parseFloat(askingPrice);
+
+  if (Number.isNaN(price) || price <= 0) {
+    return res
+      .status(400)
+      .json({ message: "askingPrice must be a positive number" });
+  }
+
+  const suggestion = getSuggestedPriceRange(price, category);
+
+  if (!suggestion) {
+    return res
+      .status(404)
+      .json({ message: `No CPI data available for category: ${category}` });
+  }
+
+  return res.status(200).json({ suggestion });
 });
 
 // Get listing details by ID
-router.get("/:id", async (req, res) => {
+router.get("/:id", verifySession, attachProfile, async (req, res) => {
   const { id } = req.params;
 
   try {
@@ -120,7 +139,7 @@ router.get("/:id", async (req, res) => {
         id,
         title,
         description,
-        price: asking_price,
+        asking_price,
         condition,
         category,
         listing_type,
@@ -152,13 +171,23 @@ router.get("/:id", async (req, res) => {
 });
 
 // For testing purposes, we can add a delete route to clear listings (not for production)
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", verifySession, attachProfile, async (req, res) => {
   const { id } = req.params;
 
-  const { error } = await supabase.from("listings").delete().eq("id", id);
+  const { data, error } = await supabase
+    .from("listings")
+    .delete()
+    .eq("id", id)
+    .eq("seller_id", req.profile.id)
+    .select("id")
+    .single();
 
   if (error) {
     return res.status(500).json({ error: error.message });
+  }
+
+  if (!data) {
+    return res.status(404).json({ message: "Listing not found" });
   }
 
   res.json({ success: true });
@@ -166,7 +195,7 @@ router.delete("/:id", async (req, res) => {
 
 // Update listing details from the owner edit form on ListingDetails page.
 // Accepts the same editable fields shown in the client UI.
-router.put("/:id", async (req, res) => {
+router.put("/:id", verifySession, attachProfile, async (req, res) => {
   const { id } = req.params;
 
   const { title, description, askingPrice, category, condition, listingType } =
@@ -176,7 +205,7 @@ router.put("/:id", async (req, res) => {
     title,
     category,
     condition,
-    askingPrice,
+    askingPrice: parseFloat(askingPrice),
     listingType,
   });
 
@@ -195,6 +224,7 @@ router.put("/:id", async (req, res) => {
       listing_type: listingType,
     })
     .eq("id", id)
+    .eq("seller_id", req.profile.id)
     .select()
     .single();
 
@@ -204,9 +234,25 @@ router.put("/:id", async (req, res) => {
 });
 
 // Add image to listing
-router.post("/:id/images", async (req, res) => {
+router.post("/:id/images", verifySession, attachProfile, async (req, res) => {
   const { id } = req.params;
   const { storage_path } = req.body;
+
+  const { data: listing, error: listingError } = await supabase
+    .from("listings")
+    .select("id, seller_id")
+    .eq("id", id)
+    .single();
+
+  if (listingError || !listing) {
+    return res.status(404).json({ message: "Listing not found" });
+  }
+
+  if (String(listing.seller_id) !== String(req.profile.id)) {
+    return res
+      .status(403)
+      .json({ message: "Not authorized to edit this listing" });
+  }
 
   const { data, error } = await supabase
     .from("listing_images")

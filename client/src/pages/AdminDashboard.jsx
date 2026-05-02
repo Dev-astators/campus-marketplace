@@ -52,7 +52,10 @@ export default function AdminDashboard() {
           UniSquare
         </a>
         <span className="text-sm font-medium text-gray-500">Admin Console</span>
-        <div className="ml-auto flex items-center gap-3">
+        <section
+          className="ml-auto flex items-center gap-3"
+          aria-label="Admin profile"
+        >
           <span className="text-sm font-medium text-gray-800">Admin</span>
           <figure className="w-9 h-9 rounded-full bg-gray-300 overflow-hidden flex items-center justify-center">
             <svg
@@ -70,7 +73,7 @@ export default function AdminDashboard() {
             </svg>
             <figcaption className="sr-only">Admin profile picture</figcaption>
           </figure>
-        </div>
+        </section>
       </header>
 
       <section
@@ -91,7 +94,10 @@ export default function AdminDashboard() {
             </p>
           </section>
 
-          <div className="flex flex-wrap items-center gap-3">
+          <section
+            className="flex flex-wrap items-center gap-3"
+            aria-label="Admin actions"
+          >
             <button
               className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors"
               type="button"
@@ -104,7 +110,7 @@ export default function AdminDashboard() {
             >
               Invite Staff
             </button>
-          </div>
+          </section>
 
           <section className="flex flex-col gap-4">
             <AdminSummaryCards cards={summaryCards} />

@@ -56,13 +56,9 @@ function CategoryCard({
   imageUrl,
   imagePosition,
   overlayClass,
-  gridClass,
 }) {
   return (
-    <article
-      className={`relative rounded-2xl overflow-hidden cursor-pointer group ${gridClass}`}
-      style={{ minHeight: "260px" }}
-    >
+    <article className="relative h-full">
       {/* Background image */}
       <img
         src={imageUrl}
@@ -105,11 +101,17 @@ export default function CuratedCategories() {
       </header>
 
       {/* Bento Grid: 3 columns, 2 rows */}
-      <div className="grid grid-cols-3 grid-rows-2 gap-4">
+      <ul className="grid grid-cols-3 grid-rows-2 gap-4" role="list">
         {CATEGORIES.map((cat) => (
-          <CategoryCard key={cat.id} {...cat} />
+          <li
+            key={cat.id}
+            className={`relative rounded-2xl overflow-hidden cursor-pointer group ${cat.gridClass}`}
+            style={{ minHeight: "260px" }}
+          >
+            <CategoryCard {...cat} />
+          </li>
         ))}
-      </div>
+      </ul>
     </section>
   );
 }

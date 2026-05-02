@@ -101,7 +101,7 @@ export default function ListingEditForm({
 
       {saveError && <p className="text-sm text-red-500">{saveError}</p>}
 
-      <section className="flex gap-3">
+      <footer className="flex gap-3">
         <button
           type="submit"
           disabled={saving}
@@ -117,7 +117,7 @@ export default function ListingEditForm({
         >
           Cancel
         </button>
-      </section>
+      </footer>
     </form>
   );
 }

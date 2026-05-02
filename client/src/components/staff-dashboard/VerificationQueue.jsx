@@ -7,26 +7,31 @@ export default function VerificationQueue() {
 
   const handleVerify = (id) =>
     setItems((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, status: "verified" } : item))
+      prev.map((item) =>
+        item.id === id ? { ...item, status: "verified" } : item,
+      ),
     );
 
   const handleDecline = (id) =>
     setItems((prev) => prev.filter((item) => item.id !== id));
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+    <section
+      className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden"
+      aria-label="Verification queue"
+    >
       {/* Header */}
-      <div className="flex items-center justify-between px-5 py-5 border-b border-slate-100">
+      <header className="flex items-center justify-between px-5 py-5 border-b border-slate-100">
         <h2 className="text-[15.5px] font-bold text-slate-900 tracking-tight">
           Verification Queue
         </h2>
         <span className="text-[11px] font-bold bg-blue-50 text-blue-600 px-2.5 py-1 rounded-full">
           {items.filter((i) => i.status === "pending").length} pending
         </span>
-      </div>
+      </header>
 
       {/* Items */}
-      <div>
+      <ul role="list">
         {items.length === 0 ? (
           <EmptyState />
         ) : (
@@ -39,16 +44,16 @@ export default function VerificationQueue() {
             />
           ))
         )}
-      </div>
-    </div>
+      </ul>
+    </section>
   );
 }
 
 function EmptyState() {
   return (
-    <div className="py-10 text-center text-slate-400 text-[13px]">
+    <li className="py-10 text-center text-slate-400 text-[13px]">
       <div className="text-3xl mb-2">✅</div>
       All items verified!
-    </div>
+    </li>
   );
 }
