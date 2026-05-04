@@ -1,0 +1,26 @@
+# codecov.yml — place this in the root of your repository
+
+coverage:
+  status:
+    project:
+      default:
+        target: 50% # overall coverage target across the whole repo
+        threshold: 2% # allow up to a 2% drop before marking the check as failed
+    patch:
+      default:
+        target: 50% # every PR must cover at least 50% of its new lines
+
+flags:
+  client:
+    paths:
+      - client/src/
+    carryforward: true # keeps client coverage even when only server changes are pushed
+  server:
+    paths:
+      - server/src/
+    carryforward: true # keeps server coverage even when only client changes are pushed
+
+comment:
+  layout: "reach, diff, flags, files"
+  behavior: default # posts a coverage summary comment on every PR
+  require_changes: false # comment even when coverage hasn't changed

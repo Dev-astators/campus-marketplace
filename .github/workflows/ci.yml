@@ -1,4 +1,4 @@
-name: CI — Lint & Test
+name: CI — Lint, Test & Coverage
 
 on:
   push:
@@ -9,8 +9,9 @@ on:
       - main
 
 jobs:
+  # ── CLIENT ──
   client:
-    name: Client — Lint & Build Check
+    name: Client — Lint, Build & Coverage
     runs-on: ubuntu-latest
 
     steps:
@@ -32,6 +33,28 @@ jobs:
         working-directory: client
         run: npm run lint
 
+      - name: Run tests with coverage
+        working-directory: client
+        run: npx jest --coverage --passWithNoTests
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+      - name: Upload client coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: client/coverage/lcov.info
+          flags: client
+          name: client-coverage
+          fail_ci_if_error: true
+
+      - name: Upload client coverage report as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: client-coverage-report
+          path: client/coverage/
+
       - name: Build check
         working-directory: client
         run: npm run build
@@ -39,8 +62,9 @@ jobs:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
+  # ── SERVER ──
   server:
-    name: Server — Lint & Test
+    name: Server — Lint, Test & Coverage
     runs-on: ubuntu-latest
 
     steps:
@@ -62,7 +86,7 @@ jobs:
         working-directory: server
         run: npm run lint --if-present
 
-      - name: Run tests
+      - name: Run tests with coverage
         working-directory: server
         run: npx jest --coverage --passWithNoTests
         env:
@@ -70,7 +94,7 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           NODE_ENV: test
 
-      - name: Upload coverage to Codecov
+      - name: Upload server coverage to Codecov
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
@@ -79,8 +103,8 @@ jobs:
           name: server-coverage
           fail_ci_if_error: true
 
-      - name: Upload coverage report
+      - name: Upload server coverage report as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-report
+          name: server-coverage-report
           path: server/coverage/
