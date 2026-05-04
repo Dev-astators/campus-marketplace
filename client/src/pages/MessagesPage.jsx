@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
-import { supabase } from '../config/supabaseClient';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from "react";
+import { supabase } from "../config/supabaseClient";
+import { useNavigate } from "react-router-dom";
 
 export default function MessagesPage() {
   const navigate = useNavigate();
@@ -22,15 +22,17 @@ export default function MessagesPage() {
   const fetchConversations = async (currentUser) => {
     try {
       const { data, error } = await supabase
-        .from('messages')
-        .select(`
+        .from("messages")
+        .select(
+          `
           *,
           listing:listings(title),
           sender:profiles!messages_sender_id_fkey(full_name),
           receiver:profiles!messages_receiver_id_fkey(full_name)
-        `)
+        `,
+        )
         .or(`sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`)
-        .order('sent_at', { ascending: false });
+        .order("sent_at", { ascending: false });
 
       if (error) throw error;
 
@@ -39,9 +41,7 @@ export default function MessagesPage() {
       data.forEach((msg) => {
         const isSender = msg.sender_id === currentUser.id;
 
-        const otherUserId = isSender
-          ? msg.receiver_id
-          : msg.sender_id;
+        const otherUserId = isSender ? msg.receiver_id : msg.sender_id;
 
         const otherUserName = isSender
           ? msg.receiver?.full_name
@@ -73,21 +73,22 @@ export default function MessagesPage() {
   useEffect(() => {
     if (!user) return;
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchConversations(user);
 
     // ✅ REALTIME FIX
     const channel = supabase
-      .channel('messages-page')
+      .channel("messages-page")
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'messages',
+          event: "INSERT",
+          schema: "public",
+          table: "messages",
         },
         () => {
           fetchConversations(user); // 🔥 refresh automatically
-        }
+        },
       )
       .subscribe();
 

@@ -78,6 +78,7 @@ export default function useDashboardListings(activeNav) {
 
   useEffect(() => {
     // Refetch when tab changes or when user identity becomes available.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchListings(activeNav, user?.id);
   }, [activeNav, user?.id, fetchListings]);
 
