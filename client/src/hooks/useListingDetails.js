@@ -53,12 +53,14 @@ export default function useListingDetails({ listingId, onDeleteSuccess }) {
   }, [listingId]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchListing();
   }, [fetchListing]);
 
   // Rehydrate edit form whenever fresh listing data is loaded.
   useEffect(() => {
     if (!listing) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setEditForm(createEditFormFromListing(listing));
   }, [listing]);
 
