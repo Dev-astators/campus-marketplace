@@ -2,6 +2,22 @@ import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../config/supabaseClient";
 import { API_BASE_URL } from "../config/apiBaseUrl";
 
+function getFirstName(authUser) {
+  const metadata = authUser?.user_metadata ?? {};
+  const candidateName =metadata.full_name;
+
+  if (typeof candidateName === "string" && candidateName.trim()) {
+    return candidateName.trim().split(/\s+/)[0];
+  }
+
+  const emailPrefix = authUser?.email?.split("@")[0];
+  if (emailPrefix) {
+    return emailPrefix;
+  }
+
+  return "Student";
+}
+
 // Encapsulates dashboard data concerns:
 // 1) current authenticated user
 // 2) listings fetch for marketplace vs my-listings tab
@@ -18,8 +34,10 @@ export default function useDashboardListings(activeNav) {
       if (!data.session) return;
 
       setUser({
-        name: data.session.user.email,
+        name: getFirstName(data.session.user),
         id: data.session.user.id,
+        avatarUrl:
+          data.session.user.user_metadata?.avatar_url
       });
     };
 
