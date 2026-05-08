@@ -8,12 +8,14 @@
  */
 
 export default function Navbar({ user, searchValue = "", onSearch }) {
+  const displayName = user?.fullName || user?.name || "Student";
+
   return (
     <header className="w-full bg-gray-100 px-6 py-3 flex items-center gap-6 border-b border-gray-200">
       {/* Brand */}
       <a
         href="/"
-        className="text-2xl font-extrabold text-blue-700 tracking-tight shrink-0"
+        className="text-2xl font-extrabold text-blue-700 tracking-tight shrink-0 cursor-pointer"
         style={{ fontFamily: "Inter, sans-serif" }}
       >
         UniSquare
@@ -58,14 +60,12 @@ export default function Navbar({ user, searchValue = "", onSearch }) {
         aria-label="User menu"
         className="flex items-center gap-3 ml-auto shrink-0"
       >
-        <span className="text-sm font-medium text-gray-800">
-          {user?.name ?? "Student"}
-        </span>
+        <span className="text-sm font-medium text-gray-800">{displayName}</span>
         <figure className="w-9 h-9 rounded-full bg-gray-300 overflow-hidden flex items-center justify-center">
           {user?.avatarUrl ? (
             <img
               src={user.avatarUrl}
-              alt={`${user.name} avatar`}
+              alt={`${displayName} avatar`}
               className="w-full h-full object-cover"
             />
           ) : (
@@ -84,7 +84,7 @@ export default function Navbar({ user, searchValue = "", onSearch }) {
             </svg>
           )}
           <figcaption className="sr-only">
-            {user?.name ?? "Student"} profile picture
+            {displayName} profile picture
           </figcaption>
         </figure>
       </nav>

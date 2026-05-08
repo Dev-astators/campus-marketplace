@@ -10,6 +10,7 @@ import { CATEGORIES } from "../components/studentDashboard/listingFiltersConfig"
 import useDashboardListings from "../hooks/useDashboardListings";
 import useListingFilters from "../hooks/useListingFilters";
 import { useNavigate } from "react-router-dom";
+import ProfileSettings from "../components/studentDashboard/ProfileSettings";
 
 export default function StudentDashboard() {
   const navigate = useNavigate();
@@ -47,7 +48,7 @@ export default function StudentDashboard() {
     }
   };
 
-  const firstName = user?.name || "Student";
+  const firstName = user?.fullName?.split(" ")[0] || user?.name || "Student";
   const activeFilterCount = [
     selectedCategory !== "All Categories",
     selectedCondition !== "all",
@@ -55,6 +56,8 @@ export default function StudentDashboard() {
     maxPrice !== "",
     sortBy !== "newest",
   ].filter(Boolean).length;
+
+  const isProfileView = activeNav === "profile";
 
   return (
     <section
@@ -70,67 +73,76 @@ export default function StudentDashboard() {
         <Sidebar activeItem={activeNav} onNavigate={handleNavigate} />
 
         <main className="flex-1 overflow-y-auto px-8 py-6 flex flex-col gap-6">
-          <section>
+          <header>
             <h1 className="text-2xl font-bold text-gray-800">
-              Hello, {firstName} !
+              Hello, {firstName}!
             </h1>
             <p className="text-sm text-gray-400">Welcome Back!</p>
-          </section>
+          </header>
 
-          <button
-            onClick={() => navigate("/create-listing")}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg w-fit"
-          >
-            + Create Listing
-          </button>
-
-          <section className="flex flex-col gap-4">
-            <section className="flex items-center gap-3">
+          {!isProfileView && (
+            <>
               <button
-                type="button"
-                onClick={() => setShowFilters((current) => !current)}
-                aria-expanded={showFilters}
-                aria-controls="listings-filter-controls"
-                className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:border-gray-400 hover:text-gray-900"
+                onClick={() => navigate("/create-listing")}
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg w-fit cursor-pointer"
               >
-                {showFilters ? "Hide Filters" : "Show Filters"}
+                + Create Listing
               </button>
 
-              {activeFilterCount > 0 && (
-                <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
-                  {activeFilterCount} active
-                </span>
-              )}
-            </section>
+              <section className="flex flex-col gap-4">
+                <section className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowFilters((current) => !current)}
+                    aria-expanded={showFilters}
+                    aria-controls="listings-filter-controls"
+                    className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:border-gray-400 hover:text-gray-900 cursor-pointer"
+                  >
+                    {showFilters ? "Hide Filters" : "Show Filters"}
+                  </button>
 
-            {showFilters && (
-              <section id="listings-filter-controls" className="flex flex-col gap-4">
-                <CategoryFilter
-                  categories={CATEGORIES}
-                  selected={selectedCategory}
-                  onSelect={setSelectedCategory}
-                />
+                  {activeFilterCount > 0 && (
+                    <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
+                      {activeFilterCount} active
+                    </span>
+                  )}
+                </section>
 
-                <ListingsFiltersPanel
-                  selectedCondition={selectedCondition}
-                  onConditionChange={setSelectedCondition}
-                  minPrice={minPrice}
-                  onMinPriceChange={setMinPrice}
-                  maxPrice={maxPrice}
-                  onMaxPriceChange={setMaxPrice}
-                  sortBy={sortBy}
-                  onSortByChange={setSortBy}
-                  onClearFilters={clearFilters}
-                />
+                {showFilters && (
+                  <section
+                    id="listings-filter-controls"
+                    className="flex flex-col gap-4"
+                  >
+                    <CategoryFilter
+                      categories={CATEGORIES}
+                      selected={selectedCategory}
+                      onSelect={setSelectedCategory}
+                    />
+
+                    <ListingsFiltersPanel
+                      selectedCondition={selectedCondition}
+                      onConditionChange={setSelectedCondition}
+                      minPrice={minPrice}
+                      onMinPriceChange={setMinPrice}
+                      maxPrice={maxPrice}
+                      onMaxPriceChange={setMaxPrice}
+                      sortBy={sortBy}
+                      onSortByChange={setSortBy}
+                      onClearFilters={clearFilters}
+                    />
+                  </section>
+                )}
               </section>
-            )}
-          </section>
 
-          <h2 className="text-lg font-semibold text-gray-700">
-            {listingsHeading}
-          </h2>
+              <h2 className="text-lg font-semibold text-gray-700">
+                {listingsHeading}
+              </h2>
 
-          <ListingsGrid listings={filteredListings} loading={loading} />
+              <ListingsGrid listings={filteredListings} loading={loading} />
+            </>
+          )}
+
+          {isProfileView && <ProfileSettings user={user} />}
         </main>
       </section>
     </section>
