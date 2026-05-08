@@ -12,16 +12,25 @@ export default function MessagesPage() {
   const [notification, setNotification] = useState(null);
 
   // ─────────────────────────────
+  // Get logged-in user
   useEffect(() => {
     const getUser = async () => {
       const { data } = await supabase.auth.getSession();
-      setUser(data.session?.user);
+
+      if (!data.session?.user) {
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+
+      setUser(data.session.user);
     };
 
     getUser();
   }, []);
 
   // ─────────────────────────────
+  // Fetch real conversations from Supabase
   const fetchConversations = async (currentUser) => {
     try {
       const { data, error } = await supabase
@@ -55,9 +64,9 @@ export default function MessagesPage() {
         if (!grouped[key]) {
           grouped[key] = {
             listing_id: msg.listing_id,
-            listing_title: msg.listing?.title,
+            listing_title: msg.listing?.title || "Untitled listing",
             otherUserId,
-            otherUserName,
+            otherUserName: otherUserName || "Unknown user",
             lastMessage: msg.content,
             sent_at: msg.sent_at,
           };
@@ -66,16 +75,18 @@ export default function MessagesPage() {
 
       setConversations(Object.values(grouped));
     } catch (err) {
-      console.error(err);
+      console.error("Error fetching conversations:", err);
     } finally {
       setLoading(false);
     }
   };
 
   // ─────────────────────────────
+  // Load conversations + realtime updates
   useEffect(() => {
     if (!user) return;
 
+<<<<<<< HEAD
     const setup = async () => {
       await fetchConversations(user);
 
@@ -90,6 +101,24 @@ export default function MessagesPage() {
           },
           async (payload) => {
             const newMessage = payload.new;
+=======
+    fetchConversations(user);
+
+    const channel = supabase
+      .channel("messages-page")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "messages",
+        },
+        () => {
+          fetchConversations(user);
+        },
+      )
+      .subscribe();
+>>>>>>> 654da9b74d558b9afdb9d5513311fbe31929ee83
 
             // refresh chats
             fetchConversations(user);
@@ -124,14 +153,50 @@ export default function MessagesPage() {
   }, [user]);
 
   // ─────────────────────────────
+  // Open selected chat
   const openChat = (conv) => {
     navigate(`/chat/${conv.listing_id}?seller=${conv.otherUserId}`);
   };
 
   // ─────────────────────────────
-  if (loading) return <p className="p-6">Loading...</p>;
+  // Format date/time
+  const formatTime = (dateString) => {
+    if (!dateString) return "";
 
+    return new Date(dateString).toLocaleString([], {
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  // ─────────────────────────────
+  // Loading state
+  if (loading) {
+    return (
+      <main className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100 flex items-center justify-center px-6">
+        <section className="bg-white border border-gray-200 rounded-3xl shadow-sm px-8 py-7 text-center">
+          <p className="mx-auto w-14 h-14 rounded-2xl bg-blue-50 flex items-center justify-center mb-4 text-2xl">
+            💬
+          </p>
+
+          <p className="text-base font-semibold text-gray-800">
+            Loading messages...
+          </p>
+
+          <p className="text-sm text-gray-400 mt-1">
+            Please wait while we get your conversations.
+          </p>
+        </section>
+      </main>
+    );
+  }
+
+  // ─────────────────────────────
+  // Main page
   return (
+<<<<<<< HEAD
     <div className="min-h-screen bg-gray-50 p-6 relative">
 
       {notification && (
@@ -151,38 +216,110 @@ export default function MessagesPage() {
       )}
 
       <h1 className="text-2xl font-bold mb-6">Messages</h1>
+=======
+    <main
+      className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100 px-4 py-8 sm:px-6 lg:px-8"
+      style={{ fontFamily: "Inter, sans-serif" }}
+    >
+      <section className="max-w-4xl mx-auto">
+        <header className="mb-8 flex items-center justify-between gap-4">
+          <section>
+            <h1 className="text-3xl font-bold text-gray-900">Messages</h1>
+>>>>>>> 654da9b74d558b9afdb9d5513311fbe31929ee83
 
-      {conversations.length === 0 ? (
-        <p className="text-gray-500">No conversations yet.</p>
-      ) : (
-        <div className="space-y-3">
-          {conversations.map((conv, i) => (
-            <div
-              key={i}
-              onClick={() => openChat(conv)}
-              className="bg-white p-4 rounded-xl border hover:shadow cursor-pointer transition"
-            >
-              <p className="text-xs text-blue-600 font-medium">
-                {conv.listing_title}
+            <p className="text-sm text-gray-500 mt-2">
+              View your conversations with sellers about marketplace listings.
+            </p>
+          </section>
+
+          <aside
+            className="hidden sm:flex w-12 h-12 rounded-2xl bg-blue-600 items-center justify-center shadow-sm text-white text-xl"
+            aria-label="Messages icon"
+          >
+            💬
+          </aside>
+        </header>
+
+        <section className="bg-white/90 backdrop-blur border border-gray-200 rounded-3xl shadow-sm overflow-hidden">
+          {conversations.length === 0 ? (
+            <article className="px-6 py-16 text-center">
+              <p className="mx-auto w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center mb-4 text-3xl">
+                💬
               </p>
 
-              <p className="text-sm font-semibold text-gray-800">
-                {conv.otherUserName}
+              <h2 className="text-xl font-bold text-gray-800">
+                No conversations yet
+              </h2>
+
+              <p className="text-sm text-gray-500 mt-2">
+                When you contact a seller, your chats will appear here.
               </p>
 
-              <p className="text-sm text-gray-600 truncate">
-                {conv.lastMessage}
-              </p>
+              {!user && (
+                <p className="text-xs text-gray-400 mt-3">
+                  You are currently not signed in, so no real conversations can
+                  be loaded yet.
+                </p>
+              )}
+            </article>
+          ) : (
+            <ul className="divide-y divide-gray-100">
+              {conversations.map((conv, i) => (
+                <li key={`${conv.listing_id}-${conv.otherUserId}-${i}`}>
+                  <button
+                    type="button"
+                    onClick={() => openChat(conv)}
+                    className="w-full text-left px-5 py-5 hover:bg-blue-50/60 transition group"
+                  >
+                    <article className="flex items-center gap-4">
+                      <p
+                        className="shrink-0 w-12 h-12 rounded-2xl bg-blue-100 flex items-center justify-center shadow-sm text-base font-bold text-blue-700"
+                        aria-label={`Avatar for ${conv.otherUserName}`}
+                      >
+                        {conv.otherUserName?.charAt(0)?.toUpperCase() || "U"}
+                      </p>
 
-              <p className="text-xs text-gray-400 mt-1">
-                {new Date(conv.sent_at).toLocaleString()}
-              </p>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
+                      <section className="min-w-0 flex-1">
+                        <header className="flex items-start justify-between gap-3">
+                          <section className="min-w-0">
+                            <h2 className="text-base font-semibold text-gray-900 truncate">
+                              {conv.otherUserName}
+                            </h2>
+
+                            <p className="text-xs text-blue-600 font-semibold truncate mt-1">
+                              {conv.listing_title}
+                            </p>
+                          </section>
+
+                          <time
+                            className="text-xs text-gray-400 shrink-0"
+                            dateTime={conv.sent_at || undefined}
+                          >
+                            {formatTime(conv.sent_at)}
+                          </time>
+                        </header>
+
+                        <p className="text-sm text-gray-600 truncate mt-2">
+                          {conv.lastMessage}
+                        </p>
+                      </section>
+
+                      <p className="shrink-0 w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 group-hover:bg-blue-600 group-hover:text-white transition">
+                        →
+                      </p>
+                    </article>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      </section>
+    </main>
   );
+<<<<<<< HEAD
   //code 
   //code
+=======
+>>>>>>> 654da9b74d558b9afdb9d5513311fbe31929ee83
 }
