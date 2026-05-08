@@ -27,29 +27,29 @@ export default function SignIn() {
     <div className="min-h-screen flex items-center justify-center bg-[#F4F6FB] px-4 py-10">
       <div className="w-full max-w-md bg-white rounded-2xl border border-slate-200 shadow-[0_4px_24px_rgba(28,63,170,0.07)] p-8">
         {/* ── Brand ── */}
-        <p className="text-[15px] font-bold text-[#1C3FAA] mb-7">Uni-Square</p>
+        <p className="text-[15px] font-['inter',sans-serif] font-bold text-[#1C3FAA] mb-7">Uni-Square</p>
 
         {/* ── Heading ── */}
-        <h1 className="text-2xl font-extrabold text-[#0D1B4B] mb-2">Sign In</h1>
-        <p className="text-sm text-slate-500 mb-6">Welcome back.</p>
+        <h1 className="text-2xl font-['inter',sans-serif] font-extrabold text-[#0D1B4B] mb-2">Sign In</h1>
+        <p className="text-sm font-['inter',sans-serif] text-slate-500 mb-6">Welcome back.</p>
 
         {/* ── Google Button ── */}
         <button
           type="button"
           onClick={handleGoogle}
           disabled={loading}
-          className="w-full flex items-center justify-center gap-2.5 py-2.75 bg-white border-[1.5px] border-slate-200 rounded-xl text-sm font-semibold text-[#0D1B4B] hover:bg-slate-50 active:scale-[.98] transition-all duration-150 mb-5 cursor-pointer"
+          className="w-full flex items-center justify-center gap-2.5 py-2.75 bg-white border-[1.5px] border-slate-200 font-['inter',sans-serif] rounded-xl text-sm font-semibold text-[#0D1B4B] hover:bg-slate-50 active:scale-[.98] transition-all duration-150 mb-5 cursor-pointer"
         >
           <GoogleIcon />
           {loading ? "Redirecting..." : "Sign-in with Google"}
         </button>
 
         {/* ── Sign In Link ── */}
-        <p className="text-center mt-5 text-sm text-slate-500">
+        <p className="text-center mt-5 font-['inter',sans-serif] text-sm text-slate-500">
           Don't have an account?{" "}
           <a
             onClick={() => navigate("/signup")}
-            className="text-[#2350D4] font-bold hover:underline cursor-pointer"
+            className="text-[#2350D4] font-['inter',sans-serif] font-bold hover:underline cursor-pointer"
           >
             Sign Up
           </a>
