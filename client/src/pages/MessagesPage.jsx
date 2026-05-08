@@ -86,7 +86,6 @@ export default function MessagesPage() {
   useEffect(() => {
     if (!user) return;
 
-<<<<<<< HEAD
     const setup = async () => {
       await fetchConversations(user);
 
@@ -101,7 +100,6 @@ export default function MessagesPage() {
           },
           async (payload) => {
             const newMessage = payload.new;
-=======
     fetchConversations(user);
 
     const channel = supabase
@@ -118,7 +116,6 @@ export default function MessagesPage() {
         },
       )
       .subscribe();
->>>>>>> 654da9b74d558b9afdb9d5513311fbe31929ee83
 
             // refresh chats
             fetchConversations(user);
@@ -196,7 +193,6 @@ export default function MessagesPage() {
   // ─────────────────────────────
   // Main page
   return (
-<<<<<<< HEAD
     <div className="min-h-screen bg-gray-50 p-6 relative">
 
       {notification && (
@@ -216,7 +212,6 @@ export default function MessagesPage() {
       )}
 
       <h1 className="text-2xl font-bold mb-6">Messages</h1>
-=======
     <main
       className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100 px-4 py-8 sm:px-6 lg:px-8"
       style={{ fontFamily: "Inter, sans-serif" }}
@@ -225,7 +220,6 @@ export default function MessagesPage() {
         <header className="mb-8 flex items-center justify-between gap-4">
           <section>
             <h1 className="text-3xl font-bold text-gray-900">Messages</h1>
->>>>>>> 654da9b74d558b9afdb9d5513311fbe31929ee83
 
             <p className="text-sm text-gray-500 mt-2">
               View your conversations with sellers about marketplace listings.
@@ -317,9 +311,6 @@ export default function MessagesPage() {
       </section>
     </main>
   );
-<<<<<<< HEAD
   //code 
   //code
-=======
->>>>>>> 654da9b74d558b9afdb9d5513311fbe31929ee83
 }
