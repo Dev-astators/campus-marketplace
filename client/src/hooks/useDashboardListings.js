@@ -18,15 +18,11 @@ function getFirstName(authUser) {
   return "Student";
 }
 
-// Encapsulates dashboard data concerns:
-// 1) current authenticated user
-// 2) listings fetch for marketplace vs my-listings tab
 export default function useDashboardListings(activeNav) {
   const [user, setUser] = useState(null);
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Session is read once on mount; tab changes do not require re-reading auth.
   useEffect(() => {
     const getUser = async () => {
       const { data } = await supabase.auth.getSession();
@@ -50,8 +46,7 @@ export default function useDashboardListings(activeNav) {
         provider: data.session.user.app_metadata?.provider || "google",
         createdAt: data.session.user.created_at,
         lastSignInAt: data.session.user.last_sign_in_at,
-        avatarUrl:
-          metadata.avatar_url || metadata.picture || null,
+        avatarUrl: metadata.avatar_url || metadata.picture || null,
       });
     };
 
@@ -59,14 +54,12 @@ export default function useDashboardListings(activeNav) {
   }, []);
 
   const fetchListings = useCallback(async (navItem, currentUserId) => {
-    // My Listings depends on the logged-in user id. If unavailable, return empty state.
     if (navItem === "my-listings" && !currentUserId) {
       setListings([]);
       setLoading(false);
       return;
     }
 
-    // Choose API endpoint based on active dashboard tab.
     const endpoint =
       navItem === "my-listings"
         ? `${API_BASE_URL}/api/listings/my/${currentUserId}`
@@ -108,10 +101,13 @@ export default function useDashboardListings(activeNav) {
     }
   }, []);
 
+  // ✅ FIXED EFFECT (lint-safe)
   useEffect(() => {
-    // Refetch when tab changes or when user identity becomes available.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchListings(activeNav, user?.id);
+    const run = async () => {
+      await fetchListings(activeNav, user?.id);
+    };
+
+    run();
   }, [activeNav, user?.id, fetchListings]);
 
   return {

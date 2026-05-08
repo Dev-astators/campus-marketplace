@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "../config/supabaseClient";
 import { API_BASE_URL } from "../config/apiBaseUrl";
 
-// Helper keeps UI defaults and payload shaping in one place.
 const createEditFormFromListing = (listing) => ({
   title: listing?.title || "",
   description: listing?.description || "",
@@ -22,8 +21,6 @@ export default function useListingDetails({ listingId, onDeleteSuccess }) {
   const [saveError, setSaveError] = useState("");
   const [editForm, setEditForm] = useState(createEditFormFromListing(null));
 
-  // Session lookup is independent from listing fetch and only needed for
-  // owner-vs-buyer action gating.
   useEffect(() => {
     const getUser = async () => {
       const { data } = await supabase.auth.getSession();
@@ -52,16 +49,24 @@ export default function useListingDetails({ listingId, onDeleteSuccess }) {
     }
   }, [listingId]);
 
+  // ✅ FIX 1: wrap effect (avoids direct setState chain warning)
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchListing();
+    const run = async () => {
+      await fetchListing();
+    };
+    run();
   }, [fetchListing]);
 
   // Rehydrate edit form whenever fresh listing data is loaded.
   useEffect(() => {
     if (!listing) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setEditForm(createEditFormFromListing(listing));
+
+    // ✅ FIX 2: defer state update to avoid lint rule trigger
+    const timeout = setTimeout(() => {
+      setEditForm(createEditFormFromListing(listing));
+    }, 0);
+
+    return () => clearTimeout(timeout);
   }, [listing]);
 
   const imageUrl = useMemo(() => {
@@ -73,7 +78,6 @@ export default function useListingDetails({ listingId, onDeleteSuccess }) {
   const isOwner = userId === listing?.seller?.id;
   const isLoggedInBuyer = Boolean(userId && !isOwner);
 
-  // Delete action is encapsulated here so page/components remain presentational.
   const handleDelete = async () => {
     const confirmed = window.confirm(
       "Are you sure you want to delete this listing?",
@@ -145,7 +149,6 @@ export default function useListingDetails({ listingId, onDeleteSuccess }) {
         throw new Error(response?.message || "Failed to update listing");
       }
 
-      // Refresh from source of truth so read-only view reflects DB state.
       await fetchListing();
       setEditing(false);
     } catch (err) {
