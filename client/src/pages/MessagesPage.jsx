@@ -9,12 +9,16 @@ export default function MessagesPage() {
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // NEW
+  const [notification, setNotification] = useState(null);
+
   // ─────────────────────────────
   useEffect(() => {
     const getUser = async () => {
       const { data } = await supabase.auth.getSession();
       setUser(data.session?.user);
     };
+
     getUser();
   }, []);
 
@@ -23,14 +27,12 @@ export default function MessagesPage() {
     try {
       const { data, error } = await supabase
         .from("messages")
-        .select(
-          `
+        .select(`
           *,
           listing:listings(title),
           sender:profiles!messages_sender_id_fkey(full_name),
           receiver:profiles!messages_receiver_id_fkey(full_name)
-        `,
-        )
+        `)
         .or(`sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`)
         .order("sent_at", { ascending: false });
 
@@ -41,7 +43,9 @@ export default function MessagesPage() {
       data.forEach((msg) => {
         const isSender = msg.sender_id === currentUser.id;
 
-        const otherUserId = isSender ? msg.receiver_id : msg.sender_id;
+        const otherUserId = isSender
+          ? msg.receiver_id
+          : msg.sender_id;
 
         const otherUserName = isSender
           ? msg.receiver?.full_name
@@ -73,10 +77,9 @@ export default function MessagesPage() {
   useEffect(() => {
     if (!user) return;
 
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchConversations(user);
 
-    // ✅ REALTIME FIX
+    // realtime messages
     const channel = supabase
       .channel("messages-page")
       .on(
@@ -86,9 +89,33 @@ export default function MessagesPage() {
           schema: "public",
           table: "messages",
         },
-        () => {
-          fetchConversations(user); // 🔥 refresh automatically
-        },
+        async (payload) => {
+          const newMessage = payload.new;
+
+          // refresh chats
+          fetchConversations(user);
+
+          // ONLY notify receiver
+          if (newMessage.receiver_id === user.id) {
+            // get sender name
+            const { data: senderProfile } = await supabase
+              .from("profiles")
+              .select("full_name")
+              .eq("id", newMessage.sender_id)
+              .single();
+
+            // show notification
+            setNotification({
+              sender: senderProfile?.full_name || "Someone",
+              message: newMessage.content,
+            });
+
+            // auto hide after 4 sec
+            setTimeout(() => {
+              setNotification(null);
+            }, 4000);
+          }
+        }
       )
       .subscribe();
 
@@ -106,7 +133,25 @@ export default function MessagesPage() {
   if (loading) return <p className="p-6">Loading...</p>;
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-50 p-6 relative">
+
+      {/* notification popup */}
+      {notification && (
+        <div className="fixed top-5 right-5 bg-white border shadow-xl rounded-xl p-4 w-80 z-50 animate-bounce">
+          <p className="font-bold text-sm text-gray-800">
+            New Message
+          </p>
+
+          <p className="text-sm text-blue-600 mt-1">
+            {notification.sender}
+          </p>
+
+          <p className="text-sm text-gray-600 truncate mt-1">
+            {notification.message}
+          </p>
+        </div>
+      )}
+
       <h1 className="text-2xl font-bold mb-6">Messages</h1>
 
       {conversations.length === 0 ? (
