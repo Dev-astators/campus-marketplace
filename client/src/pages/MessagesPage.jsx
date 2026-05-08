@@ -9,7 +9,6 @@ export default function MessagesPage() {
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // NEW
   const [notification, setNotification] = useState(null);
 
   // ─────────────────────────────
@@ -77,51 +76,51 @@ export default function MessagesPage() {
   useEffect(() => {
     if (!user) return;
 
-    fetchConversations(user);
+    const setup = async () => {
+      await fetchConversations(user);
 
-    // realtime messages
-    const channel = supabase
-      .channel("messages-page")
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "messages",
-        },
-        async (payload) => {
-          const newMessage = payload.new;
+      const channel = supabase
+        .channel("messages-page")
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "messages",
+          },
+          async (payload) => {
+            const newMessage = payload.new;
 
-          // refresh chats
-          fetchConversations(user);
+            // refresh chats
+            fetchConversations(user);
 
-          // ONLY notify receiver
-          if (newMessage.receiver_id === user.id) {
-            // get sender name
-            const { data: senderProfile } = await supabase
-              .from("profiles")
-              .select("full_name")
-              .eq("id", newMessage.sender_id)
-              .single();
+            // ONLY notify receiver
+            if (newMessage.receiver_id === user.id) {
+              const { data: senderProfile } = await supabase
+                .from("profiles")
+                .select("full_name")
+                .eq("id", newMessage.sender_id)
+                .single();
 
-            // show notification
-            setNotification({
-              sender: senderProfile?.full_name || "Someone",
-              message: newMessage.content,
-            });
+              setNotification({
+                sender: senderProfile?.full_name || "Someone",
+                message: newMessage.content,
+              });
 
-            // auto hide after 4 sec
-            setTimeout(() => {
-              setNotification(null);
-            }, 4000);
+              setTimeout(() => {
+                setNotification(null);
+              }, 4000);
+            }
           }
-        }
-      )
-      .subscribe();
+        )
+        .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
+      return () => {
+        supabase.removeChannel(channel);
+      };
     };
+
+    setup();
   }, [user]);
 
   // ─────────────────────────────
@@ -135,7 +134,6 @@ export default function MessagesPage() {
   return (
     <div className="min-h-screen bg-gray-50 p-6 relative">
 
-      {/* notification popup */}
       {notification && (
         <div className="fixed top-5 right-5 bg-white border shadow-xl rounded-xl p-4 w-80 z-50 animate-bounce">
           <p className="font-bold text-sm text-gray-800">
@@ -185,6 +183,4 @@ export default function MessagesPage() {
       )}
     </div>
   );
-  //code
-  //code code
 }
