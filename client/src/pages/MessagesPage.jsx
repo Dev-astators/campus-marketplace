@@ -9,7 +9,7 @@ export default function MessagesPage() {
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // NEW: for notifications
+  // NEW
   const [notification, setNotification] = useState(null);
 
   // ─────────────────────────────
