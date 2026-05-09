@@ -4,6 +4,11 @@ import userEvent from "@testing-library/user-event";
 import { describe, it, expect, beforeEach } from "@jest/globals";
 import ProfileSettings from "../../components/studentDashboard/ProfileSettings";
 import { supabase } from "../../config/supabaseClient";
+import { redirectTo } from "../../utils/navigation";
+
+jest.mock("../../utils/navigation", () => ({
+  redirectTo: jest.fn(),
+}));
 
 describe("ProfileSettings", () => {
   const user = {
@@ -36,12 +41,6 @@ describe("ProfileSettings", () => {
 
   it("signs out and redirects to the home page", async () => {
     const userDriver = userEvent.setup();
-    const originalLocation = window.location;
-
-    Object.defineProperty(window, "location", {
-      configurable: true,
-      value: { href: "http://localhost" },
-    });
 
     render(<ProfileSettings user={user} />);
 
@@ -50,12 +49,7 @@ describe("ProfileSettings", () => {
     expect(supabase.auth.signOut).toHaveBeenCalledTimes(1);
 
     await waitFor(() => {
-      expect(window.location.href).toBe("/");
-    });
-
-    Object.defineProperty(window, "location", {
-      configurable: true,
-      value: originalLocation,
+      expect(redirectTo).toHaveBeenCalledWith("/");
     });
   });
 });

@@ -1,4 +1,5 @@
 import { supabase } from "../../config/supabaseClient";
+import { redirectTo } from "../../utils/navigation";
 
 const formatDate = (value) => {
   if (!value) return "—";
@@ -23,7 +24,7 @@ export default function ProfileSettings({ user }) {
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
-    window.location.href = "/";
+    redirectTo("/");
   };
 
   return (
