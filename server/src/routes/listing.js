@@ -8,6 +8,7 @@ const {
   getListingsBySellerId,
   createListing,
 } = require("../services/listingService");
+const { getSuggestedPriceRange } = require("../services/cpiService");
 const { validateListingInput } = require("../services/listingValidator");
 const { verifySession } = require("../middleware/authMiddleware");
 
@@ -62,6 +63,39 @@ router.get("/my/:sellerId", verifySession, async (req, res) => {
   }
 
   return res.status(200).json({ listings: data || [] });
+});
+
+/**
+ * GET /api/listings/suggested-price
+ * Returns a suggested price range based on Stats SA CPI data.
+ * Query params: category, askingPrice
+ */
+router.get("/suggested-price", (req, res) => {
+  const { category, askingPrice } = req.query;
+
+  if (!category || !askingPrice) {
+    return res
+      .status(400)
+      .json({ message: "category and askingPrice are required" });
+  }
+
+  const price = parseFloat(askingPrice);
+
+  if (Number.isNaN(price) || price <= 0) {
+    return res
+      .status(400)
+      .json({ message: "askingPrice must be a positive number" });
+  }
+
+  const suggestion = getSuggestedPriceRange(price, category);
+
+  if (!suggestion) {
+    return res
+      .status(404)
+      .json({ message: `No CPI data available for category: ${category}` });
+  }
+
+  return res.status(200).json({ suggestion });
 });
 
 /**
