@@ -436,7 +436,7 @@ export default function CreateListing() {
 
               <label htmlFor="askingPrice" className="space-y-2">
                 <strong className="block text-sm font-semibold text-gray-800">
-                  Asking price
+                  Asking price (ZAR)
                 </strong>
 
                 <input
