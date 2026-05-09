@@ -20,6 +20,17 @@ export default function NotificationsPage() {
   const [loading, setLoading] = useState(true);
 
   // ─────────────────────────────
+  // FORMAT TIME (MOVED UP → FIX LINT ERROR)
+  const formatTime = (dateString) => {
+    return new Date(dateString).toLocaleString([], {
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  // ─────────────────────────────
   // Get logged in user
   useEffect(() => {
     const getUser = async () => {
@@ -37,7 +48,7 @@ export default function NotificationsPage() {
   }, []);
 
   // ─────────────────────────────
-  // Fetch notifications (FIXED with useCallback)
+  // Fetch notifications (stable + lint-safe)
   const fetchNotifications = useCallback(async (currentUser) => {
     try {
       const { data, error } = await supabase
@@ -83,7 +94,7 @@ export default function NotificationsPage() {
   }, []);
 
   // ─────────────────────────────
-  // Realtime updates
+  // Realtime updates (FIXED dependency + no lint issue)
   useEffect(() => {
     if (!user) return;
 
@@ -152,15 +163,6 @@ export default function NotificationsPage() {
     }
   };
 
-  const formatTime = (dateString) => {
-    return new Date(dateString).toLocaleString([], {
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
   // ─────────────────────────────
   const unreadNotifications = notifications.filter((n) => !n.is_read);
   const earlierNotifications = notifications.filter((n) => n.is_read);
@@ -223,6 +225,7 @@ export default function NotificationsPage() {
                       Unread
                     </h2>
                   </header>
+
                   <ul className="divide-y divide-gray-100">
                     {unreadNotifications.map((notification) => (
                       <li key={notification.id}>
