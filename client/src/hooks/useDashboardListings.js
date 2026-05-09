@@ -29,10 +29,24 @@ export default function useDashboardListings(activeNav) {
 
       if (!data.session) return;
 
+      const metadata = data.session.user.user_metadata ?? {};
+      const fullName =
+        metadata.full_name ||
+        metadata.name ||
+        data.session.user.email?.split("@")[0] ||
+        "Student";
+
       setUser({
         name: getFirstName(data.session.user),
+        fullName,
         id: data.session.user.id,
-        avatarUrl: data.session.user.user_metadata?.avatar_url,
+        email: data.session.user.email,
+        studentNumber: data.session.user.email?.split("@")[0] || null,
+        role: metadata.role || "student",
+        provider: data.session.user.app_metadata?.provider || "google",
+        createdAt: data.session.user.created_at,
+        lastSignInAt: data.session.user.last_sign_in_at,
+        avatarUrl: metadata.avatar_url || metadata.picture || null,
       });
     };
 

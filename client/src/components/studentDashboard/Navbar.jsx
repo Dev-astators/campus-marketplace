@@ -10,6 +10,7 @@
  */
 
 export default function Navbar({ user, searchValue = "", onSearch }) {
+  const displayName = user?.fullName || user?.name || "Student";
   const notificationCount = 3; // temporary for now
 
   return (
@@ -94,7 +95,7 @@ export default function Navbar({ user, searchValue = "", onSearch }) {
 
         {/* Username */}
         <p className="text-sm font-medium text-gray-800">
-          {user?.name ?? "Student"}
+          {displayName ?? "Student"}
         </p>
 
         {/* Avatar */}
@@ -102,7 +103,7 @@ export default function Navbar({ user, searchValue = "", onSearch }) {
           {user?.avatarUrl ? (
             <img
               src={user.avatarUrl}
-              alt={`${user.name} avatar`}
+              alt={`${displayName} avatar`}
               className="w-full h-full object-cover"
             />
           ) : (
@@ -122,7 +123,7 @@ export default function Navbar({ user, searchValue = "", onSearch }) {
           )}
 
           <figcaption className="sr-only">
-            {user?.name ?? "Student"} profile picture
+            {displayName} profile picture
           </figcaption>
         </figure>
       </nav>
