@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { supabase } from "../config/supabaseClient";
 import Chat from "../components/Chat";
@@ -14,6 +14,7 @@ const PREVIEW_MESSAGES = [
     receiver_id: PREVIEW_USER_ID,
     content: "Hi, yes this item is still available.",
     sent_at: new Date().toISOString(),
+    is_read: true,
   },
   {
     id: "preview-2",
@@ -22,6 +23,7 @@ const PREVIEW_MESSAGES = [
     receiver_id: "seller-preview",
     content: "Great, can I collect it tomorrow?",
     sent_at: new Date().toISOString(),
+    is_read: true,
   },
   {
     id: "preview-3",
@@ -30,6 +32,7 @@ const PREVIEW_MESSAGES = [
     receiver_id: PREVIEW_USER_ID,
     content: "Yes, tomorrow works. We can meet at the trade facility.",
     sent_at: new Date().toISOString(),
+    is_read: false,
   },
 ];
 
@@ -58,6 +61,24 @@ export default function ChatPage() {
   }, []);
 
   // ─────────────────────────────
+  // FIXED: stable function for lint (useCallback)
+  const markMessagesAsRead = useCallback(async () => {
+    if (!user || !sellerId || !listingId) return;
+
+    try {
+      await supabase
+        .from("messages")
+        .update({ is_read: true })
+        .eq("listing_id", listingId)
+        .eq("sender_id", sellerId)
+        .eq("receiver_id", user.id)
+        .eq("is_read", false);
+    } catch (err) {
+      console.error("Error marking messages as read:", err);
+    }
+  }, [user, sellerId, listingId]);
+
+  // ─────────────────────────────
   // Fetch real messages
   useEffect(() => {
     if (!user || !sellerId || !listingId) return;
@@ -65,25 +86,27 @@ export default function ChatPage() {
     const fetchMessages = async () => {
       try {
         const res = await fetch(
-          `${API_BASE_URL}/api/messages/${listingId}/${user.id}/${sellerId}`,
+          `${API_BASE_URL}/api/messages/${listingId}/${user.id}/${sellerId}`
         );
 
         const data = await res.json();
+
         setMessages(data.messages || []);
+
+        await markMessagesAsRead();
       } catch (err) {
         console.error("Error fetching messages:", err);
       }
     };
 
     fetchMessages();
-  }, [user, sellerId, listingId]);
+  }, [user, sellerId, listingId, markMessagesAsRead]);
 
   // ─────────────────────────────
-  // Send message with optimistic UI update
+  // Send message
   const handleSend = async () => {
     if (!input.trim()) return;
 
-    // Preview mode: allow typing locally without real backend
     if (!user) {
       const previewMessage = {
         id: Date.now(),
@@ -92,6 +115,7 @@ export default function ChatPage() {
         receiver_id: sellerId || "seller-preview",
         content: input.trim(),
         sent_at: new Date().toISOString(),
+        is_read: false,
       };
 
       PREVIEW_MESSAGES.push(previewMessage);
@@ -110,6 +134,7 @@ export default function ChatPage() {
       receiver_id: sellerId,
       content: messageContent,
       sent_at: new Date().toISOString(),
+      is_read: false,
     };
 
     setMessages((prev) => [...prev, tempMessage]);
@@ -132,7 +157,7 @@ export default function ChatPage() {
   };
 
   // ─────────────────────────────
-  // Realtime messages
+  // Realtime updates
   useEffect(() => {
     if (!user || !listingId) return;
 
@@ -146,7 +171,7 @@ export default function ChatPage() {
           table: "messages",
           filter: `listing_id=eq.${listingId}`,
         },
-        (payload) => {
+        async (payload) => {
           const newMessage = payload.new;
 
           setMessages((prev) => {
@@ -154,20 +179,51 @@ export default function ChatPage() {
             if (exists) return prev;
             return [...prev, newMessage];
           });
+
+          if (newMessage.receiver_id === user.id) {
+            await markMessagesAsRead();
+          }
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "messages",
+          filter: `listing_id=eq.${listingId}`,
         },
+        (payload) => {
+          const updatedMessage = payload.new;
+
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === updatedMessage.id ? updatedMessage : msg
+            )
+          );
+        }
       )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, listingId]);
+  }, [user, listingId, sellerId, markMessagesAsRead]);
 
+  // ─────────────────────────────
   const displayedMessages = user ? messages : PREVIEW_MESSAGES;
   const displayedUserId = user?.id || PREVIEW_USER_ID;
 
+  const enhancedMessages = displayedMessages.map((msg) => {
+    const isMine = msg.sender_id === displayedUserId;
+
+    return {
+      ...msg,
+      status: isMine ? (msg.is_read ? "read" : "sent") : null,
+    };
+  });
+
   // ─────────────────────────────
-  // Loading state
   if (loadingUser) {
     return (
       <main className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100 flex items-center justify-center px-6">
@@ -188,31 +244,18 @@ export default function ChatPage() {
     );
   }
 
-  // ─────────────────────────────
-  // Main page
   return (
-    <main
-      className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100 px-4 py-8 sm:px-6 lg:px-8"
-      style={{ fontFamily: "Inter, sans-serif" }}
-    >
+    <main className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100 px-4 py-8 sm:px-6 lg:px-8">
       <section className="max-w-4xl mx-auto h-[calc(100vh-4rem)] flex flex-col">
         <header className="mb-6 flex items-center justify-between gap-4">
           <section>
             <h1 className="text-3xl font-bold text-gray-900">Chat</h1>
-
             <p className="text-sm text-gray-500 mt-2">
               Send and receive messages about this marketplace listing.
             </p>
-
-            {!user && (
-              <p className="text-xs text-blue-600 font-medium mt-2">
-                Preview mode: sign in later to test with real messages.
-              </p>
-            )}
           </section>
 
           <button
-            type="button"
             onClick={() => navigate("/messages")}
             className="px-4 py-2 rounded-xl border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
           >
@@ -222,7 +265,7 @@ export default function ChatPage() {
 
         <section className="flex-1 min-h-0">
           <Chat
-            messages={displayedMessages}
+            messages={enhancedMessages}
             currentUserId={displayedUserId}
             input={input}
             setInput={setInput}
