@@ -12,6 +12,7 @@ import CreateListing from "./pages/CreateListing";
 import ChatPage from "./pages/ChatPage";
 import SellerProfilePage from "./pages/SellerProfilePage";
 import MessagesPage from "./pages/MessagesPage";
+import NotificationsPage from "./pages/NotificationsPage";
 import AdminDashboard from "./pages/AdminDashboard";
 
 function App() {
@@ -43,23 +44,22 @@ function App() {
   }, [session]);
 
   return (
-    <>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<WelcomePage />} />
-          <Route path="/signin" element={<SignInPage />} />
-          <Route path="/signup" element={<SignUpPage />} />
-          <Route path="/staff-dashboard" element={<StaffDashboard />} />
-          <Route path="/student-dashboard" element={<StudentDashboard />} />
-          <Route path="/listing/:id" element={<ListingDetails />} />
-          <Route path="/create-listing" element={<CreateListing />} />
-          <Route path="/chat/:id" element={<ChatPage />} />
-          <Route path="/seller-profile" element={<SellerProfilePage />} />
-          <Route path="/messages" element={<MessagesPage />} />
-          <Route path="/admin-dashboard" element={<AdminDashboard />} />
-        </Routes>
-      </BrowserRouter>
-    </>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<WelcomePage />} />
+        <Route path="/signin" element={<SignInPage />} />
+        <Route path="/signup" element={<SignUpPage />} />
+        <Route path="/staff-dashboard" element={<StaffDashboard />} />
+        <Route path="/student-dashboard" element={<StudentDashboard />} />
+        <Route path="/listing/:id" element={<ListingDetails />} />
+        <Route path="/create-listing" element={<CreateListing />} />
+        <Route path="/chat/:id" element={<ChatPage />} />
+        <Route path="/seller-profile" element={<SellerProfilePage />} />
+        <Route path="/messages" element={<MessagesPage />} />
+        <Route path="/notifications" element={<NotificationsPage />} />
+        <Route path="/admin-dashboard" element={<AdminDashboard />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 

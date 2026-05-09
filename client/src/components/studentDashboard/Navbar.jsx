@@ -1,4 +1,4 @@
-// src/components/dashboard/Navbar.jsx
+// src/components/studentDashboard/Navbar.jsx
 
 /**
  * Navbar component
@@ -11,7 +11,7 @@
 
 export default function Navbar({ user, searchValue = "", onSearch }) {
   const displayName = user?.fullName || user?.name || "Student";
-  const notificationCount = 3; // temporary for now
+  const notificationCount = 0; // temporary for now
 
   return (
     <header className="w-full bg-gray-100 px-6 py-3 flex items-center gap-6 border-b border-gray-200">
@@ -66,8 +66,8 @@ export default function Navbar({ user, searchValue = "", onSearch }) {
         className="flex items-center gap-3 ml-auto shrink-0"
       >
         {/* Notification bell */}
-        <button
-          type="button"
+        <a
+          href="/notifications"
           className="relative w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition"
           aria-label={`View notifications. ${notificationCount} unread notifications.`}
         >
@@ -91,12 +91,10 @@ export default function Navbar({ user, searchValue = "", onSearch }) {
               {notificationCount}
             </strong>
           )}
-        </button>
+        </a>
 
         {/* Username */}
-        <p className="text-sm font-medium text-gray-800">
-          {displayName ?? "Student"}
-        </p>
+        <p className="text-sm font-medium text-gray-800">{displayName}</p>
 
         {/* Avatar */}
         <figure className="w-9 h-9 rounded-full bg-gray-300 overflow-hidden flex items-center justify-center">
