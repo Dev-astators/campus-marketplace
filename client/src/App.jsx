@@ -12,7 +12,7 @@ import CreateListing from './pages/CreateListing';
 import ChatPage from './pages/ChatPage';
 import SellerProfilePage from './pages/SellerProfilePage';
 import MessagesPage from './pages/MessagesPage';
-
+import NotificationsPage from './pages/NotificationsPage';
 
 function App() {
   const [session, setSession] = useState(null);
@@ -54,6 +54,7 @@ function App() {
           <Route path="/chat/:id" element={<ChatPage/>}/>
           <Route path="/seller-profile" element={<SellerProfilePage />} />
           <Route path="/messages" element={<MessagesPage />} />
+          <Route path="/notifications" element={<NotificationsPage />} />
         </Routes>
       </BrowserRouter>
     </>

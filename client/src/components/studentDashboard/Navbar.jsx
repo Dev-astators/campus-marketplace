@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 // src/components/dashboard/Navbar.jsx
 
 /**
@@ -10,7 +11,8 @@
  */
 
 export default function Navbar({ user, searchValue = "", onSearch }) {
-  const notificationCount = 3; // temporary for now
+  const navigate = useNavigate();
+  const notificationCount = 0; // temporary for now
 
   return (
     <header className="w-full bg-gray-100 px-6 py-3 flex items-center gap-6 border-b border-gray-200">
@@ -67,6 +69,7 @@ export default function Navbar({ user, searchValue = "", onSearch }) {
         {/* Notification bell */}
         <button
           type="button"
+          onClick={() => navigate("/notifications")}
           className="relative w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition"
           aria-label={`View notifications. ${notificationCount} unread notifications.`}
         >
