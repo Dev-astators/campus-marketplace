@@ -24,9 +24,12 @@ const formatCurrency = (value) =>
     maximumFractionDigits: 2,
   }).format(value);
 
+const formatFileSize = (bytes) => `${(bytes / 1024 / 1024).toFixed(2)} MB`;
+
 export default function CreateListing() {
   const navigate = useNavigate();
   const [image, setImage] = useState(null);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState("");
   const [priceSuggestion, setPriceSuggestion] = useState(null);
   const [suggestionState, setSuggestionState] = useState("idle");
   const [suggestionMessage, setSuggestionMessage] = useState(
@@ -45,6 +48,20 @@ export default function CreateListing() {
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
+
+  useEffect(() => {
+    if (!image) {
+      setImagePreviewUrl("");
+      return undefined;
+    }
+
+    const previewUrl = URL.createObjectURL(image);
+    setImagePreviewUrl(previewUrl);
+
+    return () => {
+      URL.revokeObjectURL(previewUrl);
+    };
+  }, [image]);
 
   useEffect(() => {
     const price = Number(form.askingPrice);
@@ -144,7 +161,7 @@ export default function CreateListing() {
 
       const listingId = dataRes.listing.id;
 
-      // 2️⃣ Upload image (if exists)
+      //Upload image 
       if (image) {
         const fileExt = image.name.split(".").pop();
         const fileName = `${listingId}.${fileExt}`;
@@ -192,20 +209,90 @@ export default function CreateListing() {
             Listing details
           </legend>
 
-          <div className="space-y-2">
+          <section className="space-y-2">
             <label htmlFor="listing-image" className="block text-sm font-medium">
               Listing image
             </label>
+            <article className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4">
+              <header className="space-y-2">
+                <p className="text-sm font-medium text-slate-900">
+                  Add a clear photo of your item
+                </p>
+                <p className="text-sm text-slate-600">
+                  Use a well-lit image so buyers can quickly understand the
+                  item and its condition.
+                </p>
+                <p className="text-xs text-slate-500">
+                  Accepted formats: JPG, PNG, WEBP and other image files.
+                </p>
+              </header>
+
+              <p className="mt-4">
+                <label
+                  htmlFor="listing-image"
+                  className="inline-flex cursor-pointer rounded-md bg-blue-700 px-4 py-2 text-sm font-medium text-white"
+                >
+                  Choose image
+                </label>
+              </p>
+
+              {image ? (
+                <article className="mt-4 grid gap-4 rounded-lg border border-slate-200 bg-white p-4 md:grid-cols-[160px_1fr]">
+                  {imagePreviewUrl ? (
+                    <figure className="overflow-hidden rounded-lg border bg-slate-100">
+                      <img
+                        src={imagePreviewUrl}
+                        alt={`Preview of ${image.name}`}
+                        className="h-40 w-full object-cover"
+                      />
+                    </figure>
+                  ) : null}
+
+                  <section className="space-y-3">
+                    <header>
+                      <h2 className="text-sm font-semibold text-blue-700">
+                        Selected image
+                      </h2>
+                      <p className="mt-1 text-sm text-slate-700">
+                        {image.name}
+                      </p>
+                    </header>
+
+                    <dl className="grid gap-2 text-sm text-slate-600 sm:grid-cols-2">
+                      <dt className="font-medium text-slate-800">File size</dt>
+                      <dd>{formatFileSize(image.size)}</dd>
+                      <dt className="font-medium text-slate-800">File type</dt>
+                      <dd>{image.type || "Unknown image type"}</dd>
+                    </dl>
+
+                    <p>
+                      <button
+                        type="button"
+                        onClick={() => setImage(null)}
+                        className="inline-flex rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700"
+                      >
+                        Remove image
+                      </button>
+                    </p>
+                  </section>
+                </article>
+              ) : (
+                <p className="mt-4 text-sm text-slate-500">
+                  No image selected yet.
+                </p>
+              )}
+
             <input
               id="listing-image"
               type="file"
               accept="image/*"
               onChange={(e) => setImage(e.target.files[0] || null)}
-              className="w-full rounded border p-2"
+              className="sr-only"
             />
-          </div>
+            </article>
+          </section>
 
-          <div className="space-y-2">
+          <section className="space-y-2">
             <label htmlFor="title" className="block text-sm font-medium">
               Title
             </label>
@@ -217,9 +304,9 @@ export default function CreateListing() {
               className="w-full rounded border p-2"
               required
             />
-          </div>
+          </section>
 
-          <div className="space-y-2">
+          <section className="space-y-2">
             <label htmlFor="description" className="block text-sm font-medium">
               Description
             </label>
@@ -230,7 +317,7 @@ export default function CreateListing() {
               onChange={handleChange}
               className="min-h-28 w-full rounded border p-2"
             />
-          </div>
+          </section>
         </fieldset>
 
         <fieldset className="space-y-4 rounded-lg border p-5">
@@ -238,8 +325,8 @@ export default function CreateListing() {
             Pricing and category
           </legend>
 
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
+          <section className="grid gap-4 md:grid-cols-2">
+            <section className="space-y-2">
               <label htmlFor="category" className="block text-sm font-medium">
                 Category
               </label>
@@ -256,9 +343,9 @@ export default function CreateListing() {
                   </option>
                 ))}
               </select>
-            </div>
+            </section>
 
-            <div className="space-y-2">
+            <section className="space-y-2">
               <label
                 htmlFor="askingPrice"
                 className="block text-sm font-medium"
@@ -277,8 +364,8 @@ export default function CreateListing() {
                 required
                 aria-describedby="price-suggestion-status"
               />
-            </div>
-          </div>
+            </section>
+          </section>
 
           <aside
             className="rounded-lg border border-blue-200 bg-blue-50 p-4"
@@ -301,27 +388,42 @@ export default function CreateListing() {
             </p>
 
             {priceSuggestion ? (
-              <dl className="mt-4 grid gap-3 text-sm text-slate-800 md:grid-cols-2">
-                <div>
-                  <dt className="font-medium">Recommended range</dt>
-                  <dd>
-                    {formatCurrency(priceSuggestion.low)} to{" "}
-                    {formatCurrency(priceSuggestion.high)}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="font-medium">Annual category change</dt>
-                  <dd>{priceSuggestion.annualChangePercent}%</dd>
-                </div>
-                <div>
-                  <dt className="font-medium">CPI index</dt>
-                  <dd>{priceSuggestion.cpiIndex}</dd>
-                </div>
-                <div>
-                  <dt className="font-medium">Reference date</dt>
-                  <dd>{priceSuggestion.referenceDate}</dd>
-                </div>
-              </dl>
+              <table className="mt-4 w-full text-sm text-slate-800">
+                <caption className="sr-only">
+                  Suggested pricing details from the selected category
+                </caption>
+                <tbody className="divide-y divide-blue-100">
+                  <tr>
+                    <th scope="row" className="py-2 pr-4 text-left font-medium">
+                      Recommended range
+                    </th>
+                    <td className="py-2">
+                      {formatCurrency(priceSuggestion.low)} to{" "}
+                      {formatCurrency(priceSuggestion.high)}
+                    </td>
+                  </tr>
+                  <tr>
+                    <th scope="row" className="py-2 pr-4 text-left font-medium">
+                      Annual category change
+                    </th>
+                    <td className="py-2">
+                      {priceSuggestion.annualChangePercent}%
+                    </td>
+                  </tr>
+                  <tr>
+                    <th scope="row" className="py-2 pr-4 text-left font-medium">
+                      CPI index
+                    </th>
+                    <td className="py-2">{priceSuggestion.cpiIndex}</td>
+                  </tr>
+                  <tr>
+                    <th scope="row" className="py-2 pr-4 text-left font-medium">
+                      Reference date
+                    </th>
+                    <td className="py-2">{priceSuggestion.referenceDate}</td>
+                  </tr>
+                </tbody>
+              </table>
             ) : null}
           </aside>
         </fieldset>
@@ -331,8 +433,8 @@ export default function CreateListing() {
             Item condition
           </legend>
 
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
+          <section className="grid gap-4 md:grid-cols-2">
+            <section className="space-y-2">
               <label htmlFor="condition" className="block text-sm font-medium">
                 Condition
               </label>
@@ -349,9 +451,9 @@ export default function CreateListing() {
                   </option>
                 ))}
               </select>
-            </div>
+            </section>
 
-            <div className="space-y-2">
+            <section className="space-y-2">
               <label
                 htmlFor="listingType"
                 className="block text-sm font-medium"
@@ -371,8 +473,8 @@ export default function CreateListing() {
                   </option>
                 ))}
               </select>
-            </div>
-          </div>
+            </section>
+          </section>
         </fieldset>
 
         <footer>
