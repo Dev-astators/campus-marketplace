@@ -2,6 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const { getActiveListings, createListing } = require('../services/listingService');
+const { getSuggestedPriceRange } = require('../services/cpiService');
 const { validateListingInput } = require('../services/listingValidator');
 const {verifySession, requireRole, attachProfile} = require('../middleware/authMiddleware');
 const {validateListing} = require('../middleware/validateListing');
