@@ -1,84 +1,150 @@
 // src/pages/StudentDashboard.jsx
 
-/**
- * StudentDashboard page
- * Bundles Navbar, Sidebar, CategoryFilter and ListingsGrid.
- *
- * In production, replace MOCK_USER and MOCK_LISTINGS with
- * real data from your Supabase hooks / API calls.
- */
-
-import { useState } from 'react';
-import Navbar from '../components/Studentdashboard/Navbar';
-import Sidebar from '../components/Studentdashboard/Sidebar';
-import CategoryFilter from '../components/Studentdashboard/CategoryFilter';
-import ListingsGrid from '../components/Studentdashboard/ListingsGrid';
-
-// ── Mock data (replace with real API data in production) ──────────────────────
-
-const MOCK_USER = {
-  name: 'Nkosinathi Khumalo',
-  avatarUrl: null,
-};
-
-const CATEGORIES = ['All Categories', 'Textbooks', 'Electronics', 'Furniture', 'Clothing'];
-
-const MOCK_LISTINGS = [
-  { id: '1', title: 'Computer Science Textbook', price: 200, condition: 'Good', category: 'Textbooks', imageUrl: null },
-  { id: '2', title: 'Introduction to Algorithms', price: 150, condition: 'Like New', category: 'Textbooks', imageUrl: null },
-  { id: '3', title: 'MacBook Pro 14"', price: 12000, condition: 'Good', category: 'Electronics', imageUrl: null },
-  { id: '4', title: 'Wits Hoodie', price: 350, condition: 'New', category: 'Clothing', imageUrl: null },
-  { id: '5', title: 'Data Structures Notes', price: 80, condition: 'Fair', category: 'Textbooks', imageUrl: null },
-  { id: '6', title: 'Desk Lamp', price: 120, condition: 'Good', category: 'Furniture', imageUrl: null },
-  { id: '7', title: 'ASUS VivoBook Laptop', price: 7500, condition: 'Like New', category: 'Electronics', imageUrl: null },
-  { id: '8', title: 'Campus Jacket', price: 400, condition: 'New', category: 'Clothing', imageUrl: null },
-];
-
-// ─────────────────────────────────────────────────────────────────────────────
+import { useState } from "react";
+import Navbar from "../components/studentDashboard/Navbar";
+import Sidebar from "../components/studentDashboard/Sidebar";
+import CategoryFilter from "../components/studentDashboard/CategoryFilter";
+import ListingsGrid from "../components/studentDashboard/ListingsGrid";
+import ListingsFiltersPanel from "../components/studentDashboard/ListingsFiltersPanel";
+import { CATEGORIES } from "../components/studentDashboard/listingFiltersConfig";
+import useDashboardListings from "../hooks/useDashboardListings";
+import useListingFilters from "../hooks/useListingFilters";
+import { useNavigate } from "react-router-dom";
+import ProfileSettings from "../components/studentDashboard/ProfileSettings";
 
 export default function StudentDashboard() {
-  const [activeNav, setActiveNav] = useState('marketplace');
-  const [selectedCategory, setSelectedCategory] = useState('All Categories');
+  const navigate = useNavigate();
 
-  // firstName derived from full name for the greeting
-  const firstName = MOCK_USER.name.split(' ')[0];
+  const [activeNav, setActiveNav] = useState("marketplace");
+  const [showFilters, setShowFilters] = useState(false);
+
+  // The dashboard page now acts as an orchestrator: hooks manage state/data,
+  // while child components handle presentation.
+  const { user, listings, loading } = useDashboardListings(activeNav);
+  const {
+    search,
+    setSearch,
+    selectedCategory,
+    setSelectedCategory,
+    selectedCondition,
+    setSelectedCondition,
+    minPrice,
+    setMinPrice,
+    maxPrice,
+    setMaxPrice,
+    sortBy,
+    setSortBy,
+    clearFilters,
+    filteredListings,
+    listingsHeading,
+  } = useListingFilters({ listings, activeNav });
+
+  // Keep local tab navigation in-page, but route to dedicated pages where needed.
+  const handleNavigate = (item) => {
+    setActiveNav(item);
+
+    if (item === "messages") {
+      navigate("/messages"); // ✅ THIS MAKES IT WORK
+    }
+  };
+
+  const firstName = user?.fullName?.split(" ")[0] || user?.name || "Student";
+  const activeFilterCount = [
+    selectedCategory !== "All Categories",
+    selectedCondition !== "all",
+    minPrice !== "",
+    maxPrice !== "",
+    sortBy !== "newest",
+  ].filter(Boolean).length;
+
+  const isProfileView = activeNav === "profile";
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50" style={{ fontFamily: 'Inter, sans-serif' }}>
+    <section
+      className="h-screen flex flex-col bg-gray-50 overflow-hidden"
+      aria-label="Student dashboard"
+    >
+      <Navbar user={user} searchValue={search} onSearch={setSearch} />
 
-      {/* Top navbar — full width */}
-      <Navbar user={MOCK_USER} />
+      <section
+        className="flex flex-1 overflow-hidden"
+        aria-label="Dashboard workspace"
+      >
+        <Sidebar activeItem={activeNav} onNavigate={handleNavigate} />
 
-      {/* Body — sidebar + main content */}
-      <div className="flex flex-1 overflow-hidden">
-
-        {/* Sidebar */}
-        <Sidebar activeItem={activeNav} onNavigate={setActiveNav} />
-
-        {/* Main content */}
         <main className="flex-1 overflow-y-auto px-8 py-6 flex flex-col gap-6">
+          <header>
+            <h1 className="text-2xl font-bold text-gray-800">
+              Hello, {firstName}!
+            </h1>
+            <p className="text-sm text-gray-400">Welcome Back!</p>
+          </header>
 
-          {/* Greeting */}
-          <section aria-label="Welcome message">
-            <h1 className="text-2xl font-bold text-gray-800">Hello, {firstName}</h1>
-            <p className="text-sm text-gray-400 mt-0.5">Welcome Back!</p>
-          </section>
+          {!isProfileView && (
+            <>
+              <button
+                onClick={() => navigate("/create-listing")}
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg w-fit cursor-pointer"
+              >
+                + Create Listing
+              </button>
 
-          {/* Category filter */}
-          <CategoryFilter
-            categories={CATEGORIES}
-            selected={selectedCategory}
-            onSelect={setSelectedCategory}
-          />
+              <section className="flex flex-col gap-4">
+                <section className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowFilters((current) => !current)}
+                    aria-expanded={showFilters}
+                    aria-controls="listings-filter-controls"
+                    className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:border-gray-400 hover:text-gray-900 cursor-pointer"
+                  >
+                    {showFilters ? "Hide Filters" : "Show Filters"}
+                  </button>
 
-          {/* Listings grid */}
-          <ListingsGrid
-            listings={MOCK_LISTINGS}
-            loading={false}
-          />
+                  {activeFilterCount > 0 && (
+                    <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
+                      {activeFilterCount} active
+                    </span>
+                  )}
+                </section>
 
+                {showFilters && (
+                  <section
+                    id="listings-filter-controls"
+                    className="flex flex-col gap-4"
+                  >
+                    <CategoryFilter
+                      categories={CATEGORIES}
+                      selected={selectedCategory}
+                      onSelect={setSelectedCategory}
+                    />
+
+                    <ListingsFiltersPanel
+                      selectedCondition={selectedCondition}
+                      onConditionChange={setSelectedCondition}
+                      minPrice={minPrice}
+                      onMinPriceChange={setMinPrice}
+                      maxPrice={maxPrice}
+                      onMaxPriceChange={setMaxPrice}
+                      sortBy={sortBy}
+                      onSortByChange={setSortBy}
+                      onClearFilters={clearFilters}
+                    />
+                  </section>
+                )}
+              </section>
+
+              <h2 className="text-lg font-semibold text-gray-700">
+                {listingsHeading}
+              </h2>
+
+              <ListingsGrid listings={filteredListings} loading={loading} />
+            </>
+          )}
+
+          {isProfileView && <ProfileSettings user={user} />}
         </main>
-      </div>
-    </div>
+      </section>
+    </section>
   );
 }
