@@ -1,6 +1,4 @@
-import { useNavigate } from "react-router-dom";
-
-// src/components/dashboard/Navbar.jsx
+// src/components/studentDashboard/Navbar.jsx
 
 /**
  * Navbar component
@@ -12,7 +10,6 @@ import { useNavigate } from "react-router-dom";
  */
 
 export default function Navbar({ user, searchValue = "", onSearch }) {
-  const navigate = useNavigate();
   const displayName = user?.fullName || user?.name || "Student";
   const notificationCount = 0; // temporary for now
 
@@ -69,9 +66,8 @@ export default function Navbar({ user, searchValue = "", onSearch }) {
         className="flex items-center gap-3 ml-auto shrink-0"
       >
         {/* Notification bell */}
-        <button
-          type="button"
-          onClick={() => navigate("/notifications")}
+        <a
+          href="/notifications"
           className="relative w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition"
           aria-label={`View notifications. ${notificationCount} unread notifications.`}
         >
@@ -95,7 +91,7 @@ export default function Navbar({ user, searchValue = "", onSearch }) {
               {notificationCount}
             </strong>
           )}
-        </button>
+        </a>
 
         {/* Username */}
         <p className="text-sm font-medium text-gray-800">{displayName}</p>
