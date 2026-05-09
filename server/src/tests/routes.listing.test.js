@@ -2,6 +2,9 @@ const listingService = require("../services/listingService");
 const { validateListingInput } = require("../services/listingValidator");
 const { supabase } = require("../config/supabaseClient");
 const router = require("../routes/listing");
+const request = require('supertest');
+const express = require('express');
+
 
 jest.mock("../services/listingService", () => ({
   getActiveListings: jest.fn(),
@@ -363,4 +366,192 @@ describe("listing routes", () => {
       expect(res.json).toHaveBeenCalledWith({ image: { id: "image-1" } });
     });
   });
+});
+
+//testing listing
+// ── Build app ─────────────────────────────────────────────────────────────────
+const listingsRouter = require('../routes/listing');
+const app = express();
+app.use(express.json());
+app.use('/api/listings', listingsRouter);
+
+//tests
+describe('GET /api/listings/suggested-price', () => {
+
+  // ── Happy path — all valid categories from cpiData.json ──────────────────
+
+  test('Given category Textbooks and a valid price, when fetched, then suggestion is returned with correct Stats SA source', async () => {
+    const res = await request(app)
+      .get('/api/listings/suggested-price?category=Textbooks&askingPrice=500');
+
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveProperty('suggestion');
+    expect(res.body.suggestion).toHaveProperty('low');
+    expect(res.body.suggestion).toHaveProperty('high');
+    expect(res.body.suggestion.source).toMatch(/Statistics South Africa/i);
+  });
+
+  test('Given category Electronics and a valid price, when fetched, then suggestion reflects negative annual CPI change', async () => {
+    const res = await request(app)
+      .get('/api/listings/suggested-price?category=Electronics&askingPrice=10000');
+
+    expect(res.status).toBe(200);
+    expect(res.body.suggestion).toHaveProperty('annualChangePercent');
+    // Electronics annual change is -9.6% from real Stats SA P0141 March 2026
+    expect(res.body.suggestion.annualChangePercent).toBe(-9.6);
+  });
+
+  test('Given category Furniture and a valid price, when fetched, then 200 is returned', async () => {
+    const res = await request(app)
+      .get('/api/listings/suggested-price?category=Furniture&askingPrice=3000');
+
+    expect(res.status).toBe(200);
+    expect(res.body.suggestion).toHaveProperty('low');
+    expect(res.body.suggestion).toHaveProperty('high');
+  });
+
+  test('Given category Clothing and a valid price, when fetched, then correct CPI index is returned', async () => {
+    const res = await request(app)
+      .get('/api/listings/suggested-price?category=Clothing&askingPrice=400');
+
+    expect(res.status).toBe(200);
+    expect(res.body.suggestion.cpiIndex).toBe(101.6);
+  });
+
+  test('Given category Other and a valid price, when fetched, then 200 is returned', async () => {
+    const res = await request(app)
+      .get('/api/listings/suggested-price?category=Other&askingPrice=200');
+
+    expect(res.status).toBe(200);
+    expect(res.body.suggestion).toHaveProperty('referenceDate');
+  });
+
+  // ── Suggested price range logic ───────────────────────────────────────────
+
+  test('Given a valid price and category, when fetched, then low is less than high', async () => {
+    const res = await request(app)
+      .get('/api/listings/suggested-price?category=Textbooks&askingPrice=500');
+
+    expect(res.status).toBe(200);
+    expect(res.body.suggestion.low).toBeLessThan(res.body.suggestion.high);
+  });
+
+  test('Given category Textbooks with 4.2% annual change, when fetched, then range reflects correct CPI adjustment', async () => {
+    const askingPrice = 1000;
+    const res = await request(app)
+      .get(`/api/listings/suggested-price?category=Textbooks&askingPrice=${askingPrice}`);
+
+    expect(res.status).toBe(200);
+    const { low, high } = res.body.suggestion;
+    expect(low).toBeCloseTo(askingPrice * (1 - 0.042), 1);
+    expect(high).toBeCloseTo(askingPrice * (1 + 0.042), 1);
+  });
+
+  test('Given category Electronics with -9.6% annual change, when fetched, then range reflects absolute CPI adjustment', async () => {
+    const askingPrice = 5000;
+    const res = await request(app)
+      .get(`/api/listings/suggested-price?category=Electronics&askingPrice=${askingPrice}`);
+
+    expect(res.status).toBe(200);
+    const { low, high } = res.body.suggestion;
+    expect(low).toBeCloseTo(askingPrice * (1 - 0.096), 1);
+    expect(high).toBeCloseTo(askingPrice * (1 + 0.096), 1);
+  });
+
+  // ── Validation errors ─────────────────────────────────────────────────────
+
+  test('Given no query params, when fetched, then 400 is returned', async () => {
+    const res = await request(app)
+      .get('/api/listings/suggested-price');
+
+    expect(res.status).toBe(400);
+    expect(res.body.message).toBe('category and askingPrice are required');
+  });
+
+  test('Given missing askingPrice, when fetched, then 400 is returned', async () => {
+    const res = await request(app)
+      .get('/api/listings/suggested-price?category=Textbooks');
+
+    expect(res.status).toBe(400);
+    expect(res.body.message).toBe('category and askingPrice are required');
+  });
+
+  test('Given missing category, when fetched, then 400 is returned', async () => {
+    const res = await request(app)
+      .get('/api/listings/suggested-price?askingPrice=500');
+
+    expect(res.status).toBe(400);
+    expect(res.body.message).toBe('category and askingPrice are required');
+  });
+
+  test('Given a negative askingPrice, when fetched, then 400 is returned', async () => {
+    const res = await request(app)
+      .get('/api/listings/suggested-price?category=Textbooks&askingPrice=-100');
+
+    expect(res.status).toBe(400);
+    expect(res.body.message).toBe('askingPrice must be a positive number');
+  });
+
+  test('Given a zero askingPrice, when fetched, then 400 is returned', async () => {
+    const res = await request(app)
+      .get('/api/listings/suggested-price?category=Textbooks&askingPrice=0');
+
+    expect(res.status).toBe(400);
+    expect(res.body.message).toBe('askingPrice must be a positive number');
+  });
+
+  test('Given a non-numeric askingPrice, when fetched, then 400 is returned', async () => {
+    const res = await request(app)
+      .get('/api/listings/suggested-price?category=Textbooks&askingPrice=abc');
+
+    expect(res.status).toBe(400);
+    expect(res.body.message).toBe('askingPrice must be a positive number');
+  });
+
+  // ── Invalid category ──────────────────────────────────────────────────────
+
+  test('Given an invalid category not in cpiData.json, when fetched, then 404 is returned', async () => {
+    const res = await request(app)
+      .get('/api/listings/suggested-price?category=Groceries&askingPrice=100');
+
+    expect(res.status).toBe(404);
+    expect(res.body.message).toMatch(/No CPI data available/i);
+  });
+
+  test('Given an empty category string, when fetched, then 400 is returned', async () => {
+    const res = await request(app)
+      .get('/api/listings/suggested-price?category=&askingPrice=100');
+
+    expect(res.status).toBe(400);
+    expect(res.body.message).toBe('category and askingPrice are required');
+  });
+
+  // ── Stats SA data integrity ───────────────────────────────────────────────
+
+  test('Given any valid category, when fetched, then response includes Stats SA reference date March 2026', async () => {
+    const res = await request(app)
+      .get('/api/listings/suggested-price?category=Clothing&askingPrice=300');
+
+    expect(res.status).toBe(200);
+    expect(res.body.suggestion.referenceDate).toBe('March 2026');
+  });
+
+  test('Given Textbooks category, when fetched, then CPI index matches P0141 March 2026 tertiary education figure', async () => {
+    const res = await request(app)
+      .get('/api/listings/suggested-price?category=Textbooks&askingPrice=500');
+
+    expect(res.status).toBe(200);
+    // Tertiary education CPI index from P0141 March 2026 Table E
+    expect(res.body.suggestion.cpiIndex).toBe(108.1);
+  });
+
+  test('Given Electronics category, when fetched, then CPI index matches P0141 March 2026 ICT equipment figure', async () => {
+    const res = await request(app)
+      .get('/api/listings/suggested-price?category=Electronics&askingPrice=1000');
+
+    expect(res.status).toBe(200);
+    // ICT equipment CPI index from P0141 March 2026 Table E
+    expect(res.body.suggestion.cpiIndex).toBe(88.2);
+  });
+
 });
