@@ -7,31 +7,56 @@ import VerificationQueue from "../components/staff-dashboard/VerificationQueue";
 import HelpDesk from "../components/staff-dashboard/HelpDesk";
 
 export default function StaffDashboard() {
-  const [activeNav, setActiveNav] = useState("meetups");
+  const [activeNav, setActiveNav] = useState("marketplace");
+
   return (
-    <div className="flex bg-slate-100 min-h-screen font-sans">
-      {/* Sidebar */}
-      <Sidebar activeNav={activeNav} onNavChange={setActiveNav} />
- 
- 
-      {/* Main content */}
-      <div className="ml-55 flex flex-col flex-1 min-h-screen">
-        {/* Top bar */}
+    <div className="flex min-h-screen bg-white text-white font-sans overflow-hidden">
+      
+      {/* ================= SIDEBAR ================= */}
+      <Sidebar
+        activeNav={activeNav}
+        onNavChange={setActiveNav}
+      />
+
+      {/* ================= MAIN CONTENT ================= */}
+      <div className="flex flex-col flex-1 ml-55">
+        
+        {/* ================= TOPBAR ================= */}
         <Topbar />
 
-        {/* Page body */}
-        <main className="flex-1 p-7">
-          <div className="grid grid-cols-[1fr_308px] gap-6 items-start">
-            {/* ── Column 1 ── */}
+        {/* ================= PAGE CONTENT ================= */}
+        <main className="flex-1 px-10 py-8">
+          
+          {/* Main layout exactly like screenshot */}
+          <div className="grid grid-cols-[1fr_320px] gap-6 items-start">
+            
+            {/* ================= LEFT SECTION ================= */}
             <div className="flex flex-col gap-6">
-              <HeroBanner />
-              <TodaysSchedule />
-            </div>
 
-            {/* ── Column 2 ── */}
-            <div className="flex flex-col gap-4">
-              <VerificationQueue />
-              <HelpDesk />
+              {/* Hero / Welcome Banner */}
+              <div className="rounded-3xl bg-white border  shadow-lg p-8">
+                <HeroBanner />
+              </div>
+
+              {/* Today's Schedule Section */}
+              <div className="rounded-3xl bg-white border  shadow-lg p-6">
+                <TodaysSchedule />
+              </div>
+
+            </div>
+            {/* ================= RIGHT SECTION ================= */}
+            <div className="flex flex-col gap-6">
+
+              {/* Verification Queue */}
+              <div className="rounded-3xl bg-white border  shadow-lg p-5">
+                <VerificationQueue />
+              </div>
+
+              {/* Help Desk */}
+              <div className="rounded-3xl bg-white border  shadow-lg p-5">
+                <HelpDesk />
+              </div>
+
             </div>
           </div>
         </main>

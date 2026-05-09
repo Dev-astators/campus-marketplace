@@ -1,32 +1,40 @@
 import { useState } from "react";
 import VerificationItem from "./VerificationItem";
 import { VERIFICATION_ITEMS } from "./dashboardData";
+import Icon from "./Icon";
 
 export default function VerificationQueue() {
   const [items, setItems] = useState(VERIFICATION_ITEMS);
 
   const handleVerify = (id) =>
     setItems((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, status: "verified" } : item))
+      prev.map((item) =>
+        item.id === id ? { ...item, status: "verified" } : item
+      )
     );
 
   const handleDecline = (id) =>
     setItems((prev) => prev.filter((item) => item.id !== id));
 
+
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+    <div className="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between px-5 py-5 border-b border-slate-100">
-        <h2 className="text-[15.5px] font-bold text-slate-900 tracking-tight">
-          Verification Queue
-        </h2>
-        <span className="text-[11px] font-bold bg-blue-50 text-blue-600 px-2.5 py-1 rounded-full">
-          {items.filter((i) => i.status === "pending").length} pending
-        </span>
+      <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100">
+        <div>
+          <h2 className="text-[18px] font-bold text-slate-800">
+            Verification Queue
+          </h2>
+          <p className="text-[12px] text-slate-400 mt-1">
+            Pending student verifications
+          </p>
+        </div>
+
+        
       </div>
 
-      {/* Items */}
-      <div>
+      {/* Content */}
+      <div className="divide-y divide-slate-100">
         {items.length === 0 ? (
           <EmptyState />
         ) : (
@@ -46,9 +54,18 @@ export default function VerificationQueue() {
 
 function EmptyState() {
   return (
-    <div className="py-10 text-center text-slate-400 text-[13px]">
-      <div className="text-3xl mb-2">✅</div>
-      All items verified!
+    <div className="flex flex-col items-center justify-center py-14">
+      <div className="w-16 h-16 rounded-full bg-green-50 flex items-center justify-center mb-4">
+        <span className="text-3xl">✅</span>
+      </div>
+
+      <p className="text-[15px] font-semibold text-slate-700">
+        All items verified
+      </p>
+
+      <p className="text-[12px] text-slate-400 mt-1">
+        There are currently no pending requests
+      </p>
     </div>
   );
 }

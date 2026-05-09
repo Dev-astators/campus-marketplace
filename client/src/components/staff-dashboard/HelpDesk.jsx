@@ -2,15 +2,33 @@ import Icon from "./Icon";
 
 export default function HelpDesk() {
   return (
-    <div className="rounded-2xl border border-orange-200 bg-linear-to-br from-orange-50 to-amber-50 p-5">
-      <p className="text-[14px] font-bold text-orange-900 mb-1">🎧 Help Desk</p>
-      <p className="text-[12.5px] text-orange-700 leading-relaxed mb-4">
-        Urgent issue with a member? Our supervisor line is open.
-      </p>
-      <button className="w-full flex items-center justify-center gap-2 py-2.5 bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white text-[13px] font-bold rounded-xl transition-all duration-150 shadow-md shadow-orange-200 hover:-translate-y-px hover:shadow-lg hover:shadow-orange-200">
-        <Icon name="phone" size={15} strokeWidth={2.5} />
-        Contact Admin
-      </button>
+    <div className="relative overflow-hidden rounded-3xl border border-orange-100 bg-linear-to-br from-orange-50 via-amber-50 to-white p-6 shadow-sm">
+      {/* Glow */}
+      <div className="absolute -top-10 -right-10 w-32 h-32 bg-orange-200/40 rounded-full blur-3xl" />
+
+      <div className="relative z-10">
+        <div className="w-12 h-12 rounded-2xl bg-orange-500 flex items-center justify-center shadow-md shadow-orange-200 mb-4">
+          <Icon
+            name="phone"
+            size={20}
+            className="text-white"
+            strokeWidth={2.4}
+          />
+        </div>
+
+        <h3 className="text-[18px] font-bold text-slate-800 mb-2">
+          Help Desk
+        </h3>
+
+        <p className="text-[13px] text-slate-500 leading-relaxed mb-5">
+          Urgent issue with a member or transaction? Contact the university
+          supervisor support line immediately.
+        </p>
+
+        <button className="w-full h-11 rounded-2xl bg-orange-500 hover:bg-orange-600 text-white text-[13px] font-semibold transition-all duration-200 shadow-md shadow-orange-200 hover:shadow-lg">
+          Contact Admin
+        </button>
+      </div>
     </div>
   );
 }

@@ -2,27 +2,34 @@ import { HERO_STATS } from "./dashboardData";
 
 export default function HeroBanner() {
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-[#1a2744] px-9 py-8 flex items-center justify-between gap-6">
-      {/* Background glows */}
-      <div className="pointer-events-none absolute -top-16 -right-16 w-72 h-72 rounded-full bg-blue-500/20 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-12 left-1/3 w-52 h-52 rounded-full bg-sky-400/10 blur-2xl" />
+    <div className="relative overflow-hidden rounded-[30px] bg-linear-to-r from-[#1d4ed8] via-[#2563eb] to-[#3b82f6] px-10 py-9 shadow-lg">
+      {/* Background Shapes */}
+      <div className="absolute top-0 right-0 w-80 h-80 bg-white/10 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 left-20 w-52 h-52 bg-sky-300/10 rounded-full blur-2xl" />
 
-      {/* Text */}
-      <div className="relative z-10">
-        <h1 className="font-extrabold text-[26px] tracking-tight text-white mb-1.5 leading-tight">
-          University Square Hub
-        </h1>
-        <p className="text-white/50 text-[13.5px] leading-relaxed max-w-sm">
-          Trading Facility Staff Dashboard. Manage safe exchanges and item
-          authenticity for the campus community.
-        </p>
-      </div>
+      <div className="relative z-10 flex items-center justify-between gap-10">
+        {/* Left */}
+        <div>
+          <p className="text-blue-100 text-[13px] font-medium mb-2">
+            Student Marketplace Dashboard
+          </p>
 
-      {/* Stats */}
-      <div className="relative z-10 flex gap-3 shrink-0">
-        {HERO_STATS.map((stat) => (
-          <StatCard key={stat.label} {...stat} />
-        ))}
+          <h1 className="text-[34px] font-extrabold text-white leading-tight tracking-tight mb-3">
+            University Square Hub
+          </h1>
+
+          <p className="max-w-lg text-[14px] text-blue-100/80 leading-relaxed">
+            Manage student listings, secure exchanges, verification requests,
+            and marketplace activities across campus.
+          </p>
+        </div>
+
+        {/* Stats */}
+        <div className="flex gap-4">
+          {HERO_STATS.map((stat) => (
+            <StatCard key={stat.label} {...stat} />
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -30,14 +37,18 @@ export default function HeroBanner() {
 
 function StatCard({ label, value, sub }) {
   return (
-    <div className="min-w-32.5 bg-white/[0.07] border border-white/10 rounded-xl px-6 py-4 text-center backdrop-blur-md">
-      <div className="text-[30px] font-extrabold text-white leading-none tracking-tight mb-1">
+    <div className="min-w-33.75 rounded-2xl border border-white/15 bg-white/10 backdrop-blur-md px-5 py-5 text-center">
+      <h2 className="text-[32px] font-extrabold text-white leading-none">
         {value}
-      </div>
-      <div className="text-[10.5px] font-semibold text-white/45 tracking-widest uppercase">
+      </h2>
+
+      <p className="text-[11px] uppercase tracking-widest text-blue-100 mt-2 font-semibold">
         {label}
-      </div>
-      <div className="text-[11px] text-white/30 mt-0.5">{sub}</div>
+      </p>
+
+      <p className="text-[11px] text-white/60 mt-1">
+        {sub}
+      </p>
     </div>
   );
 }
