@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { supabase } from "../config/supabaseClient";
 import Chat from "../components/Chat";
@@ -61,8 +61,8 @@ export default function ChatPage() {
   }, []);
 
   // ─────────────────────────────
-  // Mark received messages as read
-  const markMessagesAsRead = async () => {
+  // FIXED: stable function for lint (useCallback)
+  const markMessagesAsRead = useCallback(async () => {
     if (!user || !sellerId || !listingId) return;
 
     try {
@@ -76,7 +76,7 @@ export default function ChatPage() {
     } catch (err) {
       console.error("Error marking messages as read:", err);
     }
-  };
+  }, [user, sellerId, listingId]);
 
   // ─────────────────────────────
   // Fetch real messages
@@ -86,7 +86,7 @@ export default function ChatPage() {
     const fetchMessages = async () => {
       try {
         const res = await fetch(
-          `${API_BASE_URL}/api/messages/${listingId}/${user.id}/${sellerId}`,
+          `${API_BASE_URL}/api/messages/${listingId}/${user.id}/${sellerId}`
         );
 
         const data = await res.json();
@@ -100,7 +100,7 @@ export default function ChatPage() {
     };
 
     fetchMessages();
-  }, [user, sellerId, listingId]);
+  }, [user, sellerId, listingId, markMessagesAsRead]);
 
   // ─────────────────────────────
   // Send message
@@ -163,7 +163,6 @@ export default function ChatPage() {
 
     const channel = supabase
       .channel(`chat-${listingId}`)
-
       .on(
         "postgres_changes",
         {
@@ -184,9 +183,8 @@ export default function ChatPage() {
           if (newMessage.receiver_id === user.id) {
             await markMessagesAsRead();
           }
-        },
+        }
       )
-
       .on(
         "postgres_changes",
         {
@@ -200,21 +198,19 @@ export default function ChatPage() {
 
           setMessages((prev) =>
             prev.map((msg) =>
-              msg.id === updatedMessage.id ? updatedMessage : msg,
-            ),
+              msg.id === updatedMessage.id ? updatedMessage : msg
+            )
           );
-        },
+        }
       )
-
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, listingId, sellerId]);
+  }, [user, listingId, sellerId, markMessagesAsRead]);
 
   // ─────────────────────────────
-  // 🔥 NEW: Add tick status logic (SENT / READ)
   const displayedMessages = user ? messages : PREVIEW_MESSAGES;
   const displayedUserId = user?.id || PREVIEW_USER_ID;
 
@@ -228,7 +224,6 @@ export default function ChatPage() {
   });
 
   // ─────────────────────────────
-  // Loading state
   if (loadingUser) {
     return (
       <main className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100 flex items-center justify-center px-6">
@@ -249,15 +244,12 @@ export default function ChatPage() {
     );
   }
 
-  // ─────────────────────────────
-  // UI
   return (
     <main className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100 px-4 py-8 sm:px-6 lg:px-8">
       <section className="max-w-4xl mx-auto h-[calc(100vh-4rem)] flex flex-col">
         <header className="mb-6 flex items-center justify-between gap-4">
           <section>
             <h1 className="text-3xl font-bold text-gray-900">Chat</h1>
-
             <p className="text-sm text-gray-500 mt-2">
               Send and receive messages about this marketplace listing.
             </p>

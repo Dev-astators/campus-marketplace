@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { supabase } from "../config/supabaseClient";
 import { useNavigate } from "react-router-dom";
 
@@ -37,8 +37,8 @@ export default function NotificationsPage() {
   }, []);
 
   // ─────────────────────────────
-  // Fetch notifications
-  const fetchNotifications = async (currentUser) => {
+  // Fetch notifications (FIXED with useCallback)
+  const fetchNotifications = useCallback(async (currentUser) => {
     try {
       const { data, error } = await supabase
         .from("messages")
@@ -71,7 +71,7 @@ export default function NotificationsPage() {
         time: formatTime(msg.sent_at),
         listing_id: msg.listing_id,
         sender_id: msg.sender_id,
-        is_read: msg.is_read ?? false, // ✅ FIX: ensures boolean always
+        is_read: msg.is_read ?? false,
       }));
 
       setNotifications(formatted);
@@ -80,7 +80,7 @@ export default function NotificationsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   // ─────────────────────────────
   // Realtime updates
@@ -109,7 +109,7 @@ export default function NotificationsPage() {
               body: "You received a new marketplace message.",
             });
           }
-        },
+        }
       )
       .subscribe();
 
@@ -120,10 +120,9 @@ export default function NotificationsPage() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user]);
+  }, [user, fetchNotifications]);
 
   // ─────────────────────────────
-  // Mark all as read
   const markAllAsRead = async () => {
     try {
       await supabase
@@ -138,8 +137,6 @@ export default function NotificationsPage() {
     }
   };
 
-  // ─────────────────────────────
-  // Open chat
   const openNotification = async (notification) => {
     try {
       await supabase
@@ -148,14 +145,13 @@ export default function NotificationsPage() {
         .eq("id", notification.id);
 
       navigate(
-        `/chat/${notification.listing_id}?seller=${notification.sender_id}`,
+        `/chat/${notification.listing_id}?seller=${notification.sender_id}`
       );
     } catch (err) {
       console.error("Error opening notification:", err);
     }
   };
 
-  // ─────────────────────────────
   const formatTime = (dateString) => {
     return new Date(dateString).toLocaleString([], {
       month: "short",
@@ -166,16 +162,9 @@ export default function NotificationsPage() {
   };
 
   // ─────────────────────────────
-  // ✅ FIXED SPLIT LOGIC (NOW RELIABLE)
-  const unreadNotifications = notifications.filter(
-    (n) => n.is_read === false,
-  );
+  const unreadNotifications = notifications.filter((n) => !n.is_read);
+  const earlierNotifications = notifications.filter((n) => n.is_read);
 
-  const earlierNotifications = notifications.filter(
-    (n) => n.is_read === true,
-  );
-
-  // ─────────────────────────────
   if (loading) {
     return (
       <main className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -185,17 +174,13 @@ export default function NotificationsPage() {
   }
 
   return (
-    <main
-      className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100 px-4 py-8 sm:px-6 lg:px-8"
-      style={{ fontFamily: "Inter, sans-serif" }}
-    >
+    <main className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100 px-4 py-8 sm:px-6 lg:px-8">
       <section className="max-w-4xl mx-auto">
         <header className="mb-8 flex items-center justify-between gap-4">
           <section>
             <h1 className="text-3xl font-bold text-gray-900">
               Notifications
             </h1>
-
             <p className="text-sm text-gray-500 mt-2">
               Stay updated on new messages sent to you.
             </p>
@@ -231,7 +216,6 @@ export default function NotificationsPage() {
             </article>
           ) : (
             <>
-              {/* ───────── UNREAD ───────── */}
               {unreadNotifications.length > 0 && (
                 <section className="border-b border-gray-100">
                   <header className="px-5 py-4 bg-gray-50">
@@ -239,7 +223,6 @@ export default function NotificationsPage() {
                       Unread
                     </h2>
                   </header>
-
                   <ul className="divide-y divide-gray-100">
                     {unreadNotifications.map((notification) => (
                       <li key={notification.id}>
@@ -258,11 +241,9 @@ export default function NotificationsPage() {
                                 <h3 className="text-base font-semibold text-gray-900">
                                   {notification.title}
                                 </h3>
-
                                 <p className="text-sm text-gray-600 mt-1">
                                   {notification.description}
                                 </p>
-
                                 <time className="text-xs text-gray-400">
                                   {notification.time}
                                 </time>
@@ -276,7 +257,6 @@ export default function NotificationsPage() {
                 </section>
               )}
 
-              {/* ───────── READ ───────── */}
               {earlierNotifications.length > 0 && (
                 <section>
                   <header className="px-5 py-4 bg-gray-50">
@@ -303,11 +283,9 @@ export default function NotificationsPage() {
                                 <h3 className="text-base font-semibold text-gray-800">
                                   {notification.title}
                                 </h3>
-
                                 <p className="text-sm text-gray-600 mt-1">
                                   {notification.description}
                                 </p>
-
                                 <time className="text-xs text-gray-400">
                                   {notification.time}
                                 </time>
