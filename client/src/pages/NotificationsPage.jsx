@@ -20,15 +20,15 @@ export default function NotificationsPage() {
   const [loading, setLoading] = useState(true);
 
   // ─────────────────────────────
-  // FORMAT TIME (MOVED UP → FIX LINT ERROR)
-  const formatTime = (dateString) => {
+  // Format time
+  const formatTime = useCallback((dateString) => {
     return new Date(dateString).toLocaleString([], {
       month: "short",
       day: "numeric",
       hour: "2-digit",
       minute: "2-digit",
     });
-  };
+  }, []);
 
   // ─────────────────────────────
   // Get logged in user
@@ -48,57 +48,70 @@ export default function NotificationsPage() {
   }, []);
 
   // ─────────────────────────────
-  // Fetch notifications (stable + lint-safe)
-  const fetchNotifications = useCallback(async (currentUser) => {
-    try {
-      const { data, error } = await supabase
-        .from("messages")
-        .select(`
-          id,
-          content,
-          sent_at,
-          is_read,
-          listing_id,
-          sender_id,
-          receiver_id,
-          listing:listings(title),
-          sender:profiles!messages_sender_id_fkey(full_name)
-        `)
-        .eq("receiver_id", currentUser.id)
-        .neq("sender_id", currentUser.id)
-        .order("sent_at", { ascending: false });
+  // Fetch notifications
+  const fetchNotifications = useCallback(
+    async (currentUser) => {
+      try {
+        const { data, error } = await supabase
+          .from("messages")
+          .select(`
+            id,
+            content,
+            sent_at,
+            is_read,
+            listing_id,
+            sender_id,
+            receiver_id,
+            listing:listings(title),
+            sender:profiles!messages_sender_id_fkey(full_name)
+          `)
+          .eq("receiver_id", currentUser.id)
+          .neq("sender_id", currentUser.id)
+          .order("sent_at", { ascending: false });
 
-      if (error) throw error;
+        if (error) throw error;
 
-      const formatted = (data || []).map((msg) => ({
-        id: msg.id,
-        type: "message",
-        title: `New message from ${
-          msg.sender?.full_name || "Unknown user"
-        }`,
-        description: msg.listing?.title
-          ? `About "${msg.listing.title}"`
-          : msg.content,
-        time: formatTime(msg.sent_at),
-        listing_id: msg.listing_id,
-        sender_id: msg.sender_id,
-        is_read: msg.is_read ?? false,
-      }));
+        const formatted = (data || []).map((msg) => ({
+          id: msg.id,
+          type: "message",
+          title: `New message from ${
+            msg.sender?.full_name || "Unknown user"
+          }`,
+          description: msg.listing?.title
+            ? `About "${msg.listing.title}"`
+            : msg.content,
+          time: formatTime(msg.sent_at),
+          listing_id: msg.listing_id,
+          sender_id: msg.sender_id,
+          is_read: msg.is_read ?? false,
+        }));
 
-      setNotifications(formatted);
-    } catch (err) {
-      console.error("Error fetching notifications:", err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+        setNotifications(formatted);
+      } catch (err) {
+        console.error("Error fetching notifications:", err);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [formatTime],
+  );
 
   // ─────────────────────────────
-  // Realtime updates (FIXED dependency + no lint issue)
+  // Initial fetch
   useEffect(() => {
     if (!user) return;
 
-    fetchNotifications(user);
+    const loadNotifications = async () => {
+      await fetchNotifications(user);
+    };
+
+    loadNotifications();
+  }, [user, fetchNotifications]);
+
+  // ─────────────────────────────
+  // Realtime updates
+  useEffect(() => {
+    if (!user) return;
 
     const channel = supabase
       .channel("notifications-realtime")
@@ -111,6 +124,7 @@ export default function NotificationsPage() {
         },
         async (payload) => {
           if (payload.new.receiver_id !== user.id) return;
+
           if (payload.new.sender_id === user.id) return;
 
           await fetchNotifications(user);
@@ -120,7 +134,7 @@ export default function NotificationsPage() {
               body: "You received a new marketplace message.",
             });
           }
-        }
+        },
       )
       .subscribe();
 
@@ -134,6 +148,7 @@ export default function NotificationsPage() {
   }, [user, fetchNotifications]);
 
   // ─────────────────────────────
+  // Mark all as read
   const markAllAsRead = async () => {
     try {
       await supabase
@@ -142,12 +157,14 @@ export default function NotificationsPage() {
         .eq("receiver_id", user.id)
         .eq("is_read", false);
 
-      fetchNotifications(user);
+      await fetchNotifications(user);
     } catch (err) {
       console.error("Error marking notifications as read:", err);
     }
   };
 
+  // ─────────────────────────────
+  // Open notification
   const openNotification = async (notification) => {
     try {
       await supabase
@@ -156,7 +173,7 @@ export default function NotificationsPage() {
         .eq("id", notification.id);
 
       navigate(
-        `/chat/${notification.listing_id}?seller=${notification.sender_id}`
+        `/chat/${notification.listing_id}?seller=${notification.sender_id}`,
       );
     } catch (err) {
       console.error("Error opening notification:", err);
@@ -164,9 +181,13 @@ export default function NotificationsPage() {
   };
 
   // ─────────────────────────────
+  // Split notifications
   const unreadNotifications = notifications.filter((n) => !n.is_read);
+
   const earlierNotifications = notifications.filter((n) => n.is_read);
 
+  // ─────────────────────────────
+  // Loading state
   if (loading) {
     return (
       <main className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -175,6 +196,8 @@ export default function NotificationsPage() {
     );
   }
 
+  // ─────────────────────────────
+  // UI
   return (
     <main className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100 px-4 py-8 sm:px-6 lg:px-8">
       <section className="max-w-4xl mx-auto">
@@ -183,6 +206,7 @@ export default function NotificationsPage() {
             <h1 className="text-3xl font-bold text-gray-900">
               Notifications
             </h1>
+
             <p className="text-sm text-gray-500 mt-2">
               Stay updated on new messages sent to you.
             </p>
@@ -244,9 +268,11 @@ export default function NotificationsPage() {
                                 <h3 className="text-base font-semibold text-gray-900">
                                   {notification.title}
                                 </h3>
+
                                 <p className="text-sm text-gray-600 mt-1">
                                   {notification.description}
                                 </p>
+
                                 <time className="text-xs text-gray-400">
                                   {notification.time}
                                 </time>
@@ -286,9 +312,11 @@ export default function NotificationsPage() {
                                 <h3 className="text-base font-semibold text-gray-800">
                                   {notification.title}
                                 </h3>
+
                                 <p className="text-sm text-gray-600 mt-1">
                                   {notification.description}
                                 </p>
+
                                 <time className="text-xs text-gray-400">
                                   {notification.time}
                                 </time>
