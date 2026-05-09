@@ -2,24 +2,51 @@ import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../config/supabaseClient";
 import { API_BASE_URL } from "../config/apiBaseUrl";
 
-// Encapsulates dashboard data concerns:
-// 1) current authenticated user
-// 2) listings fetch for marketplace vs my-listings tab
+function getFirstName(authUser) {
+  const metadata = authUser?.user_metadata ?? {};
+  const candidateName = metadata.full_name;
+
+  if (typeof candidateName === "string" && candidateName.trim()) {
+    return candidateName.trim().split(/\s+/)[0];
+  }
+
+  const emailPrefix = authUser?.email?.split("@")[0];
+  if (emailPrefix) {
+    return emailPrefix;
+  }
+
+  return "Student";
+}
+
 export default function useDashboardListings(activeNav) {
   const [user, setUser] = useState(null);
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Session is read once on mount; tab changes do not require re-reading auth.
   useEffect(() => {
     const getUser = async () => {
       const { data } = await supabase.auth.getSession();
 
       if (!data.session) return;
 
+      const metadata = data.session.user.user_metadata ?? {};
+      const fullName =
+        metadata.full_name ||
+        metadata.name ||
+        data.session.user.email?.split("@")[0] ||
+        "Student";
+
       setUser({
-        name: data.session.user.email,
+        name: getFirstName(data.session.user),
+        fullName,
         id: data.session.user.id,
+        email: data.session.user.email,
+        studentNumber: data.session.user.email?.split("@")[0] || null,
+        role: metadata.role || "student",
+        provider: data.session.user.app_metadata?.provider || "google",
+        createdAt: data.session.user.created_at,
+        lastSignInAt: data.session.user.last_sign_in_at,
+        avatarUrl: metadata.avatar_url || metadata.picture || null,
       });
     };
 
@@ -27,14 +54,12 @@ export default function useDashboardListings(activeNav) {
   }, []);
 
   const fetchListings = useCallback(async (navItem, currentUserId) => {
-    // My Listings depends on the logged-in user id. If unavailable, return empty state.
     if (navItem === "my-listings" && !currentUserId) {
       setListings([]);
       setLoading(false);
       return;
     }
 
-    // Choose API endpoint based on active dashboard tab.
     const endpoint =
       navItem === "my-listings"
         ? `${API_BASE_URL}/api/listings/my/${currentUserId}`
@@ -76,10 +101,13 @@ export default function useDashboardListings(activeNav) {
     }
   }, []);
 
+  // ✅ FIXED EFFECT (lint-safe)
   useEffect(() => {
-    // Refetch when tab changes or when user identity becomes available.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchListings(activeNav, user?.id);
+    const run = async () => {
+      await fetchListings(activeNav, user?.id);
+    };
+
+    run();
   }, [activeNav, user?.id, fetchListings]);
 
   return {

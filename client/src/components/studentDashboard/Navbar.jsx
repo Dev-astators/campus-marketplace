@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+
 // src/components/dashboard/Navbar.jsx
 
 /**
@@ -12,6 +13,7 @@ import { useNavigate } from "react-router-dom";
 
 export default function Navbar({ user, searchValue = "", onSearch }) {
   const navigate = useNavigate();
+  const displayName = user?.fullName || user?.name || "Student";
   const notificationCount = 0; // temporary for now
 
   return (
@@ -96,16 +98,14 @@ export default function Navbar({ user, searchValue = "", onSearch }) {
         </button>
 
         {/* Username */}
-        <p className="text-sm font-medium text-gray-800">
-          {user?.name ?? "Student"}
-        </p>
+        <p className="text-sm font-medium text-gray-800">{displayName}</p>
 
         {/* Avatar */}
         <figure className="w-9 h-9 rounded-full bg-gray-300 overflow-hidden flex items-center justify-center">
           {user?.avatarUrl ? (
             <img
               src={user.avatarUrl}
-              alt={`${user.name} avatar`}
+              alt={`${displayName} avatar`}
               className="w-full h-full object-cover"
             />
           ) : (
@@ -125,7 +125,7 @@ export default function Navbar({ user, searchValue = "", onSearch }) {
           )}
 
           <figcaption className="sr-only">
-            {user?.name ?? "Student"} profile picture
+            {displayName} profile picture
           </figcaption>
         </figure>
       </nav>

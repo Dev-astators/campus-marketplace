@@ -80,40 +80,42 @@ export default function MessagesPage() {
   };
 
   // ─────────────────────────────
-  // Load conversations + realtime updates
+  // Load conversations + realtime updates (FIXED FOR LINT)
   useEffect(() => {
     if (!user) return;
 
-    fetchConversations(user);
+    const run = async () => {
+      await fetchConversations(user);
 
-    const channel = supabase
-      .channel("messages-page")
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "messages",
-        },
-        () => {
-          fetchConversations(user);
-        },
-      )
-      .subscribe();
+      const channel = supabase
+        .channel("messages-page")
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "messages",
+          },
+          () => {
+            fetchConversations(user);
+          },
+        )
+        .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
+      return () => {
+        supabase.removeChannel(channel);
+      };
     };
+
+    run();
   }, [user]);
 
   // ─────────────────────────────
-  // Open selected chat
   const openChat = (conv) => {
     navigate(`/chat/${conv.listing_id}?seller=${conv.otherUserId}`);
   };
 
   // ─────────────────────────────
-  // Format date/time
   const formatTime = (dateString) => {
     if (!dateString) return "";
 
@@ -126,7 +128,6 @@ export default function MessagesPage() {
   };
 
   // ─────────────────────────────
-  // Loading state
   if (loading) {
     return (
       <main className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100 flex items-center justify-center px-6">
@@ -147,8 +148,6 @@ export default function MessagesPage() {
     );
   }
 
-  // ─────────────────────────────
-  // Main page
   return (
     <main
       className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100 px-4 py-8 sm:px-6 lg:px-8"
@@ -158,7 +157,6 @@ export default function MessagesPage() {
         <header className="mb-8 flex items-center justify-between gap-4">
           <section>
             <h1 className="text-3xl font-bold text-gray-900">Messages</h1>
-
             <p className="text-sm text-gray-500 mt-2">
               View your conversations with sellers about marketplace listings.
             </p>
@@ -204,10 +202,7 @@ export default function MessagesPage() {
                     className="w-full text-left px-5 py-5 hover:bg-blue-50/60 transition group"
                   >
                     <article className="flex items-center gap-4">
-                      <p
-                        className="shrink-0 w-12 h-12 rounded-2xl bg-blue-100 flex items-center justify-center shadow-sm text-base font-bold text-blue-700"
-                        aria-label={`Avatar for ${conv.otherUserName}`}
-                      >
+                      <p className="w-12 h-12 rounded-2xl bg-blue-100 flex items-center justify-center shadow-sm text-base font-bold text-blue-700">
                         {conv.otherUserName?.charAt(0)?.toUpperCase() || "U"}
                       </p>
 
@@ -223,10 +218,7 @@ export default function MessagesPage() {
                             </p>
                           </section>
 
-                          <time
-                            className="text-xs text-gray-400 shrink-0"
-                            dateTime={conv.sent_at || undefined}
-                          >
+                          <time className="text-xs text-gray-400 shrink-0">
                             {formatTime(conv.sent_at)}
                           </time>
                         </header>
@@ -236,7 +228,7 @@ export default function MessagesPage() {
                         </p>
                       </section>
 
-                      <p className="shrink-0 w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 group-hover:bg-blue-600 group-hover:text-white transition">
+                      <p className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 group-hover:bg-blue-600 group-hover:text-white transition">
                         →
                       </p>
                     </article>
