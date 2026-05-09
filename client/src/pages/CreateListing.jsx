@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../config/supabaseClient";
 import { API_BASE_URL } from "../config/apiBaseUrl";
@@ -16,6 +16,13 @@ const LISTING_TYPE_OPTIONS = [
   { value: "trade", label: "Trade" },
   { value: "both", label: "Both" },
 ];
+const DEFAULT_SUGGESTION_MESSAGE =
+  "Enter a price to see a CPI-based suggestion for this category.";
+const INVALID_SUGGESTION_MESSAGE =
+  "Enter a valid positive price to get a suggestion.";
+const LOADING_SUGGESTION_MESSAGE =
+  "Checking the latest Stats SA category guidance...";
+const SUCCESS_SUGGESTION_MESSAGE = "Price suggestion loaded.";
 
 const formatCurrency = (value) =>
   new Intl.NumberFormat("en-ZA", {
@@ -28,12 +35,14 @@ const formatFileSize = (bytes) => `${(bytes / 1024 / 1024).toFixed(2)} MB`;
 
 export default function CreateListing() {
   const navigate = useNavigate();
+  const imageInputRef = useRef(null);
   const [image, setImage] = useState(null);
   const [imagePreviewUrl, setImagePreviewUrl] = useState("");
   const [priceSuggestion, setPriceSuggestion] = useState(null);
+  const [suggestionRequestKey, setSuggestionRequestKey] = useState("");
   const [suggestionState, setSuggestionState] = useState("idle");
   const [suggestionMessage, setSuggestionMessage] = useState(
-    "Enter a price to see a CPI-based suggestion for this category.",
+    DEFAULT_SUGGESTION_MESSAGE,
   );
 
   const [form, setForm] = useState({
@@ -49,48 +58,82 @@ export default function CreateListing() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  useEffect(() => {
-    if (!image) {
-      setImagePreviewUrl("");
-      return undefined;
+  const handleImageChange = (e) => {
+    const nextImage = e.target.files?.[0] || null;
+
+    if (imagePreviewUrl) {
+      URL.revokeObjectURL(imagePreviewUrl);
     }
 
-    const previewUrl = URL.createObjectURL(image);
-    setImagePreviewUrl(previewUrl);
+    setImage(nextImage);
+    setImagePreviewUrl(nextImage ? URL.createObjectURL(nextImage) : "");
+  };
 
+  const clearSelectedImage = () => {
+    if (imagePreviewUrl) {
+      URL.revokeObjectURL(imagePreviewUrl);
+    }
+
+    setImage(null);
+    setImagePreviewUrl("");
+
+    if (imageInputRef.current) {
+      imageInputRef.current.value = "";
+    }
+  };
+
+  useEffect(() => {
     return () => {
-      URL.revokeObjectURL(previewUrl);
+      if (imagePreviewUrl) {
+        URL.revokeObjectURL(imagePreviewUrl);
+      }
     };
-  }, [image]);
+  }, [imagePreviewUrl]);
+
+  const parsedPrice = Number(form.askingPrice);
+  const hasPriceInput = form.askingPrice !== "";
+  const hasValidPrice = Number.isFinite(parsedPrice) && parsedPrice > 0;
+  const currentSuggestionKey = hasValidPrice
+    ? `${form.category}:${parsedPrice}`
+    : "";
+  const suggestionMatchesCurrentInput =
+    suggestionRequestKey === currentSuggestionKey;
+
+  const displayedSuggestionState = !hasPriceInput
+    ? "idle"
+    : !hasValidPrice
+      ? "error"
+      : suggestionMatchesCurrentInput
+        ? suggestionState
+        : "loading";
+
+  const displayedSuggestionMessage = !hasPriceInput
+    ? DEFAULT_SUGGESTION_MESSAGE
+    : !hasValidPrice
+      ? INVALID_SUGGESTION_MESSAGE
+      : suggestionMatchesCurrentInput
+        ? suggestionMessage
+        : LOADING_SUGGESTION_MESSAGE;
+
+  const displayedPriceSuggestion =
+    displayedSuggestionState === "success" ? priceSuggestion : null;
 
   useEffect(() => {
-    const price = Number(form.askingPrice);
-
-    if (!form.askingPrice) {
-      setPriceSuggestion(null);
-      setSuggestionState("idle");
-      setSuggestionMessage(
-        "Enter a price to see a CPI-based suggestion for this category.",
-      );
-      return undefined;
-    }
-
-    if (Number.isNaN(price) || price <= 0) {
-      setPriceSuggestion(null);
-      setSuggestionState("error");
-      setSuggestionMessage("Enter a valid positive price to get a suggestion.");
+    if (!hasValidPrice) {
       return undefined;
     }
 
     const controller = new AbortController();
     const timeoutId = setTimeout(async () => {
+      setSuggestionRequestKey(currentSuggestionKey);
       setSuggestionState("loading");
-      setSuggestionMessage("Checking the latest Stats SA category guidance...");
+      setSuggestionMessage(LOADING_SUGGESTION_MESSAGE);
+      setPriceSuggestion(null);
 
       try {
         const params = new URLSearchParams({
           category: form.category,
-          askingPrice: String(price),
+          askingPrice: String(parsedPrice),
         });
 
         const response = await fetch(
@@ -107,14 +150,16 @@ export default function CreateListing() {
         }
 
         setPriceSuggestion(result.suggestion);
+        setSuggestionRequestKey(currentSuggestionKey);
         setSuggestionState("success");
-        setSuggestionMessage("Price suggestion loaded.");
+        setSuggestionMessage(SUCCESS_SUGGESTION_MESSAGE);
       } catch (error) {
         if (error.name === "AbortError") {
           return;
         }
 
         setPriceSuggestion(null);
+        setSuggestionRequestKey(currentSuggestionKey);
         setSuggestionState("error");
         setSuggestionMessage(
           error.message || "Unable to load a price suggestion right now.",
@@ -126,7 +171,7 @@ export default function CreateListing() {
       controller.abort();
       clearTimeout(timeoutId);
     };
-  }, [form.askingPrice, form.category]);
+  }, [currentSuggestionKey, form.category, hasValidPrice, parsedPrice]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -268,7 +313,7 @@ export default function CreateListing() {
                     <p>
                       <button
                         type="button"
-                        onClick={() => setImage(null)}
+                        onClick={clearSelectedImage}
                         className="inline-flex rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700"
                       >
                         Remove image
@@ -283,10 +328,11 @@ export default function CreateListing() {
               )}
 
             <input
+              ref={imageInputRef}
               id="listing-image"
               type="file"
               accept="image/*"
-              onChange={(e) => setImage(e.target.files[0] || null)}
+              onChange={handleImageChange}
               className="sr-only"
             />
             </article>
@@ -382,12 +428,12 @@ export default function CreateListing() {
               className="mt-2 text-sm text-blue-900"
               aria-live="polite"
             >
-              {suggestionState === "loading"
+              {displayedSuggestionState === "loading"
                 ? "Loading suggestion..."
-                : suggestionMessage}
+                : displayedSuggestionMessage}
             </p>
 
-            {priceSuggestion ? (
+            {displayedPriceSuggestion ? (
               <table className="mt-4 w-full text-sm text-slate-800">
                 <caption className="sr-only">
                   Suggested pricing details from the selected category
@@ -398,8 +444,8 @@ export default function CreateListing() {
                       Recommended range
                     </th>
                     <td className="py-2">
-                      {formatCurrency(priceSuggestion.low)} to{" "}
-                      {formatCurrency(priceSuggestion.high)}
+                      {formatCurrency(displayedPriceSuggestion.low)} to{" "}
+                      {formatCurrency(displayedPriceSuggestion.high)}
                     </td>
                   </tr>
                   <tr>
@@ -407,20 +453,22 @@ export default function CreateListing() {
                       Annual category change
                     </th>
                     <td className="py-2">
-                      {priceSuggestion.annualChangePercent}%
+                      {displayedPriceSuggestion.annualChangePercent}%
                     </td>
                   </tr>
                   <tr>
                     <th scope="row" className="py-2 pr-4 text-left font-medium">
                       CPI index
                     </th>
-                    <td className="py-2">{priceSuggestion.cpiIndex}</td>
+                    <td className="py-2">{displayedPriceSuggestion.cpiIndex}</td>
                   </tr>
                   <tr>
                     <th scope="row" className="py-2 pr-4 text-left font-medium">
                       Reference date
                     </th>
-                    <td className="py-2">{priceSuggestion.referenceDate}</td>
+                    <td className="py-2">
+                      {displayedPriceSuggestion.referenceDate}
+                    </td>
                   </tr>
                 </tbody>
               </table>

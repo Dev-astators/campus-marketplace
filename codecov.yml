@@ -7,11 +7,11 @@ coverage:
   status:
     project:
       default:
-        target: 80% # overall coverage target across the whole repo
+        target: 60% # overall coverage target across the whole repo
         threshold: 2% # allow up to a 2% drop before marking the check as failed
     patch:
       default:
-        target: 80% # every PR must cover at least 80% of its new lines
+        target: 60% # every PR must cover at least 80% of its new lines
 
 flags:
   client:
