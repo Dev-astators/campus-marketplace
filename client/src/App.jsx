@@ -87,7 +87,6 @@ function AppShell() {
   }, [location.pathname, navigate, session]);
 
   return (
-    <BrowserRouter>
       <Routes>
         <Route path="/" element={<WelcomePage />} />
         <Route path="/signin" element={<SignInPage />} />
@@ -105,7 +104,6 @@ function AppShell() {
         <Route path="/payment/success"  element={<PaymentPage result="success" />} />
         <Route path="/payment/cancel"   element={<PaymentPage result="cancel" />} />
       </Routes>
-    </BrowserRouter>
   );
 }
 
