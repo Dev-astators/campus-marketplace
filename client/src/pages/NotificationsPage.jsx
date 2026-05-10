@@ -1,45 +1,6 @@
-const NOTIFICATIONS = [
-  {
-    id: "n1",
-    type: "message",
-    title: "New message from Ayanda",
-    description: 'About “MacBook Pro 14”',
-    time: "2 minutes ago",
-    unread: true,
-  },
-  {
-    id: "n2",
-    type: "listing",
-    title: "Lerato is interested in your listing",
-    description: 'Someone contacted you about “Desk Lamp”.',
-    time: "12 minutes ago",
-    unread: true,
-  },
-  {
-    id: "n3",
-    type: "booking",
-    title: "Drop-off booked",
-    description: "Your drop-off slot is booked for Friday at 10:00.",
-    time: "Yesterday",
-    unread: false,
-  },
-  {
-    id: "n4",
-    type: "payment",
-    title: "Payment verified",
-    description: 'Payment for “Computer Science Textbook” was verified.',
-    time: "May 7",
-    unread: false,
-  },
-  {
-    id: "n5",
-    type: "rating",
-    title: "Rate your experience",
-    description: "Tell us how your trade with Sipho went.",
-    time: "May 6",
-    unread: false,
-  },
-];
+import { useEffect, useState, useCallback } from "react";
+import { supabase } from "../config/supabaseClient";
+import { useNavigate } from "react-router-dom";
 
 const getNotificationIcon = (type) => {
   if (type === "message") return "💬";
@@ -47,23 +8,198 @@ const getNotificationIcon = (type) => {
   if (type === "booking") return "📦";
   if (type === "payment") return "💳";
   if (type === "rating") return "⭐";
+
   return "🔔";
 };
 
 export default function NotificationsPage() {
-  const unreadNotifications = NOTIFICATIONS.filter(
-    (notification) => notification.unread,
+  const navigate = useNavigate();
+
+  const [user, setUser] = useState(null);
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // ─────────────────────────────
+  // Format time
+  const formatTime = useCallback((dateString) => {
+    return new Date(dateString).toLocaleString([], {
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }, []);
+
+  // ─────────────────────────────
+  // Get logged in user
+  useEffect(() => {
+    const getUser = async () => {
+      const { data } = await supabase.auth.getSession();
+
+      if (!data.session?.user) {
+        setLoading(false);
+        return;
+      }
+
+      setUser(data.session.user);
+    };
+
+    getUser();
+  }, []);
+
+  // ─────────────────────────────
+  // Fetch notifications
+  const fetchNotifications = useCallback(
+    async (currentUser) => {
+      try {
+        const { data, error } = await supabase
+          .from("messages")
+          .select(`
+            id,
+            content,
+            sent_at,
+            is_read,
+            listing_id,
+            sender_id,
+            receiver_id,
+            listing:listings(title),
+            sender:profiles!messages_sender_id_fkey(full_name)
+          `)
+          .eq("receiver_id", currentUser.id)
+          .neq("sender_id", currentUser.id)
+          .order("sent_at", { ascending: false });
+
+        if (error) throw error;
+
+        const formatted = (data || []).map((msg) => ({
+          id: msg.id,
+          type: "message",
+          title: `New message from ${
+            msg.sender?.full_name || "Unknown user"
+          }`,
+          description: msg.listing?.title
+            ? `About "${msg.listing.title}"`
+            : msg.content,
+          time: formatTime(msg.sent_at),
+          listing_id: msg.listing_id,
+          sender_id: msg.sender_id,
+          is_read: msg.is_read ?? false,
+        }));
+
+        setNotifications(formatted);
+      } catch (err) {
+        console.error("Error fetching notifications:", err);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [formatTime],
   );
 
-  const earlierNotifications = NOTIFICATIONS.filter(
-    (notification) => !notification.unread,
-  );
+  // ─────────────────────────────
+  // Initial fetch
+  useEffect(() => {
+    if (!user) return;
 
+    const loadNotifications = async () => {
+      await fetchNotifications(user);
+    };
+
+    loadNotifications();
+  }, [user, fetchNotifications]);
+
+  // ─────────────────────────────
+  // Realtime updates
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel("notifications-realtime")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "messages",
+        },
+        async (payload) => {
+          if (payload.new.receiver_id !== user.id) return;
+
+          if (payload.new.sender_id === user.id) return;
+
+          await fetchNotifications(user);
+
+          if (Notification.permission === "granted") {
+            new Notification("New Message", {
+              body: "You received a new marketplace message.",
+            });
+          }
+        },
+      )
+      .subscribe();
+
+    if (Notification.permission !== "granted") {
+      Notification.requestPermission();
+    }
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, fetchNotifications]);
+
+  // ─────────────────────────────
+  // Mark all as read
+  const markAllAsRead = async () => {
+    try {
+      await supabase
+        .from("messages")
+        .update({ is_read: true })
+        .eq("receiver_id", user.id)
+        .eq("is_read", false);
+
+      await fetchNotifications(user);
+    } catch (err) {
+      console.error("Error marking notifications as read:", err);
+    }
+  };
+
+  // ─────────────────────────────
+  // Open notification
+  const openNotification = async (notification) => {
+    try {
+      await supabase
+        .from("messages")
+        .update({ is_read: true })
+        .eq("id", notification.id);
+
+      navigate(
+        `/chat/${notification.listing_id}?seller=${notification.sender_id}`,
+      );
+    } catch (err) {
+      console.error("Error opening notification:", err);
+    }
+  };
+
+  // ─────────────────────────────
+  // Split notifications
+  const unreadNotifications = notifications.filter((n) => !n.is_read);
+
+  const earlierNotifications = notifications.filter((n) => n.is_read);
+
+  // ─────────────────────────────
+  // Loading state
+  if (loading) {
+    return (
+      <main className="min-h-screen flex items-center justify-center bg-gray-50">
+        <p className="text-gray-500">Loading notifications...</p>
+      </main>
+    );
+  }
+
+  // ─────────────────────────────
+  // UI
   return (
-    <main
-      className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100 px-4 py-8 sm:px-6 lg:px-8"
-      style={{ fontFamily: "Inter, sans-serif" }}
-    >
+    <main className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100 px-4 py-8 sm:px-6 lg:px-8">
       <section className="max-w-4xl mx-auto">
         <header className="mb-8 flex items-center justify-between gap-4">
           <section>
@@ -72,18 +208,25 @@ export default function NotificationsPage() {
             </h1>
 
             <p className="text-sm text-gray-500 mt-2">
-              Stay updated on messages, listings, bookings and payments.
+              Stay updated on new messages sent to you.
             </p>
           </section>
 
-          <figure className="hidden sm:flex w-12 h-12 rounded-2xl bg-blue-600 items-center justify-center shadow-sm text-white text-xl">
-            🔔
-            <figcaption className="sr-only">Notifications icon</figcaption>
-          </figure>
+          <section className="flex items-center gap-3">
+            {unreadNotifications.length > 0 && (
+              <button
+                type="button"
+                onClick={markAllAsRead}
+                className="px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition"
+              >
+                Mark all as read
+              </button>
+            )}
+          </section>
         </header>
 
         <section className="bg-white/90 backdrop-blur border border-gray-200 rounded-3xl shadow-sm overflow-hidden">
-          {NOTIFICATIONS.length === 0 ? (
+          {notifications.length === 0 ? (
             <article className="px-6 py-16 text-center">
               <p className="mx-auto w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center mb-4 text-3xl">
                 🔔
@@ -94,8 +237,7 @@ export default function NotificationsPage() {
               </h2>
 
               <p className="text-sm text-gray-500 mt-2">
-                Updates about your messages, listings and bookings will appear
-                here.
+                New incoming messages will appear here.
               </p>
             </article>
           ) : (
@@ -111,34 +253,33 @@ export default function NotificationsPage() {
                   <ul className="divide-y divide-gray-100">
                     {unreadNotifications.map((notification) => (
                       <li key={notification.id}>
-                        <article className="px-5 py-5 hover:bg-blue-50/60 transition">
-                          <section className="flex items-start gap-4">
-                            <p className="shrink-0 w-12 h-12 rounded-2xl bg-blue-100 flex items-center justify-center text-xl">
-                              {getNotificationIcon(notification.type)}
-                            </p>
+                        <button
+                          type="button"
+                          onClick={() => openNotification(notification)}
+                          className="w-full text-left"
+                        >
+                          <article className="px-5 py-5 hover:bg-blue-50/60 transition cursor-pointer">
+                            <section className="flex items-start gap-4">
+                              <p className="w-12 h-12 rounded-2xl bg-blue-100 flex items-center justify-center text-xl">
+                                {getNotificationIcon(notification.type)}
+                              </p>
 
-                            <section className="min-w-0 flex-1">
-                              <header className="flex items-start justify-between gap-3">
+                              <section className="flex-1">
                                 <h3 className="text-base font-semibold text-gray-900">
                                   {notification.title}
                                 </h3>
 
-                                <time className="text-xs text-gray-400 shrink-0">
+                                <p className="text-sm text-gray-600 mt-1">
+                                  {notification.description}
+                                </p>
+
+                                <time className="text-xs text-gray-400">
                                   {notification.time}
                                 </time>
-                              </header>
-
-                              <p className="text-sm text-gray-600 mt-1">
-                                {notification.description}
-                              </p>
+                              </section>
                             </section>
-
-                            <p
-                              className="shrink-0 w-2.5 h-2.5 rounded-full bg-blue-600 mt-2"
-                              aria-label="Unread notification"
-                            />
-                          </section>
-                        </article>
+                          </article>
+                        </button>
                       </li>
                     ))}
                   </ul>
@@ -149,36 +290,40 @@ export default function NotificationsPage() {
                 <section>
                   <header className="px-5 py-4 bg-gray-50">
                     <h2 className="text-sm font-bold text-gray-700">
-                      Earlier
+                      Read
                     </h2>
                   </header>
 
                   <ul className="divide-y divide-gray-100">
                     {earlierNotifications.map((notification) => (
                       <li key={notification.id}>
-                        <article className="px-5 py-5 hover:bg-gray-50 transition">
-                          <section className="flex items-start gap-4">
-                            <p className="shrink-0 w-12 h-12 rounded-2xl bg-gray-100 flex items-center justify-center text-xl">
-                              {getNotificationIcon(notification.type)}
-                            </p>
+                        <button
+                          type="button"
+                          onClick={() => openNotification(notification)}
+                          className="w-full text-left"
+                        >
+                          <article className="px-5 py-5 hover:bg-gray-50 transition cursor-pointer">
+                            <section className="flex items-start gap-4">
+                              <p className="w-12 h-12 rounded-2xl bg-gray-100 flex items-center justify-center text-xl">
+                                {getNotificationIcon(notification.type)}
+                              </p>
 
-                            <section className="min-w-0 flex-1">
-                              <header className="flex items-start justify-between gap-3">
+                              <section className="flex-1">
                                 <h3 className="text-base font-semibold text-gray-800">
                                   {notification.title}
                                 </h3>
 
-                                <time className="text-xs text-gray-400 shrink-0">
+                                <p className="text-sm text-gray-600 mt-1">
+                                  {notification.description}
+                                </p>
+
+                                <time className="text-xs text-gray-400">
                                   {notification.time}
                                 </time>
-                              </header>
-
-                              <p className="text-sm text-gray-600 mt-1">
-                                {notification.description}
-                              </p>
+                              </section>
                             </section>
-                          </section>
-                        </article>
+                          </article>
+                        </button>
                       </li>
                     ))}
                   </ul>

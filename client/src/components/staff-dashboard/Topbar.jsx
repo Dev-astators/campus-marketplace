@@ -1,7 +1,7 @@
 import { useState } from "react";
 import Icon from "./Icon";
 
-export default function Topbar() {
+export default function Topbar({ staffProfile }) {
   const [query, setQuery] = useState("");
 
   return (
@@ -24,35 +24,26 @@ export default function Topbar() {
       </div>
 
       {/* Right Side */}
-      <div className="flex items-center gap-3 ml-auto">
-        {/* Profile */}
-        <div className="flex items-center gap-3 pl-2">
-          <div className="text-right hidden md:block">
+      <section className="ml-auto flex items-center gap-3">
+        <article className="flex items-center gap-3 pl-2">
+          <header className="hidden text-right md:block">
             <p className="text-[13px] font-semibold text-slate-700">
-              tlakakarabo98@gmail.com
-            </p>   
-          </div>
+              {staffProfile?.email || "Facility staff"}
+            </p>
+            <p className="mt-1 text-[12px] text-slate-400">
+              {staffProfile?.fullName || "Staff member"}
+            </p>
+          </header>
 
-          <div className="w-11 h-11 rounded-full bg-slate-200 flex items-center justify-center overflow-hidden border border-slate-300">
+          <figure className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border border-slate-300 bg-slate-200">
             <Icon
               name="user"
               size={20}
               className="text-slate-600"
             />
-          </div>
-        </div>
-      </div>
+          </figure>
+        </article>
+      </section>
     </header>
-  );
-}
-
-function IconButton({ children, onClick }) {
-  return (
-    <button
-      onClick={onClick}
-      className="w-11 h-11 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-all duration-200"
-    >
-      {children}
-    </button>
   );
 }

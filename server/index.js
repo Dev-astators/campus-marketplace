@@ -5,6 +5,7 @@ const listingsRouter = require('./src/routes/listing');
 const messagesRouter = require('./src/routes/messages');
 const paymentsRouter = require('./src/routes/payments');
 
+const facilityDashboardRouter = require('./src/routes/facilityDashboard');
   
 const app = express();
 const port = process.env.PORT || 8080;
@@ -30,6 +31,7 @@ app.use(cors({
 app.use('/api/listings', listingsRouter);
 app.use('/api/messages', messagesRouter);
 app.use('/api/payments', paymentsRouter);
+app.use('/api/facility-dashboard', facilityDashboardRouter);
 
 app.get('/', (req, res) => {
     res.json({ message: "Hello, World!" });

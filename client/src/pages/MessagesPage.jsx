@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
-import { supabase } from "../config/supabaseClient";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "../config/supabaseClient";
 
 export default function MessagesPage() {
   const navigate = useNavigate();
@@ -28,8 +28,8 @@ export default function MessagesPage() {
   }, []);
 
   // ─────────────────────────────
-  // Fetch real conversations from Supabase
-  const fetchConversations = async (currentUser) => {
+  // Stable fetch function
+  const fetchConversations = useCallback(async (currentUser) => {
     try {
       const { data, error } = await supabase
         .from("messages")
@@ -48,10 +48,12 @@ export default function MessagesPage() {
 
       const grouped = {};
 
-      data.forEach((msg) => {
+      (data || []).forEach((msg) => {
         const isSender = msg.sender_id === currentUser.id;
 
-        const otherUserId = isSender ? msg.receiver_id : msg.sender_id;
+        const otherUserId = isSender
+          ? msg.receiver_id
+          : msg.sender_id;
 
         const otherUserName = isSender
           ? msg.receiver?.full_name
@@ -59,12 +61,15 @@ export default function MessagesPage() {
 
         const key = `${msg.listing_id}-${otherUserId}`;
 
+        // Keep newest message only
         if (!grouped[key]) {
           grouped[key] = {
             listing_id: msg.listing_id,
-            listing_title: msg.listing?.title || "Untitled listing",
+            listing_title:
+              msg.listing?.title || "Untitled listing",
             otherUserId,
-            otherUserName: otherUserName || "Unknown user",
+            otherUserName:
+              otherUserName || "Unknown user",
             lastMessage: msg.content,
             sent_at: msg.sent_at,
           };
@@ -77,38 +82,76 @@ export default function MessagesPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   // ─────────────────────────────
-  // Load conversations + realtime updates (FIXED FOR LINT)
+  // Initial load
   useEffect(() => {
     if (!user) return;
 
-    const run = async () => {
+    const loadConversations = async () => {
       await fetchConversations(user);
-
-      const channel = supabase
-        .channel("messages-page")
-        .on(
-          "postgres_changes",
-          {
-            event: "INSERT",
-            schema: "public",
-            table: "messages",
-          },
-          () => {
-            fetchConversations(user);
-          },
-        )
-        .subscribe();
-
-      return () => {
-        supabase.removeChannel(channel);
-      };
     };
 
-    run();
-  }, [user]);
+    loadConversations();
+  }, [user, fetchConversations]);
+
+  // ─────────────────────────────
+  // REALTIME updates
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel("messages-page-realtime")
+
+      // NEW MESSAGES
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "messages",
+        },
+        async (payload) => {
+          const msg = payload.new;
+
+          const belongsToUser =
+            msg.sender_id === user.id ||
+            msg.receiver_id === user.id;
+
+          if (!belongsToUser) return;
+
+          await fetchConversations(user);
+        },
+      )
+
+      // READ STATUS UPDATES
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "messages",
+        },
+        async (payload) => {
+          const msg = payload.new;
+
+          const belongsToUser =
+            msg.sender_id === user.id ||
+            msg.receiver_id === user.id;
+
+          if (!belongsToUser) return;
+
+          await fetchConversations(user);
+        },
+      )
+
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, fetchConversations]);
 
   // ─────────────────────────────
   const openChat = (conv) => {
@@ -156,7 +199,10 @@ export default function MessagesPage() {
       <section className="max-w-4xl mx-auto">
         <header className="mb-8 flex items-center justify-between gap-4">
           <section>
-            <h1 className="text-3xl font-bold text-gray-900">Messages</h1>
+            <h1 className="text-3xl font-bold text-gray-900">
+              Messages
+            </h1>
+
             <p className="text-sm text-gray-500 mt-2">
               View your conversations with sellers about marketplace listings.
             </p>
@@ -195,7 +241,9 @@ export default function MessagesPage() {
           ) : (
             <ul className="divide-y divide-gray-100">
               {conversations.map((conv, i) => (
-                <li key={`${conv.listing_id}-${conv.otherUserId}-${i}`}>
+                <li
+                  key={`${conv.listing_id}-${conv.otherUserId}-${i}`}
+                >
                   <button
                     type="button"
                     onClick={() => openChat(conv)}

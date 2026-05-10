@@ -43,8 +43,17 @@ const mockRes = () => {
 };
 
 describe("listing routes", () => {
+  let consoleErrorSpy;
+
   beforeEach(() => {
     jest.clearAllMocks();
+    consoleErrorSpy = jest
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    consoleErrorSpy.mockRestore();
   });
 
   describe("GET /", () => {
@@ -240,6 +249,9 @@ describe("listing routes", () => {
       await handler({ params: { id: "listing-5" } }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
+      expect(consoleErrorSpy).toHaveBeenCalledWith("Supabase error:", {
+        message: "DB error",
+      });
     });
   });
 
