@@ -14,6 +14,7 @@ import SellerProfilePage from "./pages/SellerProfilePage";
 import MessagesPage from "./pages/MessagesPage";
 import NotificationsPage from "./pages/NotificationsPage";
 import AdminDashboard from "./pages/AdminDashboard";
+import PaymentPage  from "./pages/PaymentPage";
 
 function App() {
   const [session, setSession] = useState(null);
@@ -58,6 +59,8 @@ function App() {
         <Route path="/messages" element={<MessagesPage />} />
         <Route path="/notifications" element={<NotificationsPage />} />
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
+        <Route path="/payment/success"  element={<PaymentPage result="success" />} />
+        <Route path="/payment/cancel"   element={<PaymentPage result="cancel" />} />
       </Routes>
     </BrowserRouter>
   );

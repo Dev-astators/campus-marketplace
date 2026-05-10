@@ -1,7 +1,11 @@
+// components/listingDetails/ListingActions.jsx
 // Centralizes action button visibility by role/state.
 // - Owner: edit + delete (when not in edit mode)
-// - Logged-in buyer: contact seller
+// - Logged-in buyer: contact seller + buy now (for sale/both listings)
+import BuyButton from "../listingDetails/BuyButton";
+
 export default function ListingActions({
+  listing,
   isOwner,
   editing,
   deleting,
@@ -10,6 +14,11 @@ export default function ListingActions({
   isLoggedInBuyer,
   onContactSeller,
 }) {
+  // Show the buy button only for listings that are for sale
+  const canBuy =
+    isLoggedInBuyer &&
+    (listing.listing_type === "sale" || listing.listing_type === "both");
+
   return (
     <footer className="mt-6 flex flex-wrap gap-3" aria-label="Listing actions">
       {isOwner && !editing && (
@@ -39,6 +48,9 @@ export default function ListingActions({
           Contact Seller
         </button>
       )}
+
+      {/* Buy Now — only shown for sale listings to non-owners */}
+      {canBuy && <BuyButton listing={listing} />}
     </footer>
   );
 }

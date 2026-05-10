@@ -11,7 +11,6 @@ export default function ListingDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  // Keep navigation side-effects outside the hook so the hook stays reusable.
   const handleDeleteSuccess = useCallback(() => {
     navigate("/student-dashboard");
   }, [navigate]);
@@ -37,7 +36,6 @@ export default function ListingDetails() {
     onDeleteSuccess: handleDeleteSuccess,
   });
 
-  // Contact seller handler
   const handleContactSeller = () => {
     navigate(`/chat/${listing.id}?seller=${listing.seller.id}`);
   };
@@ -47,10 +45,8 @@ export default function ListingDetails() {
 
   return (
     <article className="p-8 max-w-2xl" aria-label="Listing details">
-      {/* Title */}
       {!editing && <h1 className="text-2xl font-bold">{listing.title}</h1>}
 
-      {/* Seller info */}
       <section className="mt-2" aria-label="Seller information">
         <p className="text-sm text-gray-700">
           Sold by:{" "}
@@ -64,7 +60,6 @@ export default function ListingDetails() {
         </p>
       </section>
 
-      {/* Image */}
       {imageUrl && (
         <img src={imageUrl} className="w-96 mt-4 rounded-xl" alt="listing" />
       )}
@@ -82,7 +77,9 @@ export default function ListingDetails() {
         <ListingReadOnlyDetails listing={listing} />
       )}
 
+      {/* ✅ listing passed down so ListingActions can give it to BuyButton */}
       <ListingActions
+        listing={listing}
         isOwner={isOwner}
         editing={editing}
         deleting={deleting}

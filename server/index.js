@@ -3,6 +3,8 @@ const express = require('express');
 const cors = require('cors');
 const listingsRouter = require('./src/routes/listing');
 const messagesRouter = require('./src/routes/messages');
+const paymentsRouter = require('./src/routes/payments');
+
   
 const app = express();
 const port = process.env.PORT || 8080;
@@ -24,10 +26,10 @@ app.use(cors({
   }
 }));
 
-// Example route
 
 app.use('/api/listings', listingsRouter);
 app.use('/api/messages', messagesRouter);
+app.use('/api/payments', paymentsRouter);
 
 app.get('/', (req, res) => {
     res.json({ message: "Hello, World!" });

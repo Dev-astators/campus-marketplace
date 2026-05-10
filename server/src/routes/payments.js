@@ -1,0 +1,279 @@
+// server/src/routes/payments.js
+const express = require("express");
+const { createClient } = require("@supabase/supabase-js");
+const { buildPaymentPayload, verifyITN } = require("../services/payfastService");
+
+const router = express.Router();
+
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
+
+const IS_SANDBOX = process.env.NODE_ENV !== "production";
+
+// ─────────────────────────────────────────────────────────────────────────────
+// POST /api/payments/initiate
+// Creates a pending transaction — listing stays "active" until payment confirms
+// ─────────────────────────────────────────────────────────────────────────────
+router.post("/initiate", async (req, res) => {
+  const { listingId, buyerId } = req.body;
+
+  if (!listingId || !buyerId) {
+    return res.status(400).json({ error: "listingId and buyerId are required." });
+  }
+
+  try {
+    const { data: listing, error: listingError } = await supabase
+      .from("listings")
+      .select("id, title, asking_price, seller_id, status")
+      .eq("id", listingId)
+      .single();
+
+    if (listingError || !listing) {
+      return res.status(404).json({ error: "Listing not found." });
+    }
+    if (listing.status !== "active") {
+      return res.status(400).json({ error: "This listing is no longer available." });
+    }
+    if (listing.seller_id === buyerId) {
+      return res.status(400).json({ error: "You cannot buy your own listing." });
+    }
+
+    const { data: buyer, error: buyerError } = await supabase
+      .from("profiles")
+      .select("full_name, email")
+      .eq("id", buyerId)
+      .single();
+
+    if (buyerError || !buyer) {
+      return res.status(404).json({ error: "Buyer profile not found." });
+    }
+
+    // Create transaction (pending) — listing stays active until payment confirms
+    const { data: transaction, error: txError } = await supabase
+      .from("transactions")
+      .insert({
+        listing_id:     listingId,
+        buyer_id:       buyerId,
+        seller_id:      listing.seller_id,
+        online_amount:  listing.asking_price,
+        cash_shortfall: 0,
+        cash_settled:   false,
+        status:         "pending",
+      })
+      .select("id")
+      .single();
+
+    if (txError) throw txError;
+
+    const { error: paymentError } = await supabase
+      .from("payments")
+      .insert({
+        transaction_id: transaction.id,
+        amount:         listing.asking_price,
+        payment_type:   "online",
+        status:         "pending",
+      });
+
+    if (paymentError) throw paymentError;
+
+    const [firstName, ...rest] = buyer.full_name.split(" ");
+    const lastName = rest.join(" ") || "-";
+
+    const payfast = buildPaymentPayload({
+      transactionId:  transaction.id,
+      amount:         listing.asking_price,
+      itemName:       listing.title,
+      buyerFirstName: firstName,
+      buyerLastName:  lastName,
+      buyerEmail:     buyer.email,
+    });
+
+    return res.json({ transactionId: transaction.id, payfast });
+
+  } catch (err) {
+    console.error("Payment initiate error:", err);
+    return res.status(500).json({ error: "Failed to initiate payment." });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// POST /api/payments/webhook  (production ITN from PayFast)
+// Sets listing → "reserved" and transaction → "confirmed" on payment success
+// ─────────────────────────────────────────────────────────────────────────────
+router.post("/webhook", express.urlencoded({ extended: false }), async (req, res) => {
+  res.sendStatus(200); // always respond immediately
+
+  const itnData = req.body;
+
+  try {
+    if (!verifyITN(itnData)) {
+      console.warn("PayFast ITN: invalid signature or incomplete payment.");
+      return;
+    }
+
+    await confirmPayment(itnData.m_payment_id, itnData.pf_payment_id);
+
+  } catch (err) {
+    console.error("PayFast webhook error:", err);
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// POST /api/payments/confirm-dev  (sandbox / dev only)
+// Manually confirm a payment without needing ITN webhook
+// Remove or disable this before going live
+// ─────────────────────────────────────────────────────────────────────────────
+router.post("/confirm-dev", async (req, res) => {
+  if (!IS_SANDBOX) {
+    return res.status(403).json({ error: "Not available in production." });
+  }
+
+  const { transactionId } = req.body;
+  if (!transactionId) {
+    return res.status(400).json({ error: "transactionId is required." });
+  }
+
+  try {
+    await confirmPayment(transactionId, "sandbox-manual");
+    return res.json({ ok: true, message: "Transaction confirmed manually." });
+  } catch (err) {
+    console.error("confirm-dev error:", err);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Shared confirm logic — used by both webhook and confirm-dev
+// ✅ Sets listing → "reserved" AFTER payment is confirmed
+// ─────────────────────────────────────────────────────────────────────────────
+async function confirmPayment(transactionId, gatewayRef) {
+  // 1. Get the listing_id from the transaction
+  const { data: tx, error: txFetchError } = await supabase
+    .from("transactions")
+    .select("id, listing_id")
+    .eq("id", transactionId)
+    .single();
+
+  if (txFetchError || !tx) throw new Error("Transaction not found.");
+
+  // 2. Mark payment as success
+  await supabase
+    .from("payments")
+    .update({
+      status:      "success",
+      gateway_ref: gatewayRef,
+      paid_at:     new Date().toISOString(),
+    })
+    .eq("transaction_id", transactionId);
+
+  // 3. Mark transaction as confirmed
+  await supabase
+    .from("transactions")
+    .update({ status: "confirmed" })
+    .eq("id", transactionId);
+
+  // 4. ✅ Set listing to "reserved" now that payment is confirmed
+  await supabase
+    .from("listings")
+    .update({ status: "reserved" })
+    .eq("id", tx.listing_id);
+
+  console.log(`Payment confirmed: transaction=${transactionId}, listing=${tx.listing_id} → reserved`);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GET /api/payments/status/:transactionId
+// ─────────────────────────────────────────────────────────────────────────────
+router.get("/status/:transactionId", async (req, res) => {
+  const { data, error } = await supabase
+    .from("transactions")
+    .select("id, status, listing_id, online_amount")
+    .eq("id", req.params.transactionId)
+    .single();
+
+  if (error || !data) {
+    return res.status(404).json({ error: "Transaction not found." });
+  }
+  return res.json(data);
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GET /api/payments/facilities
+// Returns all active trade facilities for the student to choose from
+// ─────────────────────────────────────────────────────────────────────────────
+router.get("/facilities", async (req, res) => {
+  const { data, error } = await supabase
+    .from("trade_facilities")
+    .select("id, name, location, operating_hours")
+    .eq("is_active", true)
+    .order("name", { ascending: true });
+
+  if (error) return res.status(500).json({ error: error.message });
+  return res.json(data);
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GET /api/payments/slots/:facilityId
+// ─────────────────────────────────────────────────────────────────────────────
+router.get("/slots/:facilityId", async (req, res) => {
+  const { data, error } = await supabase
+    .from("facility_slots")
+    .select("id, slot_date, slot_time, capacity, booked_count")
+    .eq("facility_id", req.params.facilityId)
+    .gte("slot_date", new Date().toISOString().split("T")[0])
+    .order("slot_date", { ascending: true })
+    .order("slot_time", { ascending: true })
+    .limit(20);
+
+  if (error) return res.status(500).json({ error: error.message });
+  return res.json(data);
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// POST /api/payments/book-slot
+// ─────────────────────────────────────────────────────────────────────────────
+router.post("/book-slot", async (req, res) => {
+  const { transactionId, slotId, studentId, bookingType } = req.body;
+
+  if (!transactionId || !slotId || !studentId || !bookingType) {
+    return res.status(400).json({ error: "All fields are required." });
+  }
+
+  try {
+    const { data: tx } = await supabase
+      .from("transactions")
+      .select("status")
+      .eq("id", transactionId)
+      .single();
+
+    if (!tx || tx.status !== "confirmed") {
+      return res.status(400).json({ error: "Payment must be confirmed before booking a slot." });
+    }
+
+    const { data: booking, error: bookingError } = await supabase
+      .from("facility_bookings")
+      .insert({
+        transaction_id: transactionId,
+        slot_id:        slotId,
+        student_id:     studentId,
+        booking_type:   bookingType,
+        status:         "pending",
+      })
+      .select("id")
+      .single();
+
+    if (bookingError) throw bookingError;
+
+    await supabase.rpc("increment_slot_count", { slot_id: slotId });
+
+    return res.json({ bookingId: booking.id });
+
+  } catch (err) {
+    console.error("Slot booking error:", err);
+    return res.status(500).json({ error: "Failed to book slot." });
+  }
+});
+
+module.exports = router;
