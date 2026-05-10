@@ -68,7 +68,7 @@ export default function ChatPage() {
   }, []);
 
   // ─────────────────────────────
-  // Mark received messages as read
+  // Mark messages as read
   const markMessagesAsRead = useCallback(async () => {
     if (!user || !sellerId || !listingId) return;
 
@@ -136,7 +136,7 @@ export default function ChatPage() {
 
     const messageContent = input.trim();
 
-    // TEMP message appears immediately
+    // TEMP optimistic message
     const tempMessage = {
       id: `temp-${Date.now()}`,
       listing_id: listingId,
@@ -168,16 +168,21 @@ export default function ChatPage() {
       });
     } catch (err) {
       console.error("Send message error:", err);
+
+      // remove failed temp message
+      setMessages((prev) =>
+        prev.filter((msg) => msg.id !== tempMessage.id),
+      );
     }
   };
 
   // ─────────────────────────────
-  // Realtime updates
+  // REALTIME SUBSCRIPTIONS
   useEffect(() => {
-    if (!user || !listingId) return;
+    if (!user || !listingId || !sellerId) return;
 
     const channel = supabase
-      .channel(`chat-${listingId}`)
+      .channel(`chat-${listingId}-${user.id}-${sellerId}`)
 
       // NEW MESSAGE
       .on(
@@ -186,47 +191,60 @@ export default function ChatPage() {
           event: "INSERT",
           schema: "public",
           table: "messages",
-          filter: `listing_id=eq.${listingId}`,
         },
 
         async (payload) => {
           const newMessage = payload.new;
 
+          const isThisConversation =
+            newMessage.listing_id === listingId &&
+            (
+              (
+                newMessage.sender_id === user.id &&
+                newMessage.receiver_id === sellerId
+              ) ||
+              (
+                newMessage.sender_id === sellerId &&
+                newMessage.receiver_id === user.id
+              )
+            );
+
+          if (!isThisConversation) return;
+
           setMessages((prev) => {
             // remove matching temp message
-            const withoutTemp = prev.filter((msg) => {
-              const isSameTemp =
+            const filtered = prev.filter((msg) => {
+              const isMatchingTemp =
                 String(msg.id).startsWith("temp-") &&
                 msg.content === newMessage.content &&
                 msg.sender_id === newMessage.sender_id;
 
-              return !isSameTemp;
+              return !isMatchingTemp;
             });
 
-            const exists = withoutTemp.some(
+            const alreadyExists = filtered.some(
               (msg) => msg.id === newMessage.id,
             );
 
-            if (exists) return withoutTemp;
+            if (alreadyExists) return filtered;
 
-            return [...withoutTemp, newMessage];
+            return [...filtered, newMessage];
           });
 
-          // instantly mark as read
+          // instantly mark incoming messages as read
           if (newMessage.receiver_id === user.id) {
             await markMessagesAsRead();
           }
         },
       )
 
-      // READ STATUS UPDATE
+      // READ STATUS
       .on(
         "postgres_changes",
         {
           event: "UPDATE",
           schema: "public",
           table: "messages",
-          filter: `listing_id=eq.${listingId}`,
         },
 
         (payload) => {
@@ -250,14 +268,14 @@ export default function ChatPage() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, listingId, markMessagesAsRead]);
+  }, [user, listingId, sellerId, markMessagesAsRead]);
 
   // ─────────────────────────────
   const displayedMessages = user ? messages : PREVIEW_MESSAGES;
 
   const displayedUserId = user?.id || PREVIEW_USER_ID;
 
-  // ADD STATUS
+  // Add status
   const enhancedMessages = displayedMessages.map((msg) => {
     const isMine = msg.sender_id === displayedUserId;
 
