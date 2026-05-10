@@ -7,6 +7,7 @@ const supabase = {
     getSession: jest.fn().mockResolvedValue({
       data: { session: null },
     }),
+    signInWithOAuth: jest.fn().mockResolvedValue({ error: null }),
     signOut: jest.fn().mockResolvedValue({ error: null }),
     onAuthStateChange: jest.fn().mockReturnValue({
       data: {
