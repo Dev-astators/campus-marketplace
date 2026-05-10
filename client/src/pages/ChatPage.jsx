@@ -38,13 +38,19 @@ const PREVIEW_MESSAGES = [
 
 export default function ChatPage() {
   const navigate = useNavigate();
+
   const { id: listingId } = useParams();
+
   const [searchParams] = useSearchParams();
+
   const sellerId = searchParams.get("seller");
 
   const [user, setUser] = useState(null);
+
   const [messages, setMessages] = useState([]);
+
   const [input, setInput] = useState("");
+
   const [loadingUser, setLoadingUser] = useState(true);
 
   // ─────────────────────────────
@@ -54,6 +60,7 @@ export default function ChatPage() {
       const { data } = await supabase.auth.getSession();
 
       setUser(data.session?.user || null);
+
       setLoadingUser(false);
     };
 
@@ -61,7 +68,7 @@ export default function ChatPage() {
   }, []);
 
   // ─────────────────────────────
-  // FIXED: stable function for lint (useCallback)
+  // Mark received messages as read
   const markMessagesAsRead = useCallback(async () => {
     if (!user || !sellerId || !listingId) return;
 
@@ -79,14 +86,14 @@ export default function ChatPage() {
   }, [user, sellerId, listingId]);
 
   // ─────────────────────────────
-  // Fetch real messages
+  // Fetch messages
   useEffect(() => {
     if (!user || !sellerId || !listingId) return;
 
     const fetchMessages = async () => {
       try {
         const res = await fetch(
-          `${API_BASE_URL}/api/messages/${listingId}/${user.id}/${sellerId}`
+          `${API_BASE_URL}/api/messages/${listingId}/${user.id}/${sellerId}`,
         );
 
         const data = await res.json();
@@ -119,7 +126,9 @@ export default function ChatPage() {
       };
 
       PREVIEW_MESSAGES.push(previewMessage);
+
       setInput("");
+
       return;
     }
 
@@ -127,8 +136,9 @@ export default function ChatPage() {
 
     const messageContent = input.trim();
 
+    // TEMP message appears immediately
     const tempMessage = {
-      id: Date.now(),
+      id: `temp-${Date.now()}`,
       listing_id: listingId,
       sender_id: user.id,
       receiver_id: sellerId,
@@ -138,12 +148,17 @@ export default function ChatPage() {
     };
 
     setMessages((prev) => [...prev, tempMessage]);
+
     setInput("");
 
     try {
       await fetch(`${API_BASE_URL}/api/messages`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+
+        headers: {
+          "Content-Type": "application/json",
+        },
+
         body: JSON.stringify({
           listing_id: listingId,
           sender_id: user.id,
@@ -163,6 +178,8 @@ export default function ChatPage() {
 
     const channel = supabase
       .channel(`chat-${listingId}`)
+
+      // NEW MESSAGE
       .on(
         "postgres_changes",
         {
@@ -171,20 +188,38 @@ export default function ChatPage() {
           table: "messages",
           filter: `listing_id=eq.${listingId}`,
         },
+
         async (payload) => {
           const newMessage = payload.new;
 
           setMessages((prev) => {
-            const exists = prev.some((msg) => msg.id === newMessage.id);
-            if (exists) return prev;
-            return [...prev, newMessage];
+            // remove matching temp message
+            const withoutTemp = prev.filter((msg) => {
+              const isSameTemp =
+                String(msg.id).startsWith("temp-") &&
+                msg.content === newMessage.content &&
+                msg.sender_id === newMessage.sender_id;
+
+              return !isSameTemp;
+            });
+
+            const exists = withoutTemp.some(
+              (msg) => msg.id === newMessage.id,
+            );
+
+            if (exists) return withoutTemp;
+
+            return [...withoutTemp, newMessage];
           });
 
+          // instantly mark as read
           if (newMessage.receiver_id === user.id) {
             await markMessagesAsRead();
           }
-        }
+        },
       )
+
+      // READ STATUS UPDATE
       .on(
         "postgres_changes",
         {
@@ -193,27 +228,36 @@ export default function ChatPage() {
           table: "messages",
           filter: `listing_id=eq.${listingId}`,
         },
+
         (payload) => {
           const updatedMessage = payload.new;
 
           setMessages((prev) =>
             prev.map((msg) =>
-              msg.id === updatedMessage.id ? updatedMessage : msg
-            )
+              msg.id === updatedMessage.id
+                ? {
+                    ...msg,
+                    ...updatedMessage,
+                  }
+                : msg,
+            ),
           );
-        }
+        },
       )
+
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, listingId, sellerId, markMessagesAsRead]);
+  }, [user, listingId, markMessagesAsRead]);
 
   // ─────────────────────────────
   const displayedMessages = user ? messages : PREVIEW_MESSAGES;
+
   const displayedUserId = user?.id || PREVIEW_USER_ID;
 
+  // ADD STATUS
   const enhancedMessages = displayedMessages.map((msg) => {
     const isMine = msg.sender_id === displayedUserId;
 
@@ -244,12 +288,14 @@ export default function ChatPage() {
     );
   }
 
+  // ─────────────────────────────
   return (
     <main className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100 px-4 py-8 sm:px-6 lg:px-8">
       <section className="max-w-4xl mx-auto h-[calc(100vh-4rem)] flex flex-col">
         <header className="mb-6 flex items-center justify-between gap-4">
           <section>
             <h1 className="text-3xl font-bold text-gray-900">Chat</h1>
+
             <p className="text-sm text-gray-500 mt-2">
               Send and receive messages about this marketplace listing.
             </p>
