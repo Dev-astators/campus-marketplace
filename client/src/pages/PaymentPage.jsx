@@ -2,8 +2,9 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "../config/supabaseClient";
+import { API_BASE_URL } from "../config/apiBaseUrl";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
+const API_URL = API_BASE_URL;
 const IS_DEV = import.meta.env.DEV;
 
 export default function PaymentPage({ result }) {
