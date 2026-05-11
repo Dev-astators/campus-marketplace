@@ -80,6 +80,17 @@ export default function ChatPage() {
         .eq("sender_id", sellerId)
         .eq("receiver_id", user.id)
         .eq("is_read", false);
+
+      // IMPORTANT FIX:
+      // refetch messages immediately
+      // so first double-tick updates instantly
+      const res = await fetch(
+        `${API_BASE_URL}/api/messages/${listingId}/${user.id}/${sellerId}`,
+      );
+
+      const data = await res.json();
+
+      setMessages(data.messages || []);
     } catch (err) {
       console.error("Error marking messages as read:", err);
     }
@@ -181,6 +192,24 @@ export default function ChatPage() {
   useEffect(() => {
     if (!user || !listingId || !sellerId) return;
 
+    let isMounted = true;
+
+    const fetchLatestMessages = async () => {
+      try {
+        const res = await fetch(
+          `${API_BASE_URL}/api/messages/${listingId}/${user.id}/${sellerId}`,
+        );
+
+        const data = await res.json();
+
+        if (!isMounted) return;
+
+        setMessages(data.messages || []);
+      } catch (err) {
+        console.error("Realtime sync error:", err);
+      }
+    };
+
     const channel = supabase
       .channel(`chat-${listingId}-${user.id}-${sellerId}`)
 
@@ -263,9 +292,21 @@ export default function ChatPage() {
         },
       )
 
-      .subscribe();
+      // IMPORTANT FIX
+      .subscribe(async (status) => {
+        console.log("Realtime status:", status);
+
+        // When subscription is fully connected,
+        // fetch latest messages again
+        // so first message is never missed
+        if (status === "SUBSCRIBED") {
+          await fetchLatestMessages();
+        }
+      });
 
     return () => {
+      isMounted = false;
+
       supabase.removeChannel(channel);
     };
   }, [user, listingId, sellerId, markMessagesAsRead]);
