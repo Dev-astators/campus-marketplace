@@ -68,7 +68,7 @@ const requireRole = (...allowedRoles) => {
       const { data, error } = await supabase
         .from('profiles')
         .select('role')
-        .eq('auth_user_id', req.user.id)
+        .eq('id', req.user.id)
         .single();
 
       if (error || !data) {
@@ -113,7 +113,7 @@ const attachProfile = async (req, res, next) => {
     const { data, error } = await supabase
       .from('profiles')
       .select('id, full_name, email, student_number, university, role, average_rating')
-      .eq('auth_user_id', req.user.id)
+      .eq('id', req.user.id)
       .single();
 
     if (error || !data) {

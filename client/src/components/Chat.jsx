@@ -74,7 +74,9 @@ export default function Chat({
                       {msg.content}
                     </p>
 
-                    <footer className="mt-2">
+                    {/* ───────────────────────────── */}
+                    {/* TIME + TICKS */}
+                    <footer className="mt-2 flex items-center justify-end gap-2">
                       <time
                         dateTime={msg.sent_at || undefined}
                         className={`text-xs ${
@@ -83,6 +85,19 @@ export default function Chat({
                       >
                         {formatTime(msg.sent_at)}
                       </time>
+
+                      {/* ✔ / ✔✔ TICKS */}
+                      {isMe && (
+                        <span
+                          className={`text-xs ${
+                            msg.status === "read"
+                              ? "text-blue-200"
+                              : "text-blue-100"
+                          }`}
+                        >
+                          {msg.status === "read" ? "✔✔" : "✔"}
+                        </span>
+                      )}
                     </footer>
                   </article>
                 </li>

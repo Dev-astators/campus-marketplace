@@ -101,17 +101,39 @@
 <a name='L36'></a><a href='#L36'>36</a>
 <a name='L37'></a><a href='#L37'>37</a>
 <a name='L38'></a><a href='#L38'>38</a>
-<a name='L39'></a><a href='#L39'>39</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L39'></a><a href='#L39'>39</a>
+<a name='L40'></a><a href='#L40'>40</a>
+<a name='L41'></a><a href='#L41'>41</a>
+<a name='L42'></a><a href='#L42'>42</a>
+<a name='L43'></a><a href='#L43'>43</a>
+<a name='L44'></a><a href='#L44'>44</a>
+<a name='L45'></a><a href='#L45'>45</a>
+<a name='L46'></a><a href='#L46'>46</a>
+<a name='L47'></a><a href='#L47'>47</a>
+<a name='L48'></a><a href='#L48'>48</a>
+<a name='L49'></a><a href='#L49'>49</a>
+<a name='L50'></a><a href='#L50'>50</a>
+<a name='L51'></a><a href='#L51'>51</a>
+<a name='L52'></a><a href='#L52'>52</a>
+<a name='L53'></a><a href='#L53'>53</a>
+<a name='L54'></a><a href='#L54'>54</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">15x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">15x</span>
@@ -136,55 +158,78 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">15x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span></td><td class="text"><pre class="prettyprint lang-js">// server/services/listingValidator.js
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">// server/services/listingValidator.js
 &nbsp;
-const VALID_CATEGORIES = ['Textbooks', 'Electronics', 'Furniture', 'Clothing', 'Other'];
-const VALID_CONDITIONS = ['new', 'like_new', 'good', 'fair', 'poor'];
-const VALID_LISTING_TYPES = ['sale', 'trade', 'both'];
+// Keep category validation aligned with client listing form/filter options.
+const VALID_CATEGORIES = ["Textbooks", "Electronics", "Furniture", "Clothing"];
+const VALID_CONDITIONS = ["new", "like_new", "good", "fair", "poor"];
+const VALID_LISTING_TYPES = ["sale", "trade", "both"];
 &nbsp;
 /**
  * Validates a listing payload before insertion.
  * Returns: { valid: boolean, errors: string[] }
  */
-const validateListingInput = ({ title, category, condition, askingPrice, listingType }) =&gt; {
+const validateListingInput = ({
+  title,
+  category,
+  condition,
+  askingPrice,
+  listingType,
+}) =&gt; {
   const errors = [];
 &nbsp;
-  if (!title || typeof title !== 'string' || title.trim() === '') {
-    errors.push('title is required');
+  if (!title || typeof title !== "string" || title.trim() === "") {
+    errors.push("title is required");
   }
 &nbsp;
   if (!category || !VALID_CATEGORIES.includes(category)) {
-    errors.push(`category must be one of: ${VALID_CATEGORIES.join(', ')}`);
+    errors.push(`category must be one of: ${VALID_CATEGORIES.join(", ")}`);
   }
 &nbsp;
   if (!condition || !VALID_CONDITIONS.includes(condition)) {
-    errors.push(`condition must be one of: ${VALID_CONDITIONS.join(', ')}`);
+    errors.push(`condition must be one of: ${VALID_CONDITIONS.join(", ")}`);
   }
 &nbsp;
   <span class="missing-if-branch" title="if path not taken" >I</span>if (askingPrice === undefined || askingPrice === null) {
-<span class="cstat-no" title="statement not covered" >    errors.push('asking_price is required');</span>
-  } else if (typeof askingPrice !== 'number' || askingPrice &lt;= 0) {
-    errors.push('asking_price must be a positive number');
+<span class="cstat-no" title="statement not covered" >    errors.push("asking_price is required");</span>
+  } else if (typeof askingPrice !== "number" || askingPrice &lt;= 0) {
+    errors.push("asking_price must be a positive number");
   }
 &nbsp;
   if (!listingType || !VALID_LISTING_TYPES.includes(listingType)) {
-    errors.push(`listing_type must be one of: ${VALID_LISTING_TYPES.join(', ')}`);
+    errors.push(
+      `listing_type must be one of: ${VALID_LISTING_TYPES.join(", ")}`,
+    );
   }
 &nbsp;
   return { valid: errors.length === 0, errors };
 };
 &nbsp;
-module.exports = { validateListingInput, VALID_CATEGORIES, VALID_CONDITIONS, VALID_LISTING_TYPES };</pre></td></tr></table></pre>
+module.exports = {
+  validateListingInput,
+  VALID_CATEGORIES,
+  VALID_CONDITIONS,
+  VALID_LISTING_TYPES,
+};
+&nbsp;</pre></td></tr></table></pre>
 
                 <div class='push'></div><!-- for sticky footer -->
             </div><!-- /wrapper -->
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-04-18T19:15:20.928Z
+                at 2026-05-10T00:11:42.778Z
             </div>
         <script src="../prettify.js"></script>
         <script>
