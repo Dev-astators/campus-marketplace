@@ -3,6 +3,8 @@ const express = require('express');
 const cors = require('cors');
 const listingsRouter = require('./src/routes/listing');
 const messagesRouter = require('./src/routes/messages');
+const paymentsRouter = require('./src/routes/payments');
+
 const facilityDashboardRouter = require('./src/routes/facilityDashboard');
   
 const app = express();
@@ -25,10 +27,10 @@ app.use(cors({
   }
 }));
 
-// Example route
 
 app.use('/api/listings', listingsRouter);
 app.use('/api/messages', messagesRouter);
+app.use('/api/payments', paymentsRouter);
 app.use('/api/facility-dashboard', facilityDashboardRouter);
 
 app.get('/', (req, res) => {
