@@ -1,6 +1,533 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1776081942208" clover="3.2.0">
-  <project timestamp="1776081942209" name="All files">
-    <metrics statements="0" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0" elements="0" coveredelements="0" complexity="0" loc="0" ncloc="0" packages="0" files="0" classes="0"/>
+<coverage generated="1778472943068" clover="3.2.0">
+  <project timestamp="1778472943069" name="All files">
+    <metrics statements="485" coveredstatements="423" conditionals="382" coveredconditionals="268" methods="78" coveredmethods="70" elements="945" coveredelements="761" complexity="0" loc="485" ncloc="485" packages="3" files="11" classes="11"/>
+    <package name="middleware">
+      <metrics statements="50" coveredstatements="49" conditionals="28" coveredconditionals="28" methods="5" coveredmethods="5"/>
+      <file name="authMiddleware.js" path="C:\Users\kamog\Documents\COMS-3\COMS300-SD\Project\campus-marketplace\server\src\middleware\authMiddleware.js">
+        <metrics statements="39" coveredstatements="39" conditionals="24" coveredconditionals="24" methods="4" coveredmethods="4"/>
+        <line num="1" count="3" type="stmt"/>
+        <line num="17" count="3" type="stmt"/>
+        <line num="18" count="7" type="stmt"/>
+        <line num="20" count="7" type="stmt"/>
+        <line num="21" count="7" type="cond" truecount="4" falsecount="0"/>
+        <line num="22" count="2" type="stmt"/>
+        <line num="26" count="5" type="stmt"/>
+        <line num="27" count="5" type="cond" truecount="2" falsecount="0"/>
+        <line num="28" count="1" type="stmt"/>
+        <line num="32" count="4" type="stmt"/>
+        <line num="33" count="3" type="cond" truecount="4" falsecount="0"/>
+        <line num="34" count="2" type="stmt"/>
+        <line num="38" count="1" type="stmt"/>
+        <line num="39" count="1" type="stmt"/>
+        <line num="41" count="1" type="stmt"/>
+        <line num="59" count="3" type="stmt"/>
+        <line num="60" count="8" type="stmt"/>
+        <line num="61" count="8" type="stmt"/>
+        <line num="63" count="8" type="cond" truecount="2" falsecount="0"/>
+        <line num="64" count="1" type="stmt"/>
+        <line num="68" count="7" type="stmt"/>
+        <line num="74" count="6" type="cond" truecount="4" falsecount="0"/>
+        <line num="75" count="1" type="stmt"/>
+        <line num="79" count="5" type="cond" truecount="2" falsecount="0"/>
+        <line num="80" count="2" type="stmt"/>
+        <line num="86" count="3" type="stmt"/>
+        <line num="88" count="3" type="stmt"/>
+        <line num="91" count="1" type="stmt"/>
+        <line num="107" count="3" type="stmt"/>
+        <line num="108" count="5" type="stmt"/>
+        <line num="109" count="5" type="cond" truecount="2" falsecount="0"/>
+        <line num="110" count="1" type="stmt"/>
+        <line num="113" count="4" type="stmt"/>
+        <line num="119" count="3" type="cond" truecount="4" falsecount="0"/>
+        <line num="120" count="1" type="stmt"/>
+        <line num="124" count="2" type="stmt"/>
+        <line num="126" count="2" type="stmt"/>
+        <line num="129" count="1" type="stmt"/>
+        <line num="133" count="3" type="stmt"/>
+      </file>
+      <file name="validateListing.js" path="C:\Users\kamog\Documents\COMS-3\COMS300-SD\Project\campus-marketplace\server\src\middleware\validateListing.js">
+        <metrics statements="11" coveredstatements="10" conditionals="4" coveredconditionals="4" methods="1" coveredmethods="1"/>
+        <line num="2" count="2" type="stmt"/>
+        <line num="16" count="2" type="stmt"/>
+        <line num="17" count="8" type="stmt"/>
+        <line num="18" count="8" type="stmt"/>
+        <line num="21" count="8" type="stmt"/>
+        <line num="29" count="8" type="cond" truecount="2" falsecount="0"/>
+        <line num="30" count="3" type="stmt"/>
+        <line num="35" count="5" type="stmt"/>
+        <line num="45" count="5" type="stmt"/>
+        <line num="48" count="0" type="stmt"/>
+        <line num="52" count="2" type="stmt"/>
+      </file>
+    </package>
+    <package name="routes">
+      <metrics statements="163" coveredstatements="146" conditionals="87" coveredconditionals="62" methods="16" coveredmethods="15"/>
+      <file name="facilityDashboard.js" path="C:\Users\kamog\Documents\COMS-3\COMS300-SD\Project\campus-marketplace\server\src\routes\facilityDashboard.js">
+        <metrics statements="25" coveredstatements="21" conditionals="23" coveredconditionals="10" methods="2" coveredmethods="2"/>
+        <line num="1" count="1" type="stmt"/>
+        <line num="2" count="1" type="stmt"/>
+        <line num="6" count="1" type="stmt"/>
+        <line num="11" count="1" type="stmt"/>
+        <line num="13" count="1" type="stmt"/>
+        <line num="19" count="2" type="stmt"/>
+        <line num="21" count="2" type="cond" truecount="2" falsecount="0"/>
+        <line num="22" count="2" type="stmt"/>
+        <line num="28" count="2" type="cond" truecount="1" falsecount="1"/>
+        <line num="29" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="35" count="2" type="stmt"/>
+        <line num="39" count="1" type="stmt"/>
+        <line num="45" count="2" type="stmt"/>
+        <line num="46" count="2" type="stmt"/>
+        <line num="48" count="2" type="stmt"/>
+        <line num="55" count="2" type="cond" truecount="1" falsecount="1"/>
+        <line num="56" count="0" type="stmt"/>
+        <line num="59" count="2" type="cond" truecount="4" falsecount="0"/>
+        <line num="60" count="1" type="stmt"/>
+        <line num="65" count="1" type="stmt"/>
+        <line num="73" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="74" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="81" count="0" type="stmt"/>
+        <line num="87" count="1" type="stmt"/>
+        <line num="91" count="1" type="stmt"/>
+      </file>
+      <file name="listing.js" path="C:\Users\kamog\Documents\COMS-3\COMS300-SD\Project\campus-marketplace\server\src\routes\listing.js">
+        <metrics statements="84" coveredstatements="81" conditionals="42" coveredconditionals="40" methods="8" coveredmethods="8"/>
+        <line num="2" count="1" type="stmt"/>
+        <line num="3" count="1" type="stmt"/>
+        <line num="4" count="1" type="stmt"/>
+        <line num="10" count="1" type="stmt"/>
+        <line num="11" count="1" type="stmt"/>
+        <line num="12" count="1" type="stmt"/>
+        <line num="13" count="1" type="stmt"/>
+        <line num="19" count="1" type="stmt"/>
+        <line num="20" count="2" type="stmt"/>
+        <line num="22" count="2" type="cond" truecount="2" falsecount="0"/>
+        <line num="23" count="1" type="stmt"/>
+        <line num="28" count="1" type="stmt"/>
+        <line num="36" count="1" type="stmt"/>
+        <line num="37" count="4" type="stmt"/>
+        <line num="38" count="4" type="stmt"/>
+        <line num="40" count="4" type="cond" truecount="2" falsecount="0"/>
+        <line num="41" count="1" type="stmt"/>
+        <line num="44" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="45" count="1" type="stmt"/>
+        <line num="49" count="2" type="stmt"/>
+        <line num="51" count="2" type="cond" truecount="2" falsecount="0"/>
+        <line num="52" count="1" type="stmt"/>
+        <line num="57" count="1" type="stmt"/>
+        <line num="58" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="59" count="0" type="stmt"/>
+        <line num="65" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="73" count="1" type="stmt"/>
+        <line num="74" count="19" type="stmt"/>
+        <line num="76" count="19" type="cond" truecount="4" falsecount="0"/>
+        <line num="77" count="4" type="stmt"/>
+        <line num="82" count="15" type="stmt"/>
+        <line num="84" count="15" type="cond" truecount="4" falsecount="0"/>
+        <line num="85" count="3" type="stmt"/>
+        <line num="90" count="12" type="stmt"/>
+        <line num="92" count="12" type="cond" truecount="2" falsecount="0"/>
+        <line num="93" count="1" type="stmt"/>
+        <line num="98" count="11" type="stmt"/>
+        <line num="105" count="1" type="stmt"/>
+        <line num="107" count="4" type="stmt"/>
+        <line num="108" count="4" type="stmt"/>
+        <line num="110" count="4" type="cond" truecount="2" falsecount="0"/>
+        <line num="111" count="1" type="stmt"/>
+        <line num="114" count="3" type="stmt"/>
+        <line num="122" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="123" count="1" type="stmt"/>
+        <line num="126" count="2" type="stmt"/>
+        <line num="136" count="2" type="cond" truecount="2" falsecount="0"/>
+        <line num="137" count="1" type="stmt"/>
+        <line num="142" count="1" type="stmt"/>
+        <line num="146" count="1" type="stmt"/>
+        <line num="147" count="3" type="stmt"/>
+        <line num="149" count="3" type="stmt"/>
+        <line num="150" count="3" type="stmt"/>
+        <line num="173" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="174" count="1" type="stmt"/>
+        <line num="175" count="1" type="stmt"/>
+        <line num="178" count="2" type="cond" truecount="4" falsecount="0"/>
+        <line num="179" count="1" type="stmt"/>
+        <line num="182" count="1" type="stmt"/>
+        <line num="184" count="0" type="stmt"/>
+        <line num="185" count="0" type="stmt"/>
+        <line num="190" count="1" type="stmt"/>
+        <line num="191" count="2" type="stmt"/>
+        <line num="193" count="2" type="stmt"/>
+        <line num="195" count="2" type="cond" truecount="2" falsecount="0"/>
+        <line num="196" count="1" type="stmt"/>
+        <line num="199" count="1" type="stmt"/>
+        <line num="204" count="1" type="stmt"/>
+        <line num="205" count="3" type="stmt"/>
+        <line num="208" count="3" type="stmt"/>
+        <line num="210" count="3" type="stmt"/>
+        <line num="218" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="219" count="1" type="stmt"/>
+        <line num="222" count="2" type="stmt"/>
+        <line num="236" count="2" type="cond" truecount="2" falsecount="0"/>
+        <line num="238" count="1" type="stmt"/>
+        <line num="242" count="1" type="stmt"/>
+        <line num="243" count="2" type="stmt"/>
+        <line num="244" count="2" type="stmt"/>
+        <line num="246" count="2" type="stmt"/>
+        <line num="255" count="2" type="cond" truecount="2" falsecount="0"/>
+        <line num="256" count="1" type="stmt"/>
+        <line num="259" count="1" type="stmt"/>
+        <line num="262" count="1" type="stmt"/>
+      </file>
+      <file name="listings.js" path="C:\Users\kamog\Documents\COMS-3\COMS300-SD\Project\campus-marketplace\server\src\routes\listings.js">
+        <metrics statements="29" coveredstatements="19" conditionals="14" coveredconditionals="4" methods="3" coveredmethods="2"/>
+        <line num="2" count="1" type="stmt"/>
+        <line num="3" count="1" type="stmt"/>
+        <line num="4" count="1" type="stmt"/>
+        <line num="5" count="1" type="stmt"/>
+        <line num="6" count="1" type="stmt"/>
+        <line num="7" count="1" type="stmt"/>
+        <line num="8" count="1" type="stmt"/>
+        <line num="13" count="1" type="stmt"/>
+        <line num="14" count="2" type="stmt"/>
+        <line num="16" count="2" type="cond" truecount="2" falsecount="0"/>
+        <line num="17" count="1" type="stmt"/>
+        <line num="20" count="1" type="stmt"/>
+        <line num="30" count="1" type="stmt"/>
+        <line num="31" count="0" type="stmt"/>
+        <line num="33" count="0" type="cond" truecount="0" falsecount="4"/>
+        <line num="34" count="0" type="stmt"/>
+        <line num="37" count="0" type="stmt"/>
+        <line num="39" count="0" type="cond" truecount="0" falsecount="4"/>
+        <line num="40" count="0" type="stmt"/>
+        <line num="43" count="0" type="stmt"/>
+        <line num="45" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="46" count="0" type="stmt"/>
+        <line num="49" count="0" type="stmt"/>
+        <line num="63" count="1" type="stmt"/>
+        <line num="70" count="2" type="stmt"/>
+        <line num="72" count="2" type="cond" truecount="2" falsecount="0"/>
+        <line num="73" count="1" type="stmt"/>
+        <line num="76" count="1" type="stmt"/>
+        <line num="80" count="1" type="stmt"/>
+      </file>
+      <file name="messages.js" path="C:\Users\kamog\Documents\COMS-3\COMS300-SD\Project\campus-marketplace\server\src\routes\messages.js">
+        <metrics statements="25" coveredstatements="25" conditionals="8" coveredconditionals="8" methods="3" coveredmethods="3"/>
+        <line num="1" count="1" type="stmt"/>
+        <line num="2" count="1" type="stmt"/>
+        <line num="3" count="1" type="stmt"/>
+        <line num="5" count="1" type="stmt"/>
+        <line num="11" count="1" type="stmt"/>
+        <line num="12" count="3" type="stmt"/>
+        <line num="14" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="15" count="1" type="stmt"/>
+        <line num="18" count="2" type="stmt"/>
+        <line num="23" count="2" type="cond" truecount="2" falsecount="0"/>
+        <line num="24" count="1" type="stmt"/>
+        <line num="27" count="1" type="stmt"/>
+        <line num="31" count="1" type="stmt"/>
+        <line num="32" count="2" type="stmt"/>
+        <line num="34" count="2" type="stmt"/>
+        <line num="41" count="2" type="cond" truecount="2" falsecount="0"/>
+        <line num="42" count="1" type="stmt"/>
+        <line num="45" count="1" type="stmt"/>
+        <line num="49" count="1" type="stmt"/>
+        <line num="50" count="2" type="stmt"/>
+        <line num="52" count="2" type="stmt"/>
+        <line num="58" count="2" type="cond" truecount="2" falsecount="0"/>
+        <line num="59" count="1" type="stmt"/>
+        <line num="62" count="1" type="stmt"/>
+        <line num="65" count="1" type="stmt"/>
+      </file>
+    </package>
+    <package name="services">
+      <metrics statements="272" coveredstatements="228" conditionals="267" coveredconditionals="178" methods="57" coveredmethods="50"/>
+      <file name="authServices.js" path="C:\Users\kamog\Documents\COMS-3\COMS300-SD\Project\campus-marketplace\server\src\services\authServices.js">
+        <metrics statements="13" coveredstatements="13" conditionals="11" coveredconditionals="11" methods="2" coveredmethods="2"/>
+        <line num="3" count="2" type="stmt"/>
+        <line num="6" count="2" type="stmt"/>
+        <line num="8" count="7" type="cond" truecount="4" falsecount="0"/>
+        <line num="9" count="2" type="stmt"/>
+        <line num="12" count="5" type="stmt"/>
+        <line num="13" count="5" type="cond" truecount="2" falsecount="0"/>
+        <line num="14" count="1" type="stmt"/>
+        <line num="17" count="4" type="stmt"/>
+        <line num="19" count="4" type="stmt"/>
+        <line num="23" count="2" type="cond" truecount="1" falsecount="0"/>
+        <line num="24" count="5" type="stmt"/>
+        <line num="31" count="5" type="cond" truecount="2" falsecount="0"/>
+        <line num="33" count="2" type="stmt"/>
+      </file>
+      <file name="cpiService.js" path="C:\Users\kamog\Documents\COMS-3\COMS300-SD\Project\campus-marketplace\server\src\services\cpiService.js">
+        <metrics statements="17" coveredstatements="17" conditionals="10" coveredconditionals="10" methods="2" coveredmethods="2"/>
+        <line num="2" count="3" type="stmt"/>
+        <line num="8" count="3" type="stmt"/>
+        <line num="9" count="25" type="cond" truecount="4" falsecount="0"/>
+        <line num="10" count="1" type="stmt"/>
+        <line num="13" count="24" type="stmt"/>
+        <line num="15" count="24" type="cond" truecount="2" falsecount="0"/>
+        <line num="16" count="3" type="stmt"/>
+        <line num="19" count="21" type="stmt"/>
+        <line num="36" count="3" type="stmt"/>
+        <line num="37" count="16" type="stmt"/>
+        <line num="39" count="16" type="cond" truecount="4" falsecount="0"/>
+        <line num="40" count="2" type="stmt"/>
+        <line num="44" count="14" type="stmt"/>
+        <line num="45" count="14" type="stmt"/>
+        <line num="46" count="14" type="stmt"/>
+        <line num="48" count="14" type="stmt"/>
+        <line num="58" count="3" type="stmt"/>
+      </file>
+      <file name="facilityDashboardService.js" path="C:\Users\kamog\Documents\COMS-3\COMS300-SD\Project\campus-marketplace\server\src\services\facilityDashboardService.js">
+        <metrics statements="207" coveredstatements="169" conditionals="214" coveredconditionals="130" methods="48" coveredmethods="43"/>
+        <line num="1" count="1" type="stmt"/>
+        <line num="3" count="1" type="stmt"/>
+        <line num="4" count="1" type="stmt"/>
+        <line num="12" count="1" type="stmt"/>
+        <line num="45" count="1" type="cond" truecount="0" falsecount="1"/>
+        <line num="46" count="2" type="stmt"/>
+        <line num="47" count="2" type="stmt"/>
+        <line num="48" count="2" type="stmt"/>
+        <line num="51" count="1" type="stmt"/>
+        <line num="52" count="2" type="stmt"/>
+        <line num="58" count="1" type="stmt"/>
+        <line num="59" count="1" type="stmt"/>
+        <line num="63" count="1" type="stmt"/>
+        <line num="64" count="7" type="cond" truecount="1" falsecount="1"/>
+        <line num="66" count="1" type="stmt"/>
+        <line num="67" count="3" type="cond" truecount="1" falsecount="1"/>
+        <line num="68" count="0" type="stmt"/>
+        <line num="71" count="3" type="stmt"/>
+        <line num="79" count="1" type="stmt"/>
+        <line num="80" count="2" type="cond" truecount="2" falsecount="0"/>
+        <line num="81" count="1" type="stmt"/>
+        <line num="89" count="1" type="cond" truecount="3" falsecount="1"/>
+        <line num="90" count="1" type="stmt"/>
+        <line num="98" count="0" type="stmt"/>
+        <line num="101" count="1" type="stmt"/>
+        <line num="102" count="2" type="cond" truecount="2" falsecount="0"/>
+        <line num="103" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="104" count="1" type="stmt"/>
+        <line num="107" count="1" type="stmt"/>
+        <line num="108" count="10" type="cond" truecount="2" falsecount="0"/>
+        <line num="110" count="1" type="stmt"/>
+        <line num="111" count="2" type="stmt"/>
+        <line num="112" count="2" type="stmt"/>
+        <line num="113" count="2" type="cond" truecount="1" falsecount="1"/>
+        <line num="114" count="2" type="cond" truecount="1" falsecount="1"/>
+        <line num="115" count="2" type="cond" truecount="2" falsecount="0"/>
+        <line num="117" count="2" type="cond" truecount="2" falsecount="0"/>
+        <line num="121" count="1" type="stmt"/>
+        <line num="124" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="128" count="0" type="stmt"/>
+        <line num="131" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="135" count="0" type="stmt"/>
+        <line num="138" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="144" count="1" type="stmt"/>
+        <line num="147" count="0" type="stmt"/>
+        <line num="150" count="1" type="stmt"/>
+        <line num="151" count="0" type="stmt"/>
+        <line num="152" count="0" type="stmt"/>
+        <line num="153" count="0" type="stmt"/>
+        <line num="156" count="1" type="stmt"/>
+        <line num="157" count="0" type="stmt"/>
+        <line num="158" count="0" type="stmt"/>
+        <line num="159" count="0" type="stmt"/>
+        <line num="162" count="1" type="stmt"/>
+        <line num="163" count="6" type="stmt"/>
+        <line num="164" count="2" type="stmt"/>
+        <line num="165" count="3" type="stmt"/>
+        <line num="167" count="2" type="stmt"/>
+        <line num="168" count="3" type="stmt"/>
+        <line num="170" count="2" type="cond" truecount="1" falsecount="2"/>
+        <line num="171" count="2" type="cond" truecount="1" falsecount="1"/>
+        <line num="172" count="2" type="cond" truecount="1" falsecount="1"/>
+        <line num="173" count="2" type="cond" truecount="1" falsecount="1"/>
+        <line num="177" count="2" type="stmt"/>
+        <line num="196" count="1" type="stmt"/>
+        <line num="198" count="2" type="cond" truecount="4" falsecount="0"/>
+        <line num="200" count="2" type="cond" truecount="2" falsecount="0"/>
+        <line num="201" count="1" type="stmt"/>
+        <line num="204" count="1" type="cond" truecount="3" falsecount="1"/>
+        <line num="205" count="1" type="stmt"/>
+        <line num="208" count="0" type="stmt"/>
+        <line num="211" count="1" type="stmt"/>
+        <line num="212" count="2" type="stmt"/>
+        <line num="213" count="2" type="stmt"/>
+        <line num="214" count="2" type="stmt"/>
+        <line num="215" count="2" type="stmt"/>
+        <line num="216" count="2" type="stmt"/>
+        <line num="218" count="2" type="stmt"/>
+        <line num="249" count="1" type="stmt"/>
+        <line num="250" count="2" type="stmt"/>
+        <line num="251" count="2" type="stmt"/>
+        <line num="253" count="2" type="stmt"/>
+        <line num="254" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="255" count="1" type="stmt"/>
+        <line num="258" count="2" type="stmt"/>
+        <line num="260" count="2" type="cond" truecount="2" falsecount="0"/>
+        <line num="262" count="2" type="stmt"/>
+        <line num="274" count="2" type="stmt"/>
+        <line num="275" count="2" type="cond" truecount="1" falsecount="1"/>
+        <line num="276" count="2" type="cond" truecount="1" falsecount="1"/>
+        <line num="278" count="2" type="cond" truecount="4" falsecount="0"/>
+        <line num="279" count="1" type="stmt"/>
+        <line num="280" count="1" type="stmt"/>
+        <line num="291" count="2" type="stmt"/>
+        <line num="292" count="2" type="cond" truecount="3" falsecount="1"/>
+        <line num="293" count="1" type="stmt"/>
+        <line num="304" count="2" type="stmt"/>
+        <line num="305" count="5" type="stmt"/>
+        <line num="307" count="4" type="stmt"/>
+        <line num="310" count="1" type="stmt"/>
+        <line num="311" count="2" type="cond" truecount="2" falsecount="0"/>
+        <line num="312" count="1" type="stmt"/>
+        <line num="315" count="1" type="stmt"/>
+        <line num="346" count="1" type="stmt"/>
+        <line num="347" count="4" type="stmt"/>
+        <line num="352" count="4" type="cond" truecount="2" falsecount="0"/>
+        <line num="353" count="3" type="stmt"/>
+        <line num="358" count="1" type="stmt"/>
+        <line num="364" count="1" type="stmt"/>
+        <line num="369" count="5" type="cond" truecount="4" falsecount="0"/>
+        <line num="370" count="1" type="stmt"/>
+        <line num="379" count="4" type="stmt"/>
+        <line num="383" count="4" type="cond" truecount="1" falsecount="1"/>
+        <line num="384" count="0" type="stmt"/>
+        <line num="387" count="4" type="cond" truecount="3" falsecount="1"/>
+        <line num="388" count="0" type="stmt"/>
+        <line num="397" count="4" type="cond" truecount="2" falsecount="0"/>
+        <line num="398" count="1" type="stmt"/>
+        <line num="418" count="3" type="stmt"/>
+        <line num="425" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="426" count="1" type="stmt"/>
+        <line num="429" count="2" type="cond" truecount="1" falsecount="1"/>
+        <line num="430" count="2" type="cond" truecount="2" falsecount="0"/>
+        <line num="437" count="2" type="cond" truecount="1" falsecount="1"/>
+        <line num="438" count="0" type="stmt"/>
+        <line num="441" count="3" type="cond" truecount="1" falsecount="1"/>
+        <line num="443" count="2" type="stmt"/>
+        <line num="445" count="2" type="cond" truecount="1" falsecount="1"/>
+        <line num="446" count="0" type="stmt"/>
+        <line num="449" count="2" type="cond" truecount="1" falsecount="1"/>
+        <line num="450" count="3" type="stmt"/>
+        <line num="451" count="3" type="stmt"/>
+        <line num="452" count="3" type="stmt"/>
+        <line num="455" count="2" type="stmt"/>
+        <line num="456" count="2" type="cond" truecount="1" falsecount="1"/>
+        <line num="459" count="2" type="stmt"/>
+        <line num="467" count="2" type="stmt"/>
+        <line num="468" count="2" type="cond" truecount="1" falsecount="1"/>
+        <line num="469" count="2" type="cond" truecount="1" falsecount="1"/>
+        <line num="471" count="2" type="cond" truecount="1" falsecount="1"/>
+        <line num="472" count="2" type="cond" truecount="1" falsecount="1"/>
+        <line num="473" count="3" type="stmt"/>
+        <line num="479" count="4" type="cond" truecount="2" falsecount="2"/>
+        <line num="483" count="2" type="stmt"/>
+        <line num="486" count="2" type="stmt"/>
+        <line num="487" count="2" type="cond" truecount="1" falsecount="1"/>
+        <line num="490" count="2" type="stmt"/>
+        <line num="491" count="2" type="cond" truecount="1" falsecount="1"/>
+        <line num="494" count="2" type="stmt"/>
+        <line num="495" count="2" type="stmt"/>
+        <line num="496" count="2" type="stmt"/>
+        <line num="498" count="2" type="stmt"/>
+        <line num="499" count="2" type="stmt"/>
+        <line num="502" count="2" type="stmt"/>
+        <line num="527" count="1" type="stmt"/>
+        <line num="528" count="4" type="stmt"/>
+        <line num="574" count="1" type="stmt"/>
+        <line num="575" count="1" type="stmt"/>
+        <line num="584" count="1" type="stmt"/>
+        <line num="592" count="4" type="stmt"/>
+        <line num="594" count="4" type="cond" truecount="2" falsecount="0"/>
+        <line num="595" count="1" type="stmt"/>
+        <line num="598" count="3" type="cond" truecount="1" falsecount="1"/>
+        <line num="599" count="3" type="stmt"/>
+        <line num="602" count="3" type="stmt"/>
+        <line num="606" count="3" type="stmt"/>
+        <line num="607" count="3" type="stmt"/>
+        <line num="608" count="3" type="stmt"/>
+        <line num="610" count="3" type="stmt"/>
+        <line num="611" count="3" type="stmt"/>
+        <line num="614" count="3" type="cond" truecount="3" falsecount="1"/>
+        <line num="615" count="0" type="stmt"/>
+        <line num="624" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="629" count="1" type="stmt"/>
+        <line num="638" count="2" type="cond" truecount="1" falsecount="1"/>
+        <line num="639" count="2" type="cond" truecount="2" falsecount="0"/>
+        <line num="640" count="1" type="stmt"/>
+        <line num="646" count="1" type="stmt"/>
+        <line num="652" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="653" count="0" type="stmt"/>
+        <line num="656" count="1" type="stmt"/>
+        <line num="661" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="662" count="0" type="stmt"/>
+        <line num="666" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="667" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="668" count="0" type="stmt"/>
+        <line num="674" count="0" type="stmt"/>
+        <line num="680" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="681" count="0" type="stmt"/>
+        <line num="684" count="0" type="stmt"/>
+        <line num="689" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="690" count="0" type="stmt"/>
+        <line num="694" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="695" count="0" type="stmt"/>
+        <line num="703" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="704" count="0" type="stmt"/>
+        <line num="708" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="709" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="710" count="0" type="stmt"/>
+        <line num="716" count="0" type="stmt"/>
+        <line num="722" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="723" count="0" type="stmt"/>
+        <line num="726" count="0" type="stmt"/>
+        <line num="733" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="734" count="0" type="stmt"/>
+        <line num="738" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="741" count="1" type="stmt"/>
+      </file>
+      <file name="listingService.js" path="C:\Users\kamog\Documents\COMS-3\COMS300-SD\Project\campus-marketplace\server\src\services\listingService.js">
+        <metrics statements="16" coveredstatements="11" conditionals="7" coveredconditionals="3" methods="4" coveredmethods="2"/>
+        <line num="1" count="1" type="stmt"/>
+        <line num="8" count="1" type="stmt"/>
+        <line num="10" count="4" type="stmt"/>
+        <line num="30" count="4" type="stmt"/>
+        <line num="37" count="1" type="stmt"/>
+        <line num="38" count="0" type="stmt"/>
+        <line num="60" count="0" type="stmt"/>
+        <line num="68" count="1" type="stmt"/>
+        <line num="79" count="1" type="stmt"/>
+        <line num="94" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="97" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="98" count="0" type="stmt"/>
+        <line num="104" count="0" type="stmt"/>
+        <line num="107" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="110" count="1" type="stmt"/>
+        <line num="113" count="1" type="stmt"/>
+      </file>
+      <file name="listingValidator.js" path="C:\Users\kamog\Documents\COMS-3\COMS300-SD\Project\campus-marketplace\server\src\services\listingValidator.js">
+        <metrics statements="19" coveredstatements="18" conditionals="25" coveredconditionals="24" methods="1" coveredmethods="1"/>
+        <line num="4" count="3" type="stmt"/>
+        <line num="5" count="3" type="stmt"/>
+        <line num="6" count="3" type="stmt"/>
+        <line num="12" count="3" type="stmt"/>
+        <line num="19" count="15" type="stmt"/>
+        <line num="21" count="15" type="cond" truecount="5" falsecount="0"/>
+        <line num="22" count="2" type="stmt"/>
+        <line num="25" count="15" type="cond" truecount="4" falsecount="0"/>
+        <line num="26" count="2" type="stmt"/>
+        <line num="29" count="15" type="cond" truecount="4" falsecount="0"/>
+        <line num="30" count="1" type="stmt"/>
+        <line num="33" count="15" type="cond" truecount="3" falsecount="1"/>
+        <line num="34" count="0" type="stmt"/>
+        <line num="35" count="15" type="cond" truecount="4" falsecount="0"/>
+        <line num="36" count="3" type="stmt"/>
+        <line num="39" count="15" type="cond" truecount="4" falsecount="0"/>
+        <line num="40" count="1" type="stmt"/>
+        <line num="45" count="15" type="stmt"/>
+        <line num="48" count="3" type="stmt"/>
+      </file>
+    </package>
   </project>
 </coverage>
