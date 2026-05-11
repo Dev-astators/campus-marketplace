@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">92.85% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/14</span>
+                <span class='fraction'>13/14</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">88.88% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/18</span>
+                <span class='fraction'>16/18</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/6</span>
+                <span class='fraction'>6/6</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/13</span>
+                <span class='fraction'>13/13</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line low'></div>
+    <div class='status-line high'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -209,28 +209,28 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">21x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">21x</span>
+<span class="cline-any cline-yes">21x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">21x</span>
+<span class="cline-any cline-yes">57x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">57x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">21x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">21x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -258,9 +258,9 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">57x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">57x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -321,7 +321,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">18x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -339,35 +339,35 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { useEffect, useRef } from "react";
 &nbsp;
-export default function <span class="fstat-no" title="function not covered" >Chat(</span>{
+export default function Chat({
   messages,
   currentUserId,
   input,
   setInput,
   onSend,
 }) {
-  const bottomRef = <span class="cstat-no" title="statement not covered" >useRef(null);</span>
+  const bottomRef = useRef(null);
 &nbsp;
   // Auto-scroll to newest message
-<span class="cstat-no" title="statement not covered" >  useEffect(<span class="fstat-no" title="function not covered" >()</span> =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >    bottomRef.current?.scrollIntoView({ behavior: "smooth" });</span>
+  useEffect(() =&gt; {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 &nbsp;
-  const formatTime = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >(d</span>ateString) =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >    if (!dateString) <span class="cstat-no" title="statement not covered" >return "";</span></span>
+  const formatTime = (dateString) =&gt; {
+    <span class="missing-if-branch" title="if path not taken" >I</span>if (!dateString) <span class="cstat-no" title="statement not covered" >return "";</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    return new Date(dateString).toLocaleTimeString([], {</span>
+    return new Date(dateString).toLocaleTimeString([], {
       hour: "2-digit",
       minute: "2-digit",
     });
   };
 &nbsp;
-  const handleSubmit = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >(e</span>vent) =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >    event.preventDefault();</span>
-<span class="cstat-no" title="statement not covered" >    onSend();</span>
+  const handleSubmit = (event) =&gt; {
+    event.preventDefault();
+    onSend();
   };
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  return (</span>
+  return (
     &lt;section className="h-full bg-white/90 backdrop-blur border border-gray-200 rounded-3xl shadow-sm overflow-hidden flex flex-col"&gt;
       &lt;header className="px-5 py-4 border-b border-gray-200 bg-white"&gt;
         &lt;h2 className="text-lg font-bold text-gray-900"&gt;Conversation&lt;/h2&gt;
@@ -394,10 +394,10 @@ export default function <span class="fstat-no" title="function not covered" >Cha
           &lt;/article&gt;
         ) : (
           &lt;ol className="space-y-3"&gt;
-            {messages.map(<span class="fstat-no" title="function not covered" >(m</span>sg) =&gt; {
-              const isMe = <span class="cstat-no" title="statement not covered" >msg.sender_id === currentUserId;</span>
+            {messages.map((msg) =&gt; {
+              const isMe = msg.sender_id === currentUserId;
 &nbsp;
-<span class="cstat-no" title="statement not covered" >              return (</span>
+              return (
                 &lt;li
                   key={msg.id}
                   className={`flex ${isMe ? "justify-end" : "justify-start"}`}
@@ -417,7 +417,7 @@ export default function <span class="fstat-no" title="function not covered" >Cha
                     {/* TIME + TICKS */}
                     &lt;footer className="mt-2 flex items-center justify-end gap-2"&gt;
                       &lt;time
-                        dateTime={msg.sent_at || undefined}
+                        dateTime={msg.sent_at || <span class="branch-1 cbranch-no" title="branch not covered" >undefined}</span>
                         className={`text-xs ${
                           isMe ? "text-blue-100" : "text-gray-400"
                         }`}
@@ -458,7 +458,7 @@ export default function <span class="fstat-no" title="function not covered" >Cha
             id="chat-message"
             type="text"
             value={input}
-            onChange={<span class="fstat-no" title="function not covered" >(e</span>vent) =&gt; <span class="cstat-no" title="statement not covered" >setInput(event.target.value)}</span>
+            onChange={(event) =&gt; setInput(event.target.value)}
             placeholder="Type a message..."
             className="flex-1 rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           /&gt;
@@ -481,7 +481,7 @@ export default function <span class="fstat-no" title="function not covered" >Cha
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-05-11T04:40:05.368Z
+                at 2026-05-11T05:01:06.573Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

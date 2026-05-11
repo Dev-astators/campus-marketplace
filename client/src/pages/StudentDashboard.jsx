@@ -17,15 +17,21 @@ import InAppNotifications from "../components/studentDashboard/InAppNotification
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
 // Tabs that don't use the marketplace listings feed at all
-const NON_LISTING_TABS = ["my-purchases", "my-sales", "notifications", "profile", "messages"];
+const NON_LISTING_TABS = [
+  "my-purchases",
+  "my-sales",
+  "notifications",
+  "profile",
+  "messages",
+];
 
 export default function StudentDashboard() {
-  const navigate  = useNavigate();
-  const location  = useLocation();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   // Support navigating directly to a tab via router state (e.g. from notifications click)
   const [activeNav, setActiveNav] = useState(
-    location.state?.tab || "marketplace"
+    location.state?.tab || "marketplace",
   );
   const [showFilters, setShowFilters] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -33,12 +39,18 @@ export default function StudentDashboard() {
   const { user, listings, loading } = useDashboardListings(activeNav);
 
   const {
-    search, setSearch,
-    selectedCategory, setSelectedCategory,
-    selectedCondition, setSelectedCondition,
-    minPrice, setMinPrice,
-    maxPrice, setMaxPrice,
-    sortBy, setSortBy,
+    search,
+    setSearch,
+    selectedCategory,
+    setSelectedCategory,
+    selectedCondition,
+    setSelectedCondition,
+    minPrice,
+    setMinPrice,
+    maxPrice,
+    setMaxPrice,
+    sortBy,
+    setSortBy,
     clearFilters,
     filteredListings,
     listingsHeading,
@@ -50,9 +62,13 @@ export default function StudentDashboard() {
 
     const fetchUnread = async () => {
       try {
-        const res  = await fetch(`${API_URL}/api/payments/notifications/${user.profileId}`);
+        const res = await fetch(
+          `${API_URL}/api/payments/notifications/${user.profileId}`,
+        );
         const data = await res.json();
-        const count = Array.isArray(data) ? data.filter(n => !n.is_read).length : 0;
+        const count = Array.isArray(data)
+          ? data.filter((n) => !n.is_read).length
+          : 0;
         setUnreadCount(count);
       } catch {
         // silently fail — badge just won't show
@@ -67,9 +83,28 @@ export default function StudentDashboard() {
     if (item === "messages") navigate("/messages");
   };
 
-  const firstName      = user?.fullName?.split(" ")[0] || user?.name || "Student";
-  const isListingView  = !NON_LISTING_TABS.includes(activeNav);
-  const isProfileView  = activeNav === "profile";
+  const firstName = user?.fullName?.split(" ")[0] || user?.name || "Student";
+  const isListingView = !NON_LISTING_TABS.includes(activeNav);
+  const isProfileView = activeNav === "profile";
+  const isMyListingsView = activeNav === "my-listings";
+
+  const normalizeStatus = (status) => String(status || "active").toLowerCase();
+  const activeListings = isMyListingsView
+    ? filteredListings.filter(
+        (listing) => normalizeStatus(listing.status) === "active",
+      )
+    : [];
+  const reservedListings = isMyListingsView
+    ? filteredListings.filter(
+        (listing) => normalizeStatus(listing.status) === "reserved",
+      )
+    : [];
+  const otherListings = isMyListingsView
+    ? filteredListings.filter(
+        (listing) =>
+          !["active", "reserved"].includes(normalizeStatus(listing.status)),
+      )
+    : [];
 
   const activeFilterCount = [
     selectedCategory !== "All Categories",
@@ -80,10 +115,16 @@ export default function StudentDashboard() {
   ].filter(Boolean).length;
 
   return (
-    <section className="h-screen flex flex-col bg-gray-50 overflow-hidden" aria-label="Student dashboard">
+    <section
+      className="h-screen flex flex-col bg-gray-50 overflow-hidden"
+      aria-label="Student dashboard"
+    >
       <Navbar user={user} searchValue={search} onSearch={setSearch} />
 
-      <section className="flex flex-1 overflow-hidden" aria-label="Dashboard workspace">
+      <section
+        className="flex flex-1 overflow-hidden"
+        aria-label="Dashboard workspace"
+      >
         <Sidebar
           activeItem={activeNav}
           onNavigate={handleNavigate}
@@ -92,7 +133,9 @@ export default function StudentDashboard() {
 
         <main className="flex-1 overflow-y-auto px-8 py-6 flex flex-col gap-6">
           <header>
-            <h1 className="text-2xl font-bold text-gray-800">Hello, {firstName}!</h1>
+            <h1 className="text-2xl font-bold text-gray-800">
+              Hello, {firstName}!
+            </h1>
             <p className="text-sm text-gray-400">Welcome Back!</p>
           </header>
 
@@ -110,7 +153,7 @@ export default function StudentDashboard() {
                 <section className="flex items-center gap-3">
                   <button
                     type="button"
-                    onClick={() => setShowFilters(c => !c)}
+                    onClick={() => setShowFilters((c) => !c)}
                     aria-expanded={showFilters}
                     aria-controls="listings-filter-controls"
                     className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:border-gray-400 hover:text-gray-900 cursor-pointer"
@@ -126,21 +169,104 @@ export default function StudentDashboard() {
                 </section>
 
                 {showFilters && (
-                  <section id="listings-filter-controls" className="flex flex-col gap-4">
-                    <CategoryFilter categories={CATEGORIES} selected={selectedCategory} onSelect={setSelectedCategory} />
+                  <section
+                    id="listings-filter-controls"
+                    className="flex flex-col gap-4"
+                  >
+                    <CategoryFilter
+                      categories={CATEGORIES}
+                      selected={selectedCategory}
+                      onSelect={setSelectedCategory}
+                    />
                     <ListingsFiltersPanel
-                      selectedCondition={selectedCondition} onConditionChange={setSelectedCondition}
-                      minPrice={minPrice} onMinPriceChange={setMinPrice}
-                      maxPrice={maxPrice} onMaxPriceChange={setMaxPrice}
-                      sortBy={sortBy} onSortByChange={setSortBy}
+                      selectedCondition={selectedCondition}
+                      onConditionChange={setSelectedCondition}
+                      minPrice={minPrice}
+                      onMinPriceChange={setMinPrice}
+                      maxPrice={maxPrice}
+                      onMaxPriceChange={setMaxPrice}
+                      sortBy={sortBy}
+                      onSortByChange={setSortBy}
                       onClearFilters={clearFilters}
                     />
                   </section>
                 )}
               </section>
 
-              <h2 className="text-lg font-semibold text-gray-700">{listingsHeading}</h2>
-              <ListingsGrid listings={filteredListings} loading={loading} />
+              <h2 className="text-lg font-semibold text-gray-700">
+                {listingsHeading}
+              </h2>
+              {isMyListingsView ? (
+                loading ? (
+                  <ListingsGrid listings={[]} loading />
+                ) : (
+                  <section
+                    className="flex flex-col gap-6"
+                    aria-label="My listings sections"
+                  >
+                    <section className="flex flex-col gap-3">
+                      <header className="flex items-center justify-between">
+                        <h3 className="text-sm font-semibold text-gray-600">
+                          Active
+                        </h3>
+                        <span className="text-xs text-gray-400">
+                          {activeListings.length}
+                        </span>
+                      </header>
+                      {activeListings.length > 0 ? (
+                        <ListingsGrid
+                          listings={activeListings}
+                          loading={false}
+                        />
+                      ) : (
+                        <p className="text-sm text-gray-400">
+                          No active listings yet.
+                        </p>
+                      )}
+                    </section>
+
+                    <section className="flex flex-col gap-3">
+                      <header className="flex items-center justify-between">
+                        <h3 className="text-sm font-semibold text-gray-600">
+                          Reserved
+                        </h3>
+                        <span className="text-xs text-gray-400">
+                          {reservedListings.length}
+                        </span>
+                      </header>
+                      {reservedListings.length > 0 ? (
+                        <ListingsGrid
+                          listings={reservedListings}
+                          loading={false}
+                        />
+                      ) : (
+                        <p className="text-sm text-gray-400">
+                          No reserved listings yet.
+                        </p>
+                      )}
+                    </section>
+
+                    {otherListings.length > 0 && (
+                      <section className="flex flex-col gap-3">
+                        <header className="flex items-center justify-between">
+                          <h3 className="text-sm font-semibold text-gray-600">
+                            Other
+                          </h3>
+                          <span className="text-xs text-gray-400">
+                            {otherListings.length}
+                          </span>
+                        </header>
+                        <ListingsGrid
+                          listings={otherListings}
+                          loading={false}
+                        />
+                      </section>
+                    )}
+                  </section>
+                )
+              ) : (
+                <ListingsGrid listings={filteredListings} loading={loading} />
+              )}
             </>
           )}
 
@@ -150,9 +276,7 @@ export default function StudentDashboard() {
           )}
 
           {/* ── My Sales ── */}
-          {activeNav === "my-sales" && (
-            <MySales profileId={user?.profileId} />
-          )}
+          {activeNav === "my-sales" && <MySales profileId={user?.profileId} />}
 
           {/* ── Notifications ── */}
           {activeNav === "notifications" && (
