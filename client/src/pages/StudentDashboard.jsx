@@ -70,6 +70,20 @@ export default function StudentDashboard() {
   const firstName      = user?.fullName?.split(" ")[0] || user?.name || "Student";
   const isListingView  = !NON_LISTING_TABS.includes(activeNav);
   const isProfileView  = activeNav === "profile";
+  const isMyListingsView = activeNav === "my-listings";
+
+  const normalizeStatus = (status) => String(status || "active").toLowerCase();
+  const activeListings = isMyListingsView
+    ? filteredListings.filter((listing) => normalizeStatus(listing.status) === "active")
+    : [];
+  const reservedListings = isMyListingsView
+    ? filteredListings.filter((listing) => normalizeStatus(listing.status) === "reserved")
+    : [];
+  const otherListings = isMyListingsView
+    ? filteredListings.filter(
+        (listing) => !["active", "reserved"].includes(normalizeStatus(listing.status)),
+      )
+    : [];
 
   const activeFilterCount = [
     selectedCategory !== "All Categories",
@@ -140,7 +154,49 @@ export default function StudentDashboard() {
               </section>
 
               <h2 className="text-lg font-semibold text-gray-700">{listingsHeading}</h2>
-              <ListingsGrid listings={filteredListings} loading={loading} />
+              {isMyListingsView ? (
+                loading ? (
+                  <ListingsGrid listings={[]} loading />
+                ) : (
+                  <section className="flex flex-col gap-6" aria-label="My listings sections">
+                    <section className="flex flex-col gap-3">
+                      <header className="flex items-center justify-between">
+                        <h3 className="text-sm font-semibold text-gray-600">Active</h3>
+                        <span className="text-xs text-gray-400">{activeListings.length}</span>
+                      </header>
+                      {activeListings.length > 0 ? (
+                        <ListingsGrid listings={activeListings} loading={false} />
+                      ) : (
+                        <p className="text-sm text-gray-400">No active listings yet.</p>
+                      )}
+                    </section>
+
+                    <section className="flex flex-col gap-3">
+                      <header className="flex items-center justify-between">
+                        <h3 className="text-sm font-semibold text-gray-600">Reserved</h3>
+                        <span className="text-xs text-gray-400">{reservedListings.length}</span>
+                      </header>
+                      {reservedListings.length > 0 ? (
+                        <ListingsGrid listings={reservedListings} loading={false} />
+                      ) : (
+                        <p className="text-sm text-gray-400">No reserved listings yet.</p>
+                      )}
+                    </section>
+
+                    {otherListings.length > 0 && (
+                      <section className="flex flex-col gap-3">
+                        <header className="flex items-center justify-between">
+                          <h3 className="text-sm font-semibold text-gray-600">Other</h3>
+                          <span className="text-xs text-gray-400">{otherListings.length}</span>
+                        </header>
+                        <ListingsGrid listings={otherListings} loading={false} />
+                      </section>
+                    )}
+                  </section>
+                )
+              ) : (
+                <ListingsGrid listings={filteredListings} loading={loading} />
+              )}
             </>
           )}
 
