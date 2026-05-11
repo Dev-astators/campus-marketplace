@@ -6,7 +6,8 @@ const messagesRouter = require('./src/routes/messages');
 const paymentsRouter = require('./src/routes/payments');
 
 const facilityDashboardRouter = require('./src/routes/facilityDashboard');
-  
+const adminRouter = require('./src/routes/admin');
+
 const app = express();
 const port = process.env.PORT || 8080;
 app.use(express.json());
@@ -32,7 +33,7 @@ app.use('/api/listings', listingsRouter);
 app.use('/api/messages', messagesRouter);
 app.use('/api/payments', paymentsRouter);
 app.use('/api/facility-dashboard', facilityDashboardRouter);
-
+app.use('/api/admin', adminRouter);
 app.get('/', (req, res) => {
     res.json({ message: "Hello, World!" });
 });
