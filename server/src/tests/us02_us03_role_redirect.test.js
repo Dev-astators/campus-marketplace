@@ -12,7 +12,7 @@ describe("User story 2 & user story 3 - Role-based dashboard redirect", ()=>{
 
     describe("User story 3 - facility staff redirect", ()=>{
         test("Given a signed-in user with role facility_staff,when auth completes, then they are redirected to '/facility-dashboard", ()=>{
-            expect(getRoleRedirect('facility_staff')).toBe('/facility-dashboard');
+            expect(getRoleRedirect('facility_staff', 'facility-1')).toBe('/facility-dashboard/facility-1');
         });
     });
 

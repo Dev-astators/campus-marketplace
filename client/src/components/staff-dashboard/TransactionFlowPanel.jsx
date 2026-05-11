@@ -50,7 +50,8 @@ export default function TransactionFlowPanel({
                     {transaction.item}
                   </h3>
                   <p className="mt-1 text-sm text-slate-500">
-                    {transaction.id} at {transaction.location}
+                    Transaction ID: {transaction.id} <br></br>
+                    Product to be collected at {transaction.location}
                   </p>
                 </header>
 

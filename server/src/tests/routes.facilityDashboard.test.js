@@ -6,7 +6,13 @@ jest.mock("../services/facilityDashboardService", () => ({
 jest.mock("../middleware/authMiddleware", () => ({
   verifySession: (_req, _res, next) => next(),
   attachProfile: (req, _res, next) => {
-    req.profile = { id: "staff-1", full_name: "Karabo Tlaka", role: "facility_staff" };
+    req.profile = {
+      id: "staff-1",
+      full_name: "Karabo Tlaka",
+      role: "facility_staff",
+      facility_id: "facility-1",
+    };
+    req.userRole = "facility_staff";
     next();
   },
   requireRole: () => (_req, _res, next) => next(),
@@ -61,10 +67,57 @@ describe("facility dashboard routes", () => {
     const handler = getHandler("get", "/");
     const res = mockRes();
 
-    await handler({ query: { date: "2026-05-10" } }, res);
+    await handler(
+      {
+        query: { date: "2026-05-10" },
+        profile: { facility_id: "facility-1" },
+        userRole: "facility_staff",
+      },
+      res,
+    );
 
     expect(facilityDashboardService.getFacilityDashboard).toHaveBeenCalledWith(
       "2026-05-10",
+      "facility-1",
+      "facility_staff",
+    );
+    expect(res.status).toHaveBeenCalledWith(200);
+  });
+
+  test("GET / lets admins request a specific facility", async () => {
+    facilityDashboardService.getFacilityDashboard.mockResolvedValue({
+      data: {
+        facility: { id: "facility-9", name: "Education Hub" },
+        slots: [],
+        transactions: [],
+        activityLog: [],
+        metrics: {
+          totalCapacity: 0,
+          totalBookedSlots: 0,
+          fullSlots: 0,
+          pendingTransactions: 0,
+          completedTransactions: 0,
+        },
+      },
+      error: null,
+    });
+
+    const handler = getHandler("get", "/");
+    const res = mockRes();
+
+    await handler(
+      {
+        query: { date: "2026-05-10", facilityId: "facility-9" },
+        profile: { facility_id: "facility-1" },
+        userRole: "admin",
+      },
+      res,
+    );
+
+    expect(facilityDashboardService.getFacilityDashboard).toHaveBeenCalledWith(
+      "2026-05-10",
+      "facility-9",
+      "admin",
     );
     expect(res.status).toHaveBeenCalledWith(200);
   });
@@ -77,7 +130,8 @@ describe("facility dashboard routes", () => {
       {
         params: { transactionId: "TX-1" },
         body: { action: "bad_action" },
-        profile: { id: "staff-1", full_name: "Karabo Tlaka" },
+        profile: { id: "staff-1", full_name: "Karabo Tlaka", facility_id: "facility-1" },
+        userRole: "facility_staff",
       },
       res,
     );
@@ -113,7 +167,8 @@ describe("facility dashboard routes", () => {
       {
         params: { transactionId: "TX-1" },
         body: { action: "confirm_dropoff" },
-        profile: { id: "staff-1", full_name: "Karabo Tlaka" },
+        profile: { id: "staff-1", full_name: "Karabo Tlaka", facility_id: "facility-1" },
+        userRole: "facility_staff",
       },
       res,
     );
@@ -122,6 +177,8 @@ describe("facility dashboard routes", () => {
       transactionId: "TX-1",
       action: "confirm_dropoff",
       staffIdentifier: "Karabo Tlaka",
+      facilityId: "facility-1",
+      userRole: "facility_staff",
     });
     expect(res.status).toHaveBeenCalledWith(200);
   });
