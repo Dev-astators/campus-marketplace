@@ -46,7 +46,7 @@ describe("useAdminDashboard", () => {
       data: { session: { access_token: "token" } },
     });
 
-    global.fetch = jest.fn((url, options = {}) => {
+    global.fetch = jest.fn((url) => {
       if (url.includes("/admin/summary")) {
         return createFetchResponse({
           activeListings: 4,
