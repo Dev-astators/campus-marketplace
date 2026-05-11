@@ -40,6 +40,7 @@ describe("ListingActions", () => {
 
     render(
       <ListingActions
+        listing={{ listing_type: "trade" }}
         isOwner={false}
         editing
         deleting
