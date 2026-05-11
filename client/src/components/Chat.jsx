@@ -70,7 +70,7 @@ export default function Chat({
                         : "bg-white text-gray-800 border border-gray-200 rounded-bl-md"
                     }`}
                   >
-                    <p className="text-sm leading-6 break-words">
+                    <p className="text-sm leading-6 wrap-break-word">
                       {msg.content}
                     </p>
 

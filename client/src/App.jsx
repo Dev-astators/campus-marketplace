@@ -14,14 +14,11 @@ import SellerProfilePage from "./pages/SellerProfilePage";
 import MessagesPage from "./pages/MessagesPage";
 import NotificationsPage from "./pages/NotificationsPage";
 import AdminDashboard from "./pages/AdminDashboard";
-<<<<<<< HEAD
-import PaystackPayment from './components/studentDashboard/Payment';
-=======
+import PaymentPage  from "./pages/PaymentPage";
 import {
   isDashboardPath,
   resolveUserDashboardPath,
 } from "./utils/roleRedirect";
->>>>>>> c1d706de687b24aab1f0d50585825f4e8008f23d
 
 function App() {
   return (
@@ -90,13 +87,13 @@ function AppShell() {
   }, [location.pathname, navigate, session]);
 
   return (
-<<<<<<< HEAD
-    <BrowserRouter>
       <Routes>
         <Route path="/" element={<WelcomePage />} />
         <Route path="/signin" element={<SignInPage />} />
         <Route path="/signup" element={<SignUpPage />} />
         <Route path="/staff-dashboard" element={<StaffDashboard />} />
+        <Route path="/facility-dashboard" element={<StaffDashboard />} />
+        <Route path="/facility-dashboard/:facilityId" element={<StaffDashboard />} />
         <Route path="/student-dashboard" element={<StudentDashboard />} />
         <Route path="/listing/:id" element={<ListingDetails />} />
         <Route path="/create-listing" element={<CreateListing />} />
@@ -105,29 +102,10 @@ function AppShell() {
         <Route path="/messages" element={<MessagesPage />} />
         <Route path="/notifications" element={<NotificationsPage />} />
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
-        <Route path="/payment" element={<PaystackPayment />} />
+        <Route path="/payment/success"  element={<PaymentPage result="success" />} />
+        <Route path="/payment/cancel"   element={<PaymentPage result="cancel" />} />
       </Routes>
-    </BrowserRouter>
-=======
-    <Routes>
-      <Route path="/" element={<WelcomePage />} />
-      <Route path="/signin" element={<SignInPage />} />
-      <Route path="/signup" element={<SignUpPage />} />
-      <Route path="/staff-dashboard" element={<StaffDashboard />} />
-      <Route path="/facility-dashboard" element={<StaffDashboard />} />
-      <Route path="/student-dashboard" element={<StudentDashboard />} />
-      <Route path="/listing/:id" element={<ListingDetails />} />
-      <Route path="/create-listing" element={<CreateListing />} />
-      <Route path="/chat/:id" element={<ChatPage />} />
-      <Route path="/seller-profile" element={<SellerProfilePage />} />
-      <Route path="/messages" element={<MessagesPage />} />
-      <Route path="/notifications" element={<NotificationsPage />} />
-      <Route path="/admin-dashboard" element={<AdminDashboard />} />
-    </Routes>
->>>>>>> c1d706de687b24aab1f0d50585825f4e8008f23d
   );
-    
-
 }
 
 export default App;
