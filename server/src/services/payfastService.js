@@ -2,8 +2,20 @@
 const crypto = require("crypto");
 
 const PAYFAST_SANDBOX_URL = "https://sandbox.payfast.co.za/eng/process";
-const PAYFAST_LIVE_URL    = "https://www.payfast.co.za/eng/process";
-const IS_SANDBOX = process.env.NODE_ENV !== "production";
+const PAYFAST_LIVE_URL = "https://www.payfast.co.za/eng/process";
+
+const resolvePayfastUrl = () => {
+  const envUrl = process.env.PAYFAST_URL;
+  if (envUrl && typeof envUrl === "string" && envUrl.trim()) {
+    return envUrl.trim();
+  }
+  return process.env.NODE_ENV === "production"
+    ? PAYFAST_LIVE_URL
+    : PAYFAST_SANDBOX_URL;
+};
+
+const PAYFAST_URL = resolvePayfastUrl();
+const IS_SANDBOX = PAYFAST_URL.includes("sandbox");
 
 /**
  * PHP-style urlencode — PayFast is built in PHP and expects spaces as '+'
@@ -42,25 +54,25 @@ function buildPaymentPayload({
   buyerLastName,
   buyerEmail,
 }) {
-  const merchantId  = process.env.PAYFAST_MERCHANT_ID;
+  const merchantId = process.env.PAYFAST_MERCHANT_ID;
   const merchantKey = process.env.PAYFAST_MERCHANT_KEY;
-  const passphrase  = process.env.PAYFAST_PASSPHRASE;
-  const baseUrl     = process.env.CLIENT_URL  || "http://localhost:5173";
-  const serverUrl   = process.env.SERVER_URL  || "http://localhost:8080";
+  const passphrase = process.env.PAYFAST_PASSPHRASE;
+  const baseUrl = process.env.CLIENT_URL || "http://localhost:5173";
+  const serverUrl = process.env.SERVER_URL || "http://localhost:8080";
 
   // ⚠️ Field order is critical — PayFast validates the signature in this order
   const params = {
-    merchant_id:   merchantId,
-    merchant_key:  merchantKey,
-    return_url:    `${baseUrl}/payment/success?transaction_id=${transactionId}`,
-    cancel_url:    `${baseUrl}/payment/cancel?transaction_id=${transactionId}`,
-    notify_url:    IS_SANDBOX ? "" : `${serverUrl}/api/payments/webhook`,
-    name_first:    buyerFirstName,
-    name_last:     buyerLastName,
+    merchant_id: merchantId,
+    merchant_key: merchantKey,
+    return_url: `${baseUrl}/payment/success?transaction_id=${transactionId}`,
+    cancel_url: `${baseUrl}/payment/cancel?transaction_id=${transactionId}`,
+    notify_url: IS_SANDBOX ? "" : `${serverUrl}/api/payments/webhook`,
+    name_first: buyerFirstName,
+    name_last: buyerLastName,
     email_address: buyerEmail,
-    m_payment_id:  transactionId,
-    amount:        Number(amount).toFixed(2),
-    item_name:     String(itemName).slice(0, 100),
+    m_payment_id: transactionId,
+    amount: Number(amount).toFixed(2),
+    item_name: String(itemName).slice(0, 100),
   };
 
   // Remove notify_url entirely in sandbox — PayFast sandbox ignores it anyway
@@ -69,7 +81,7 @@ function buildPaymentPayload({
   const signature = generateSignature(params, passphrase);
 
   return {
-    url:    IS_SANDBOX ? PAYFAST_SANDBOX_URL : PAYFAST_LIVE_URL,
+    url: PAYFAST_URL,
     fields: { ...params, signature },
   };
 }
