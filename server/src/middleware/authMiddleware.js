@@ -112,7 +112,7 @@ const attachProfile = async (req, res, next) => {
 
     const { data, error } = await supabase
       .from('profiles')
-      .select('id, full_name, email, student_number, university, role, average_rating')
+      .select('id, full_name, email, student_number, university, role, average_rating, facility_id')
       .eq('id', req.user.id)
       .single();
 

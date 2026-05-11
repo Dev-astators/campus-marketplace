@@ -42,6 +42,12 @@ const TRANSACTION_STAGE_META = {
   },
 };
 
+const createServiceError = (message, statusCode = 500) => {
+  const error = new Error(message);
+  error.statusCode = statusCode;
+  return error;
+};
+
 const formatCurrency = (value) =>
   new Intl.NumberFormat("en-ZA", {
     style: "currency",
@@ -337,17 +343,55 @@ const fetchDashboardTransactions = async (transactionIds) => {
     .in("id", transactionIds);
 };
 
-const getFacilityDashboard = async (selectedDate = getTodayInJohannesburg()) => {
-  const { data: facility, error: facilityError } = await supabase
+const fetchFacilityRecord = async (facilityId) => {
+  const facilityQuery = supabase
     .from("trade_facilities")
     .select("*")
-    .eq("is_active", true)
+    .eq("is_active", true);
+
+  if (facilityId) {
+    return facilityQuery
+      .eq("id", facilityId)
+      .maybeSingle();
+  }
+
+  return facilityQuery
     .order("name", { ascending: true })
     .limit(1)
     .maybeSingle();
+};
+
+const getFacilityDashboard = async (
+  selectedDate = getTodayInJohannesburg(),
+  facilityId,
+  userRole = "facility_staff",
+) => {
+  if (userRole === "facility_staff" && !facilityId) {
+    return {
+      data: null,
+      error: createServiceError(
+        "No trade facility is assigned to this staff profile.",
+        403,
+      ),
+    };
+  }
+
+  const { data: facility, error: facilityError } = await fetchFacilityRecord(
+    facilityId,
+  );
 
   if (facilityError) {
     return { data: null, error: facilityError };
+  }
+
+  if (facilityId && !facility) {
+    return {
+      data: null,
+      error: createServiceError(
+        "Assigned trade facility could not be found or is inactive.",
+        404,
+      ),
+    };
   }
 
   if (!facility) {
@@ -541,6 +585,8 @@ const advanceFacilityTransaction = async ({
   transactionId,
   action,
   staffIdentifier,
+  facilityId,
+  userRole = "facility_staff",
 }) => {
   const { data: transaction, error: transactionError } =
     await getTransactionWithBookings(transactionId);
@@ -550,12 +596,44 @@ const advanceFacilityTransaction = async ({
   }
 
   const bookings = transaction.bookings || [];
+  const bookingFacilityIds = [
+    ...new Set(
+      bookings
+        .map((booking) => booking.slot?.facility_id)
+        .filter(Boolean),
+    ),
+  ];
+  const transactionFacilityId = bookingFacilityIds[0];
   const dropOffBooking = bookings.find(
     (booking) => booking.booking_type === "dropoff",
   );
   const collectionBooking = bookings.find(
     (booking) => booking.booking_type === "collection",
   );
+
+  if (userRole === "facility_staff" && !facilityId) {
+    return {
+      data: null,
+      error: createServiceError(
+        "No trade facility is assigned to this staff profile.",
+        403,
+      ),
+    };
+  }
+
+  if (
+    userRole === "facility_staff" &&
+    transactionFacilityId &&
+    facilityId !== transactionFacilityId
+  ) {
+    return {
+      data: null,
+      error: createServiceError(
+        "You can only manage transactions for your assigned trade facility.",
+        403,
+      ),
+    };
+  }
 
   if (action === "confirm_dropoff") {
     if (!dropOffBooking) {
@@ -657,7 +735,7 @@ const advanceFacilityTransaction = async ({
     }
   }
 
-  return getFacilityDashboard();
+  return getFacilityDashboard(undefined, facilityId || transactionFacilityId, userRole);
 };
 
 module.exports = {

@@ -93,6 +93,7 @@ function AppShell() {
         <Route path="/signup" element={<SignUpPage />} />
         <Route path="/staff-dashboard" element={<StaffDashboard />} />
         <Route path="/facility-dashboard" element={<StaffDashboard />} />
+        <Route path="/facility-dashboard/:facilityId" element={<StaffDashboard />} />
         <Route path="/student-dashboard" element={<StudentDashboard />} />
         <Route path="/listing/:id" element={<ListingDetails />} />
         <Route path="/create-listing" element={<CreateListing />} />
