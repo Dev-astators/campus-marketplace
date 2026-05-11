@@ -39,7 +39,7 @@ export default function AdminDashboard() {
     updateUserRole,
 
     loadingStates,
-    errors,
+    errors={},
   } = useAdminDashboard();
 
   const handleNavigate = useCallback(
@@ -109,7 +109,7 @@ export default function AdminDashboard() {
           </section>
 
           {/* ── Global error banner ──────────────────────────────────────── */}
-          {Object.entries(errors).some(([, msg]) => !!msg) && (
+          {Object.entries(errors || {}).some(([, msg]) => !!msg) && (
             <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
               <strong>Some data failed to load:</strong>{" "}
               {Object.entries(errors)
