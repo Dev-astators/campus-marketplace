@@ -17,10 +17,16 @@ router.get(
   requireRole("facility_staff", "admin"),
   async (req, res) => {
     const selectedDate = req.query.date;
-    const { data, error } = await getFacilityDashboard(selectedDate);
+    const requestedFacilityId =
+      req.userRole === "admin" ? req.query.facilityId : req.profile.facility_id;
+    const { data, error } = await getFacilityDashboard(
+      selectedDate,
+      requestedFacilityId,
+      req.userRole,
+    );
 
     if (error) {
-      return res.status(500).json({
+      return res.status(error.statusCode || 500).json({
         message: "Failed to fetch facility dashboard data",
         error: error.message,
       });
@@ -60,15 +66,17 @@ router.post(
       transactionId,
       action,
       staffIdentifier: req.profile.full_name || req.profile.id,
+      facilityId: req.profile.facility_id,
+      userRole: req.userRole,
     });
 
     if (error) {
-      const statusCode =
-        error.message &&
+      const statusCode = error.statusCode ||
+        (error.message &&
         (error.message.includes("No drop-off booking") ||
           error.message.includes("No collection booking"))
           ? 400
-          : 500;
+          : 500);
 
       return res.status(statusCode).json({
         message: "Failed to update facility transaction",

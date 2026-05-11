@@ -83,7 +83,11 @@ describe("facilityDashboardService", () => {
         ],
       });
 
-      const { data, error } = await getFacilityDashboard("2026-05-10");
+      const { data, error } = await getFacilityDashboard(
+        "2026-05-10",
+        undefined,
+        "admin",
+      );
 
       expect(error).toBeNull();
       expect(data).toEqual({
@@ -130,7 +134,11 @@ describe("facilityDashboardService", () => {
         ],
       });
 
-      const result = await getFacilityDashboard("2026-05-10");
+      const result = await getFacilityDashboard(
+        "2026-05-10",
+        "facility-1",
+        "facility_staff",
+      );
 
       expect(result.data).toBeNull();
       expect(result.error).toEqual(slotError);
@@ -271,7 +279,11 @@ describe("facilityDashboardService", () => {
         ],
       });
 
-      const { data, error } = await getFacilityDashboard("2026-05-10");
+      const { data, error } = await getFacilityDashboard(
+        "2026-05-10",
+        "facility-1",
+        "facility_staff",
+      );
 
       expect(error).toBeNull();
       expect(data.selectedDate).toBe("2026-05-10");
@@ -355,6 +367,21 @@ describe("facilityDashboardService", () => {
         ]),
       );
     });
+
+    test("Given staff has no assigned facility, when fetched, then a permission error is returned", async () => {
+      const result = await getFacilityDashboard(
+        "2026-05-10",
+        undefined,
+        "facility_staff",
+      );
+
+      expect(result.data).toBeNull();
+      expect(result.error).toBeInstanceOf(Error);
+      expect(result.error.statusCode).toBe(403);
+      expect(result.error.message).toBe(
+        "No trade facility is assigned to this staff profile.",
+      );
+    });
   });
 
   describe("advanceFacilityTransaction", () => {
@@ -401,6 +428,8 @@ describe("facilityDashboardService", () => {
         transactionId: "tx-1",
         action: "confirm_dropoff",
         staffIdentifier: "Staff A",
+        facilityId: "facility-1",
+        userRole: "facility_staff",
       });
 
       expect(result.data).toBeNull();
@@ -467,7 +496,20 @@ describe("facilityDashboardService", () => {
         facility_bookings: [bookingUpdateBuilder],
         trade_facilities: [
           createMaybeSingleBuilder({
-            data: null,
+            data: {
+              id: "facility-1",
+              name: "Wits Exchange Hub",
+              location: "Braamfontein Campus",
+              slot_capacity: 10,
+              is_active: true,
+              operating_hours: [],
+            },
+            error: null,
+          }),
+        ],
+        facility_slots: [
+          createOrderBuilder({
+            data: [],
             error: null,
           }),
         ],
@@ -477,6 +519,8 @@ describe("facilityDashboardService", () => {
         transactionId: "tx-1",
         action: "confirm_dropoff",
         staffIdentifier: "Karabo Tlaka",
+        facilityId: "facility-1",
+        userRole: "facility_staff",
       });
 
       expect(error).toBeNull();
@@ -494,10 +538,52 @@ describe("facilityDashboardService", () => {
       expect(transactionUpdateBuilder.eq).toHaveBeenCalledWith("id", "tx-1");
       expect(data).toEqual(
         expect.objectContaining({
-          facility: null,
+          facility: expect.objectContaining({
+            id: "facility-1",
+            name: "Wits Exchange Hub",
+          }),
           slots: [],
           transactions: [],
         }),
+      );
+    });
+
+    test("Given a transaction belongs to another facility, when staff advance it, then access is denied", async () => {
+      queueFromBuilders({
+        transactions: [
+          createSingleBuilder({
+            data: {
+              id: "tx-1",
+              status: "pending",
+              bookings: [
+                {
+                  id: "booking-1",
+                  booking_type: "dropoff",
+                  slot: {
+                    id: "slot-1",
+                    facility_id: "facility-9",
+                  },
+                },
+              ],
+            },
+            error: null,
+          }),
+        ],
+      });
+
+      const result = await advanceFacilityTransaction({
+        transactionId: "tx-1",
+        action: "confirm_dropoff",
+        staffIdentifier: "Karabo Tlaka",
+        facilityId: "facility-1",
+        userRole: "facility_staff",
+      });
+
+      expect(result.data).toBeNull();
+      expect(result.error).toBeInstanceOf(Error);
+      expect(result.error.statusCode).toBe(403);
+      expect(result.error.message).toBe(
+        "You can only manage transactions for your assigned trade facility.",
       );
     });
   });

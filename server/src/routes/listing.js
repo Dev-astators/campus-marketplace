@@ -158,6 +158,7 @@ router.get("/:id", async (req, res) => {
         condition,
         category,
         listing_type,
+        status,
         seller:profiles!listings_seller_id_fkey (
           id,
           full_name,
