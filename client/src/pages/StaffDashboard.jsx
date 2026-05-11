@@ -87,6 +87,7 @@ export default function StaffDashboard() {
               {showTransactionFlow && !loading ? (
                 <TransactionFlowPanel
                   transactions={transactionQueue}
+                  slots={todaysBookings}
                   onAdvance={advanceTransaction}
                   actionLoadingId={actionLoadingId}
                 />

@@ -38,7 +38,7 @@ export default function BookingScheduleBoard({ slots }) {
                   Capacity
                 </th>
                 <th scope="col" className="pb-2 font-semibold">
-                  Lead transaction
+                  Slot queue
                 </th>
                 <th scope="col" className="pb-2 font-semibold">
                   Facility
@@ -85,10 +85,41 @@ export default function BookingScheduleBoard({ slots }) {
                     </p>
                   </td>
                   <td className="px-4 py-4 text-sm text-slate-700">
-                    <strong className="block font-semibold text-slate-900">
-                      {slot.leadTransactionId || "No transaction yet"}
-                    </strong>
-                    <p className="mt-1">{slot.leadItemTitle}</p>
+                    {slot.linkedTransactions?.length ? (
+                      <ul className="space-y-3">
+                        {slot.linkedTransactions.map((transaction) => (
+                          <li
+                            key={`${slot.id}-${transaction.bookingId || transaction.transactionId}`}
+                            className="rounded-2xl border border-slate-200 bg-white px-3 py-3"
+                          >
+                            <div className="flex flex-wrap items-center gap-2">
+                              <strong className="text-sm font-semibold text-slate-900">
+                                {transaction.transactionId || "No transaction yet"}
+                              </strong>
+                              <span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700">
+                                {transaction.bookingTypeLabel}
+                              </span>
+                            </div>
+                            <p className="mt-2 font-medium text-slate-900">
+                              {transaction.itemTitle}
+                            </p>
+                            <p className="mt-1 text-xs text-slate-500">
+                              Seller: {transaction.seller}
+                            </p>
+                            <p className="mt-1 text-xs text-slate-500">
+                              Buyer: {transaction.buyer}
+                            </p>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <>
+                        <strong className="block font-semibold text-slate-900">
+                          {slot.leadTransactionId || "No transaction yet"}
+                        </strong>
+                        <p className="mt-1">{slot.leadItemTitle}</p>
+                      </>
+                    )}
                   </td>
                   <td className="px-4 py-4 text-sm text-slate-700">
                     <p className="font-medium text-slate-900">

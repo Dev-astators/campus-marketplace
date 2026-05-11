@@ -16,9 +16,17 @@ const LIFECYCLE_LABELS = [
 
 export default function TransactionFlowPanel({
   transactions,
+  slots = [],
   onAdvance,
   actionLoadingId = "",
 }) {
+  const getRelatedSlots = (transactionId) =>
+    slots.filter((slot) =>
+      slot.linkedTransactions?.some(
+        (linkedTransaction) => linkedTransaction.transactionId === transactionId,
+      ),
+    );
+
   return (
     <article className="rounded-3xl border border-slate-200 bg-white shadow-sm">
       <header className="border-b border-slate-100 px-6 py-5">
@@ -37,9 +45,12 @@ export default function TransactionFlowPanel({
 
       {transactions.length > 0 ? (
         <ol className="space-y-4 px-6 py-5">
-          {transactions.map((transaction) => (
-            <li key={transaction.id}>
-              <article className="rounded-2xl border border-slate-200 p-5">
+          {transactions.map((transaction) => {
+            const relatedSlots = getRelatedSlots(transaction.id);
+
+            return (
+              <li key={transaction.id}>
+                <article className="rounded-2xl border border-slate-200 p-5">
                 <header className="border-b border-slate-100 pb-4">
                   <p
                     className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${stageClasses[transaction.stageTone]}`}
@@ -122,6 +133,62 @@ export default function TransactionFlowPanel({
                   </article>
                 </section>
 
+                {relatedSlots.length > 0 ? (
+                  <section className="mt-4 rounded-2xl bg-slate-50 p-4">
+                    <h4 className="text-sm font-semibold text-slate-900">
+                      Related slot queue
+                    </h4>
+                    <div className="mt-3 space-y-3">
+                      {relatedSlots.map((slot) => (
+                        <article
+                          key={`${transaction.id}-${slot.id}`}
+                          className="rounded-2xl border border-slate-200 bg-white p-4"
+                        >
+                          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                            {slot.time} slot
+                          </p>
+                          <ul className="mt-3 space-y-2">
+                            {slot.linkedTransactions.map((linkedTransaction) => {
+                              const isCurrentTransaction =
+                                linkedTransaction.transactionId === transaction.id;
+
+                              return (
+                                <li
+                                  key={`${slot.id}-${linkedTransaction.bookingId || linkedTransaction.transactionId}`}
+                                  className={`rounded-2xl border px-3 py-3 ${
+                                    isCurrentTransaction
+                                      ? "border-blue-200 bg-blue-50"
+                                      : "border-slate-200 bg-slate-50"
+                                  }`}
+                                >
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <strong className="text-sm font-semibold text-slate-900">
+                                      {linkedTransaction.transactionId ||
+                                        "No transaction yet"}
+                                    </strong>
+                                    <span className="rounded-full bg-white px-2 py-1 text-xs font-medium text-slate-700">
+                                      {linkedTransaction.bookingTypeLabel}
+                                    </span>
+                                  </div>
+                                  <p className="mt-2 font-medium text-slate-900">
+                                    {linkedTransaction.itemTitle}
+                                  </p>
+                                  <p className="mt-1 text-xs text-slate-500">
+                                    Seller: {linkedTransaction.seller}
+                                  </p>
+                                  <p className="mt-1 text-xs text-slate-500">
+                                    Buyer: {linkedTransaction.buyer}
+                                  </p>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        </article>
+                      ))}
+                    </div>
+                  </section>
+                ) : null}
+
                 <footer className="mt-5">
                   {transaction.actionLabel ? (
                     <button
@@ -140,9 +207,10 @@ export default function TransactionFlowPanel({
                     </p>
                   )}
                 </footer>
-              </article>
-            </li>
-          ))}
+                </article>
+              </li>
+            );
+          })}
         </ol>
       ) : (
         <p className="px-6 py-5 text-sm text-slate-500">

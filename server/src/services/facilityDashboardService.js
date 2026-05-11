@@ -63,6 +63,44 @@ const getTodayInJohannesburg = () =>
 const formatSlotTime = (slotTime) =>
   typeof slotTime === "string" ? slotTime.slice(0, 5) : "";
 
+const normalizeBookingType = (bookingType) => {
+  const normalizedType = String(bookingType || "").toLowerCase();
+
+  if (normalizedType === "drop_off") {
+    return "dropoff";
+  }
+
+  return normalizedType;
+};
+
+const normalizeBookingStatus = (bookingStatus) => {
+  const normalizedStatus = String(bookingStatus || "").toLowerCase();
+
+  if (normalizedStatus === "scheduled") {
+    return "pending";
+  }
+
+  if (["received", "buyer_arrived"].includes(normalizedStatus)) {
+    return "confirmed";
+  }
+
+  if (normalizedStatus === "released") {
+    return "complete";
+  }
+
+  return normalizedStatus;
+};
+
+const normalizeTransactionStatus = (transactionStatus) => {
+  const normalizedStatus = String(transactionStatus || "").toLowerCase();
+
+  if (normalizedStatus === "completed") {
+    return "complete";
+  }
+
+  return normalizedStatus;
+};
+
 const formatActivityTime = (value) => {
   if (!value) {
     return "";
@@ -105,41 +143,46 @@ const createSlotStatus = (booked, capacity) => {
 };
 
 const getBookingByType = (bookings, bookingType) =>
-  bookings.find((booking) => booking.bookingType === bookingType) || null;
+  bookings.find(
+    (booking) => normalizeBookingType(booking.bookingType) === bookingType,
+  ) || null;
 
 const deriveTransactionStage = (transaction, bookings) => {
   const dropOffBooking = getBookingByType(bookings, "dropoff");
   const collectionBooking = getBookingByType(bookings, "collection");
-  const transactionStatus = String(transaction.status || "").toLowerCase();
-  const collectionStatus = String(collectionBooking?.status || "").toLowerCase();
-  const dropOffStatus = String(dropOffBooking?.status || "").toLowerCase();
+  const transactionStatus = normalizeTransactionStatus(transaction.status);
+  const dropOffStatus = normalizeBookingStatus(dropOffBooking?.status);
+  const collectionStatus = normalizeBookingStatus(collectionBooking?.status);
+  const requiresCashHandoff = Number(transaction.cash_shortfall || 0) > 0;
+  const buyerArrived =
+    collectionStatus === "confirmed" || transactionStatus === "buyer_arrived";
+  const cashConfirmed =
+    transactionStatus === "cash_confirmed" ||
+    (buyerArrived &&
+      (!requiresCashHandoff || Boolean(transaction.cash_settled)));
+  const dropOffConfirmed =
+    dropOffStatus === "confirmed" || transactionStatus === "item_received";
 
   if (
-    transactionStatus === "completed" ||
-    collectionStatus === "released"
+    transactionStatus === "complete" ||
+    collectionStatus === "complete"
   ) {
     return "complete";
   }
 
-  if (
-    transaction.cash_settled ||
-    transactionStatus === "cash_confirmed"
-  ) {
+  if (cashConfirmed) {
     return "cash_confirmed";
   }
 
-  if (
-    transactionStatus === "buyer_arrived" ||
-    collectionStatus === "buyer_arrived"
-  ) {
+  if (buyerArrived) {
     return "buyer_arrived";
   }
 
   if (
+    dropOffConfirmed ||
     ["item_received", "ready_for_collection", "collection_booked"].includes(
       transactionStatus,
-    ) ||
-    dropOffStatus === "received"
+    )
   ) {
     return "collection_booked";
   }
@@ -162,17 +205,47 @@ const buildSlotMap = (slots) =>
 const mapSlotRecord = (slot, facility, bookings, transactionMap) => {
   const slotBookings = bookings.filter((booking) => booking.slot_id === slot.id);
   const dropOffCount = slotBookings.filter(
-    (booking) => booking.booking_type === "dropoff",
+    (booking) => normalizeBookingType(booking.booking_type) === "dropoff",
   ).length;
   const collectionCount = slotBookings.filter(
-    (booking) => booking.booking_type === "collection",
+    (booking) => normalizeBookingType(booking.booking_type) === "collection",
   ).length;
   const booked = Number(slot.booked_count ?? slotBookings.length ?? 0);
   const capacity = Number(slot.capacity || 0);
   const leadBooking = slotBookings[0] || null;
-  const leadTransaction = leadBooking
+  const leadTransactionRecord = leadBooking
     ? transactionMap.get(leadBooking.transaction_id)
     : null;
+  const linkedTransactions = slotBookings
+    .map((booking) => {
+      const bookingType = normalizeBookingType(booking.booking_type);
+      const transaction = transactionMap.get(booking.transaction_id);
+
+      return {
+        bookingId: booking.id,
+        transactionId: transaction?.id || booking.transaction_id || null,
+        itemTitle: transaction?.listing?.title || "No linked listing yet",
+        bookingType,
+        bookingTypeLabel:
+          bookingType === "dropoff" ? "Drop-off" : "Collection",
+        bookingStatus: normalizeBookingStatus(booking.status),
+        seller: transaction?.seller?.full_name || "Unknown seller",
+        buyer: transaction?.buyer?.full_name || "Unknown buyer",
+      };
+    })
+    .sort((left, right) => {
+      const typeCompare = left.bookingTypeLabel.localeCompare(
+        right.bookingTypeLabel,
+      );
+
+      if (typeCompare !== 0) {
+        return typeCompare;
+      }
+
+      return String(left.transactionId || "").localeCompare(
+        String(right.transactionId || ""),
+      );
+    });
 
   return {
     id: slot.id,
@@ -186,8 +259,10 @@ const mapSlotRecord = (slot, facility, bookings, transactionMap) => {
     dropOffCount,
     collectionCount,
     bookingSummary: `${dropOffCount} drop-off, ${collectionCount} collection`,
-    leadTransactionId: leadTransaction?.id || null,
-    leadItemTitle: leadTransaction?.listing?.title || "No linked listing yet",
+    leadTransactionId: leadTransactionRecord?.id || null,
+    leadItemTitle:
+      leadTransactionRecord?.listing?.title || "No linked listing yet",
+    linkedTransactions,
     facilityName: facility.name,
     facilityLocation: facility.location,
   };
@@ -257,7 +332,9 @@ const buildActivityFeed = ({ slots, bookings, transactions, facility }) => {
 
     const transaction = transactionMap.get(booking.transaction_id);
     const bookingTypeLabel =
-      booking.booking_type === "dropoff" ? "Drop-off" : "Collection";
+      normalizeBookingType(booking.booking_type) === "dropoff"
+        ? "Drop-off"
+        : "Collection";
 
     activityEntries.push({
       id: `${booking.id}-${booking.status || "confirmed"}`,
@@ -289,7 +366,7 @@ const buildActivityFeed = ({ slots, bookings, transactions, facility }) => {
   }
 
   for (const transaction of transactions) {
-    if (String(transaction.status || "").toLowerCase() === "completed") {
+    if (normalizeTransactionStatus(transaction.status) === "complete") {
       activityEntries.push({
         id: `${transaction.id}-completed`,
         sortValue: new Date(transaction.created_at).getTime(),
@@ -605,10 +682,10 @@ const advanceFacilityTransaction = async ({
   ];
   const transactionFacilityId = bookingFacilityIds[0];
   const dropOffBooking = bookings.find(
-    (booking) => booking.booking_type === "dropoff",
+    (booking) => normalizeBookingType(booking.booking_type) === "dropoff",
   );
   const collectionBooking = bookings.find(
-    (booking) => booking.booking_type === "collection",
+    (booking) => normalizeBookingType(booking.booking_type) === "collection",
   );
 
   if (userRole === "facility_staff" && !facilityId) {
@@ -645,7 +722,7 @@ const advanceFacilityTransaction = async ({
 
     const { error: bookingError } = await updateBookingConfirmation(
       dropOffBooking.id,
-      "received",
+      "confirmed",
       staffIdentifier,
     );
 
@@ -653,14 +730,6 @@ const advanceFacilityTransaction = async ({
       return { data: null, error: bookingError };
     }
 
-    const { error: transactionUpdateError } = await supabase
-      .from("transactions")
-      .update({ status: "item_received" })
-      .eq("id", transactionId);
-
-    if (transactionUpdateError) {
-      return { data: null, error: transactionUpdateError };
-    }
   }
 
   if (action === "confirm_buyer_arrival") {
@@ -673,7 +742,7 @@ const advanceFacilityTransaction = async ({
 
     const { error: bookingError } = await updateBookingConfirmation(
       collectionBooking.id,
-      "buyer_arrived",
+      "confirmed",
       staffIdentifier,
     );
 
@@ -681,14 +750,6 @@ const advanceFacilityTransaction = async ({
       return { data: null, error: bookingError };
     }
 
-    const { error: transactionUpdateError } = await supabase
-      .from("transactions")
-      .update({ status: "buyer_arrived" })
-      .eq("id", transactionId);
-
-    if (transactionUpdateError) {
-      return { data: null, error: transactionUpdateError };
-    }
   }
 
   if (action === "confirm_cash_handoff") {
@@ -696,7 +757,6 @@ const advanceFacilityTransaction = async ({
       .from("transactions")
       .update({
         cash_settled: true,
-        status: "cash_confirmed",
       })
       .eq("id", transactionId);
 
@@ -715,7 +775,7 @@ const advanceFacilityTransaction = async ({
 
     const { error: bookingError } = await updateBookingConfirmation(
       collectionBooking.id,
-      "released",
+      "complete",
       staffIdentifier,
     );
 
@@ -726,7 +786,7 @@ const advanceFacilityTransaction = async ({
     const { error: transactionUpdateError } = await supabase
       .from("transactions")
       .update({
-        status: "completed",
+        status: "complete",
       })
       .eq("id", transactionId);
 

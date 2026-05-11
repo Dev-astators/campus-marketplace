@@ -195,8 +195,8 @@ describe("facilityDashboardService", () => {
                 id: "booking-1",
                 transaction_id: "tx-1",
                 slot_id: "slot-1",
-                booking_type: "dropoff",
-                status: "received",
+                booking_type: "drop_off",
+                status: "confirmed",
                 confirmed_at: "2026-05-10T07:00:00.000Z",
                 staff_confirmed_by: "Staff A",
               },
@@ -205,7 +205,7 @@ describe("facilityDashboardService", () => {
                 transaction_id: "tx-1",
                 slot_id: "slot-2",
                 booking_type: "collection",
-                status: "scheduled",
+                status: "pending",
                 confirmed_at: null,
                 staff_confirmed_by: null,
               },
@@ -214,7 +214,7 @@ describe("facilityDashboardService", () => {
                 transaction_id: "tx-2",
                 slot_id: "slot-1",
                 booking_type: "collection",
-                status: "released",
+                status: "complete",
                 confirmed_at: "2026-05-10T08:00:00.000Z",
                 staff_confirmed_by: "Staff A",
               },
@@ -227,7 +227,7 @@ describe("facilityDashboardService", () => {
             data: [
               {
                 id: "tx-1",
-                status: "item_received",
+                status: "confirmed",
                 online_amount: 500,
                 cash_shortfall: 100,
                 cash_settled: false,
@@ -251,7 +251,7 @@ describe("facilityDashboardService", () => {
               },
               {
                 id: "tx-2",
-                status: "completed",
+                status: "complete",
                 online_amount: 0,
                 cash_shortfall: 0,
                 cash_settled: true,
@@ -328,6 +328,20 @@ describe("facilityDashboardService", () => {
           facilityName: "Wits Exchange Hub",
         }),
       );
+      expect(data.slots[0].linkedTransactions).toEqual([
+        expect.objectContaining({
+          transactionId: "tx-2",
+          itemTitle: "Statistics Textbook",
+          bookingType: "collection",
+          bookingTypeLabel: "Collection",
+        }),
+        expect.objectContaining({
+          transactionId: "tx-1",
+          itemTitle: "Laptop",
+          bookingType: "dropoff",
+          bookingTypeLabel: "Drop-off",
+        }),
+      ]);
 
       expect(data.transactions).toHaveLength(2);
       expect(data.transactions[0]).toEqual(
@@ -439,7 +453,7 @@ describe("facilityDashboardService", () => {
       );
     });
 
-    test("Given confirm_dropoff succeeds, when advanced, then booking and transaction statuses are updated and a refreshed dashboard is returned", async () => {
+    test("Given confirm_dropoff succeeds, when advanced, then the booking is confirmed and a refreshed dashboard is returned", async () => {
       const transactionLookupBuilder = createSingleBuilder({
         data: {
           id: "tx-1",
@@ -451,7 +465,7 @@ describe("facilityDashboardService", () => {
           bookings: [
             {
               id: "booking-1",
-              booking_type: "dropoff",
+              booking_type: "drop_off",
               status: "scheduled",
               confirmed_at: null,
               staff_confirmed_by: null,
@@ -486,13 +500,8 @@ describe("facilityDashboardService", () => {
       });
 
       const bookingUpdateBuilder = createUpdateEqBuilder({ error: null });
-      const transactionUpdateBuilder = createUpdateEqBuilder({ error: null });
-
       queueFromBuilders({
-        transactions: [
-          transactionLookupBuilder,
-          transactionUpdateBuilder,
-        ],
+        transactions: [transactionLookupBuilder],
         facility_bookings: [bookingUpdateBuilder],
         trade_facilities: [
           createMaybeSingleBuilder({
@@ -526,16 +535,12 @@ describe("facilityDashboardService", () => {
       expect(error).toBeNull();
       expect(bookingUpdateBuilder.update).toHaveBeenCalledWith(
         expect.objectContaining({
-          status: "received",
+          status: "confirmed",
           staff_confirmed_by: "Karabo Tlaka",
           confirmed_at: expect.any(String),
         }),
       );
       expect(bookingUpdateBuilder.eq).toHaveBeenCalledWith("id", "booking-1");
-      expect(transactionUpdateBuilder.update).toHaveBeenCalledWith({
-        status: "item_received",
-      });
-      expect(transactionUpdateBuilder.eq).toHaveBeenCalledWith("id", "tx-1");
       expect(data).toEqual(
         expect.objectContaining({
           facility: expect.objectContaining({

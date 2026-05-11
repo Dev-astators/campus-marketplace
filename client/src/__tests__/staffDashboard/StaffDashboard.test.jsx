@@ -57,6 +57,16 @@ describe("StaffDashboard", () => {
           bookingSummary: "6 drop-off, 4 collection",
           leadTransactionId: "TX-204",
           leadItemTitle: "Canon EOS R6 Mark II",
+          linkedTransactions: [
+            {
+              bookingId: "booking-1",
+              transactionId: "TX-204",
+              itemTitle: "Canon EOS R6 Mark II",
+              bookingTypeLabel: "Drop-off",
+              seller: "Alex Chen",
+              buyer: "Mia Patel",
+            },
+          ],
           facilityName: "Braamfontein Trade Facility",
           facilityLocation: "Wits Central Campus Exchange Hub",
         },
