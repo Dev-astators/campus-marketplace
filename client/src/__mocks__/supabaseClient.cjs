@@ -23,6 +23,11 @@ const supabase = {
     eq: jest.fn().mockReturnThis(),
     single: jest.fn().mockResolvedValue({ data: null, error: null }),
   }),
+  channel: jest.fn().mockReturnValue({
+    on: jest.fn().mockReturnThis(),
+    subscribe: jest.fn().mockReturnThis(),
+  }),
+  removeChannel: jest.fn(),
 };
 
 module.exports = { supabase };
