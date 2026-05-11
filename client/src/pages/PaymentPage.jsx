@@ -1,5 +1,5 @@
 // client/src/pages/PaymentPage.jsx
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "../config/supabaseClient";
 
@@ -25,13 +25,15 @@ export default function PaymentPage({ result }) {
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [loadingBooking, setLoadingBooking] = useState(false);
 
-  // ── Fetch slots for a given facility ────────────────────────────────────
-  const fetchSlots = async (facilityId) => {
+  // ── Fetch active trade facilities from DB ────────────────────────────────
+  const fetchSlots = useCallback(async (facilityId) => {
     setLoadingSlots(true);
     setSlots([]);
     setSelectedSlot(null);
     try {
-      const res = await fetch(`${API_URL}/api/payments/slots/${facilityId}`);
+      const res = await fetch(
+        `${API_URL}/api/payments/slots/${facilityId}?type=collection`,
+      );
       const data = await res.json();
       setSlots(Array.isArray(data) ? data : []);
     } catch {
@@ -39,7 +41,26 @@ export default function PaymentPage({ result }) {
     } finally {
       setLoadingSlots(false);
     }
-  };
+  }, []);
+
+  const fetchFacilities = useCallback(async () => {
+    setLoadingFacilities(true);
+    try {
+      const res = await fetch(`${API_URL}/api/payments/facilities`);
+      const data = await res.json();
+      const list = Array.isArray(data) ? data : [];
+      setFacilities(list);
+      // Auto-select if there's only one facility
+      if (list.length === 1) {
+        setSelectedFacility(list[0].id);
+        fetchSlots(list[0].id);
+      }
+    } catch {
+      setError("Could not load trade facilities.");
+    } finally {
+      setLoadingFacilities(false);
+    }
+  }, [fetchSlots]);
 
   const handleFacilityChange = (facilityId) => {
     setSelectedFacility(facilityId);
@@ -53,25 +74,6 @@ export default function PaymentPage({ result }) {
     confirmedRef.current = true;
 
     const run = async () => {
-      const fetchFacilities = async () => {
-        setLoadingFacilities(true);
-        try {
-          const res = await fetch(`${API_URL}/api/payments/facilities`);
-          const data = await res.json();
-          const list = Array.isArray(data) ? data : [];
-          setFacilities(list);
-          // Auto-select if there's only one facility
-          if (list.length === 1) {
-            setSelectedFacility(list[0].id);
-            fetchSlots(list[0].id);
-          }
-        } catch {
-          setError("Could not load trade facilities.");
-        } finally {
-          setLoadingFacilities(false);
-        }
-      };
-
       try {
         if (IS_DEV) {
           // Sandbox: auto-call confirm-dev so DB is updated immediately.
@@ -124,7 +126,7 @@ export default function PaymentPage({ result }) {
     };
 
     run();
-  }, [transactionId, result]);
+  }, [transactionId, result, fetchFacilities]);
 
   // ── Book selected slot ───────────────────────────────────────────────────
   const handleBookSlot = async () => {
@@ -149,8 +151,14 @@ export default function PaymentPage({ result }) {
         .eq("id", session.user.id)
         .single();
 
+      console.log("Session user id:", session.user.id);
+      console.log("Profile result:", profile);
+      console.log("Profile error:", profileError);
+
       if (profileError || !profile) {
-        setError("Could not load your profile. Please sign in again.");
+        setError(
+          `Profile error: ${profileError?.message || "No profile found for user " + session.user.id}`,
+        );
         setLoadingBooking(false);
         return;
       }
