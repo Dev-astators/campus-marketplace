@@ -1,5 +1,5 @@
 import "@testing-library/jest-dom";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import {
   beforeEach,
@@ -91,12 +91,12 @@ describe("MySales booking", () => {
       screen.getByRole("button", { name: /book drop-off slot/i }),
     );
 
-    expect(
-      await screen.findByRole("dialog", { name: /book drop-off slot/i }),
-    ).toBeInTheDocument();
+    const dialog = await screen.findByRole("dialog", {
+      name: /book drop-off slot/i,
+    });
 
     const slotLabel = new Date("2026-05-12").toDateString();
-    await user.click(screen.getByText(new RegExp(slotLabel)));
+    await user.click(within(dialog).getByText(new RegExp(slotLabel)));
     await user.click(screen.getByRole("button", { name: /confirm drop-off/i }));
 
     await waitFor(() => {
