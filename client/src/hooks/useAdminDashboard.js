@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useReducer, useRef } from "react";
 import { supabase } from "../config/supabaseClient";
+import { API_BASE_URL } from "../config/apiBaseUrl";
 
 // ─── API base URL ─────────────────────────────────────────────────────────────
-const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api";
+const API_BASE = `${API_BASE_URL}/api`;
 
 const getAuthHeaders = async () => {
   const {
@@ -249,7 +250,9 @@ const buildCsv = (rows) => {
   const headers = Object.keys(rows[0]);
   const escape = (v) => {
     const s = String(v ?? "");
-    return s.includes(",") || s.includes("\n") ? `"${s.replace(/"/g, '""')}"` : s;
+    return s.includes(",") || s.includes("\n")
+      ? `"${s.replace(/"/g, '""')}"`
+      : s;
   };
   return [
     headers.join(","),
@@ -308,7 +311,9 @@ export default function useAdminDashboard() {
 
   useEffect(() => {
     isMounted.current = true;
-    return () => { isMounted.current = false; };
+    return () => {
+      isMounted.current = false;
+    };
   }, []);
 
   // ── Fetch helpers ──────────────────────────────────────────────────────────
@@ -393,7 +398,13 @@ export default function useAdminDashboard() {
     fetchModeration();
     fetchUsers();
     fetchFacilities();
-  }, [fetchSummary, fetchAnalytics, fetchModeration, fetchUsers, fetchFacilities]);
+  }, [
+    fetchSummary,
+    fetchAnalytics,
+    fetchModeration,
+    fetchUsers,
+    fetchFacilities,
+  ]);
 
   // ── Derived nav items ──────────────────────────────────────────────────────
   const pendingModerationCount =
@@ -496,11 +507,7 @@ export default function useAdminDashboard() {
       dispatch({ type: "FACILITY_SAVE_ERROR" });
       console.error("Failed to save facility settings:", err.message);
     }
-  }, [
-    state.facilitySettings,
-    state.operatingHours,
-    state.selectedFacilityId,
-  ]);
+  }, [state.facilitySettings, state.operatingHours, state.selectedFacilityId]);
 
   const selectFacility = useCallback(
     (facilityId) => {
@@ -510,34 +517,40 @@ export default function useAdminDashboard() {
     [state.facilities],
   );
 
-  const resolveListingFlag = useCallback(async (id) => {
-    // Optimistic update
-    dispatch({ type: "RESOLVE_LISTING", id });
-    try {
-      await apiFetch(`/admin/moderation/listings/${id}/resolve`, {
-        method: "PATCH",
-      });
-      // Refresh summary badge
-      fetchSummary();
-    } catch (err) {
-      // Roll back on failure
-      fetchModeration();
-      console.error("Failed to resolve listing flag:", err.message);
-    }
-  }, [fetchModeration, fetchSummary]);
+  const resolveListingFlag = useCallback(
+    async (id) => {
+      // Optimistic update
+      dispatch({ type: "RESOLVE_LISTING", id });
+      try {
+        await apiFetch(`/admin/moderation/listings/${id}/resolve`, {
+          method: "PATCH",
+        });
+        // Refresh summary badge
+        fetchSummary();
+      } catch (err) {
+        // Roll back on failure
+        fetchModeration();
+        console.error("Failed to resolve listing flag:", err.message);
+      }
+    },
+    [fetchModeration, fetchSummary],
+  );
 
-  const resolveReviewFlag = useCallback(async (id) => {
-    dispatch({ type: "RESOLVE_REVIEW", id });
-    try {
-      await apiFetch(`/admin/moderation/reviews/${id}/resolve`, {
-        method: "PATCH",
-      });
-      fetchSummary();
-    } catch (err) {
-      fetchModeration();
-      console.error("Failed to resolve review flag:", err.message);
-    }
-  }, [fetchModeration, fetchSummary]);
+  const resolveReviewFlag = useCallback(
+    async (id) => {
+      dispatch({ type: "RESOLVE_REVIEW", id });
+      try {
+        await apiFetch(`/admin/moderation/reviews/${id}/resolve`, {
+          method: "PATCH",
+        });
+        fetchSummary();
+      } catch (err) {
+        fetchModeration();
+        console.error("Failed to resolve review flag:", err.message);
+      }
+    },
+    [fetchModeration, fetchSummary],
+  );
 
   const updateUserRole = useCallback(async (userId, newRole) => {
     dispatch({ type: "TOGGLING_ROLE", userId });
@@ -585,10 +598,22 @@ export default function useAdminDashboard() {
   const exportPdf = useCallback(
     (reportId) => {
       const configs = {
-        categories: { title: "Popular Categories", rows: analytics.popularCategories },
-        transactions: { title: "Transactions Over Time", rows: analytics.transactionsOverTime },
-        utilization: { title: "Facility Utilisation", rows: [analytics.facilityUtilization] },
-        moderation: { title: "Flagged Content Summary", rows: [analytics.flaggedSummary] },
+        categories: {
+          title: "Popular Categories",
+          rows: analytics.popularCategories,
+        },
+        transactions: {
+          title: "Transactions Over Time",
+          rows: analytics.transactionsOverTime,
+        },
+        utilization: {
+          title: "Facility Utilisation",
+          rows: [analytics.facilityUtilization],
+        },
+        moderation: {
+          title: "Flagged Content Summary",
+          rows: [analytics.flaggedSummary],
+        },
       };
       const config = configs[reportId];
       if (config?.rows?.length) openPrintWindow(config.title, config.rows);
