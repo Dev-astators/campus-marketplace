@@ -80,7 +80,7 @@ export default function ListingDetails() {
               {imageUrl && (
                 <img
                   src={imageUrl}
-                  alt={listing.title}
+                  alt="listing"
                   className="
                     w-full
                     max-h-[520px]
