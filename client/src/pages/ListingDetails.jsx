@@ -5,8 +5,6 @@ import ListingReadOnlyDetails from "../components/listingDetails/ListingReadOnly
 import ListingActions from "../components/listingDetails/ListingActions";
 import useListingDetails from "../hooks/useListingDetails";
 
-// Page-level composition only: domain state/actions live in useListingDetails,
-// while rendering is delegated to focused child components.
 export default function ListingDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -50,118 +48,138 @@ export default function ListingDetails() {
 
   return (
     <article
-      className="max-w-7xl mx-auto p-6 lg:p-10"
+      className="max-w-7xl mx-auto px-6 py-6"
       aria-label="Listing details"
     >
-      {/* Back Button */}
-      <button
-        onClick={() => navigate(-1)}
-        className="
-          mb-8
-          px-5
-          py-2.5
-          border
-          border-gray-200
-          rounded-xl
-          shadow-sm
-          hover:bg-gray-50
-          transition
-        "
-      >
-        ← Back
-      </button>
-
-      {/* Main Layout */}
-      <main className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
-        {/* LEFT SIDE - IMAGE */}
-        <figure
-          className="
-            bg-gray-100
-            rounded-3xl
-            min-h-[500px]
-            flex
-            items-center
-            justify-center
-            p-8
-          "
-          aria-label="Listing image"
-        >
-          {imageUrl && (
-            <img
-              src={imageUrl}
-              alt={listing.title}
-              className="w-full max-w-md object-contain"
-            />
-          )}
-        </figure>
-
-        {/* RIGHT SIDE - DETAILS */}
-        <section aria-label="Listing information">
-          {/* Title */}
-          {!editing && (
-            <header>
-              <h1 className="text-4xl font-bold leading-tight text-black">
-                {listing.title}
-              </h1>
-            </header>
-          )}
-
-          {/* Seller Info */}
-          <section
-            className="mt-4 space-y-1"
-            aria-label="Seller information"
+      <main className="grid grid-cols-[110px_1fr] gap-6 items-start">
+        {/* Back Button */}
+        <section className="-ml-12 pt-1">
+          <button
+            onClick={() => navigate(-1)}
+            className="
+              px-4
+              py-2
+              border
+              border-gray-200
+              rounded-xl
+              shadow-sm
+              hover:bg-gray-50
+              transition
+            "
           >
-            <p className="text-gray-700">
-              Sold by: {listing.seller?.full_name || "Unknown"}
-            </p>
+            ← Back
+          </button>
+        </section>
 
-            <p className="text-yellow-500">
-              ⭐ {listing.seller?.average_rating?.toFixed(1) || "0.0"} (
-              {listing.seller?.total_ratings || 0} reviews)
-            </p>
-          </section>
+        {/* Main Layout */}
+        <section className="grid grid-cols-1 lg:grid-cols-[1.25fr_1fr] gap-8 items-start mt-16">
+          {/* Left Side */}
+          <section aria-label="Listing image and description">
+            {/* Image */}
+            <figure aria-label="Listing image">
+              {imageUrl && (
+                <img
+                  src={imageUrl}
+                  alt={listing.title}
+                  className="
+                    w-full
+                    max-h-[520px]
+                    object-contain
+                    rounded-xl
+                  "
+                />
+              )}
+            </figure>
 
-          {/* Price */}
-          {!editing && (
-            <section className="mt-8" aria-label="Price">
-              <p className="text-4xl font-bold">
-                R{Number(listing.price).toFixed(2)}
-              </p>
-            </section>
-          )}
+            {/* Description */}
+            {!editing && listing.description && (
+              <section className="mt-4" aria-label="Description">
+                <h2 className="text-lg font-bold mb-2">
+                  Description
+                </h2>
 
-          <hr className="my-8 border-gray-200" />
-
-          {/* Listing Details */}
-          <section aria-label="Listing details">
-            {editing ? (
-              <ListingEditForm
-                editForm={editForm}
-                onEditChange={handleEditChange}
-                onSaveEdit={handleSaveEdit}
-                onCancelEdit={handleCancelEdit}
-                saving={saving}
-                saveError={saveError}
-              />
-            ) : (
-              <ListingReadOnlyDetails listing={listing} />
+                <p className="text-gray-700 text-base leading-7">
+                  {listing.description}
+                </p>
+              </section>
             )}
           </section>
 
-          <hr className="my-8 border-gray-200" />
+          {/* Right Side */}
+          <section
+            aria-label="Listing information"
+            className="pt-1"
+          >
+            {/* Title */}
+            {!editing && (
+              <header>
+                <h1 className="text-2xl font-bold leading-tight text-black">
+                  {listing.title}
+                </h1>
+              </header>
+            )}
 
-          {/* Actions */}
-          <footer aria-label="Listing actions">
-            <ListingActions
-              isOwner={isOwner}
-              editing={editing}
-              deleting={deleting}
-              onStartEdit={handleStartEdit}
-              onDelete={handleDelete}
-              isLoggedInBuyer={isLoggedInBuyer}
-              onContactSeller={handleContactSeller}
-            />
-          </footer>
+            {/* Seller */}
+            <section
+              className="mt-3"
+              aria-label="Seller information"
+            >
+              <p className="text-gray-700 text-base">
+                Sold by:{" "}
+                {listing.seller?.full_name || "Unknown"}{" "}
+                <strong className="font-normal text-yellow-500">
+                  ⭐{" "}
+                  {listing.seller?.average_rating?.toFixed(1) ||
+                    "0.0"}{" "}
+                  (
+                  {listing.seller?.total_ratings || 0} reviews)
+                </strong>
+              </p>
+            </section>
+
+            {/* Price */}
+            {!editing && (
+              <section className="mt-4" aria-label="Price">
+                <p className="text-3xl font-bold">
+                  R{Number(listing.price).toFixed(2)}
+                </p>
+              </section>
+            )}
+
+            <hr className="my-4 border-gray-200" />
+
+            {/* Metadata */}
+            <section aria-label="Listing details">
+              {editing ? (
+                <ListingEditForm
+                  editForm={editForm}
+                  onEditChange={handleEditChange}
+                  onSaveEdit={handleSaveEdit}
+                  onCancelEdit={handleCancelEdit}
+                  saving={saving}
+                  saveError={saveError}
+                />
+              ) : (
+                <ListingReadOnlyDetails listing={listing} />
+              )}
+            </section>
+
+            <hr className="my-4 border-gray-200" />
+
+            {/* Actions */}
+            <footer aria-label="Listing actions">
+              <ListingActions
+                listing={listing}
+                isOwner={isOwner}
+                editing={editing}
+                deleting={deleting}
+                onStartEdit={handleStartEdit}
+                onDelete={handleDelete}
+                isLoggedInBuyer={isLoggedInBuyer}
+                onContactSeller={handleContactSeller}
+              />
+            </footer>
+          </section>
         </section>
       </main>
     </article>
