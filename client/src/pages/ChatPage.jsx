@@ -1,5 +1,10 @@
 import { useEffect, useState, useCallback } from "react";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import {
+  useNavigate,
+  useParams,
+  useSearchParams,
+  useLocation,
+} from "react-router-dom";
 import { supabase } from "../config/supabaseClient";
 import Chat from "../components/Chat";
 import { API_BASE_URL } from "../config/apiBaseUrl";
@@ -38,37 +43,81 @@ const PREVIEW_MESSAGES = [
 
 export default function ChatPage() {
   const navigate = useNavigate();
-
+  const location = useLocation();
   const { id: listingId } = useParams();
-
   const [searchParams] = useSearchParams();
 
   const sellerId = searchParams.get("seller");
 
   const [user, setUser] = useState(null);
-
   const [messages, setMessages] = useState([]);
-
   const [input, setInput] = useState("");
-
   const [loadingUser, setLoadingUser] = useState(true);
+  const [conversationName, setConversationName] = useState("Unknown user");
+  const [listingSummary, setListingSummary] = useState(null);
 
-  // ─────────────────────────────
-  // Get logged-in user
+  const backTarget = location.state?.backTo || "/messages";
+
   useEffect(() => {
     const getUser = async () => {
       const { data } = await supabase.auth.getSession();
 
       setUser(data.session?.user || null);
-
       setLoadingUser(false);
     };
 
     getUser();
   }, []);
 
-  // ─────────────────────────────
-  // Mark messages as read
+  useEffect(() => {
+    if (!listingId) return;
+
+    const fetchChatContext = async () => {
+      try {
+        if (sellerId) {
+          const { data: profile, error: profileError } = await supabase
+            .from("profiles")
+            .select("full_name")
+            .eq("id", sellerId)
+            .single();
+
+          if (profileError) {
+            console.error("Error loading chat profile:", profileError);
+          }
+
+          setConversationName(profile?.full_name || "Unknown user");
+        }
+
+        const listingResponse = await fetch(
+          `${API_BASE_URL}/api/listings/${listingId}`,
+        );
+
+        if (!listingResponse.ok) {
+          throw new Error("Failed to load listing context");
+        }
+
+        const listingData = await listingResponse.json();
+
+        setListingSummary({
+          title: listingData.listing?.title || "Marketplace listing",
+          price:
+            listingData.listing?.price ??
+            listingData.listing?.asking_price ??
+            null,
+        });
+      } catch (err) {
+        console.error("Error loading chat context:", err);
+
+        setListingSummary({
+          title: "Marketplace listing",
+          price: null,
+        });
+      }
+    };
+
+    fetchChatContext();
+  }, [listingId, sellerId]);
+
   const markMessagesAsRead = useCallback(async () => {
     if (!user || !sellerId || !listingId) return;
 
@@ -81,9 +130,6 @@ export default function ChatPage() {
         .eq("receiver_id", user.id)
         .eq("is_read", false);
 
-      // IMPORTANT FIX:
-      // refetch messages immediately
-      // so first double-tick updates instantly
       const res = await fetch(
         `${API_BASE_URL}/api/messages/${listingId}/${user.id}/${sellerId}`,
       );
@@ -96,8 +142,6 @@ export default function ChatPage() {
     }
   }, [user, sellerId, listingId]);
 
-  // ─────────────────────────────
-  // Fetch messages
   useEffect(() => {
     if (!user || !sellerId || !listingId) return;
 
@@ -110,7 +154,6 @@ export default function ChatPage() {
         const data = await res.json();
 
         setMessages(data.messages || []);
-
         await markMessagesAsRead();
       } catch (err) {
         console.error("Error fetching messages:", err);
@@ -120,8 +163,6 @@ export default function ChatPage() {
     fetchMessages();
   }, [user, sellerId, listingId, markMessagesAsRead]);
 
-  // ─────────────────────────────
-  // Send message
   const handleSend = async () => {
     if (!input.trim()) return;
 
@@ -137,7 +178,6 @@ export default function ChatPage() {
       };
 
       PREVIEW_MESSAGES.push(previewMessage);
-
       setInput("");
 
       return;
@@ -147,7 +187,6 @@ export default function ChatPage() {
 
     const messageContent = input.trim();
 
-    // TEMP optimistic message
     const tempMessage = {
       id: `temp-${Date.now()}`,
       listing_id: listingId,
@@ -159,7 +198,6 @@ export default function ChatPage() {
     };
 
     setMessages((prev) => [...prev, tempMessage]);
-
     setInput("");
 
     try {
@@ -180,15 +218,12 @@ export default function ChatPage() {
     } catch (err) {
       console.error("Send message error:", err);
 
-      // remove failed temp message
       setMessages((prev) =>
         prev.filter((msg) => msg.id !== tempMessage.id),
       );
     }
   };
 
-  // ─────────────────────────────
-  // REALTIME SUBSCRIPTIONS
   useEffect(() => {
     if (!user || !listingId || !sellerId) return;
 
@@ -213,7 +248,6 @@ export default function ChatPage() {
     const channel = supabase
       .channel(`chat-${listingId}-${user.id}-${sellerId}`)
 
-      // NEW MESSAGE
       .on(
         "postgres_changes",
         {
@@ -241,7 +275,6 @@ export default function ChatPage() {
           if (!isThisConversation) return;
 
           setMessages((prev) => {
-            // remove matching temp message
             const filtered = prev.filter((msg) => {
               const isMatchingTemp =
                 String(msg.id).startsWith("temp-") &&
@@ -260,14 +293,12 @@ export default function ChatPage() {
             return [...filtered, newMessage];
           });
 
-          // instantly mark incoming messages as read
           if (newMessage.receiver_id === user.id) {
             await markMessagesAsRead();
           }
         },
       )
 
-      // READ STATUS
       .on(
         "postgres_changes",
         {
@@ -292,13 +323,9 @@ export default function ChatPage() {
         },
       )
 
-      // IMPORTANT FIX
       .subscribe(async (status) => {
         console.log("Realtime status:", status);
 
-        // When subscription is fully connected,
-        // fetch latest messages again
-        // so first message is never missed
         if (status === "SUBSCRIBED") {
           await fetchLatestMessages();
         }
@@ -306,17 +333,13 @@ export default function ChatPage() {
 
     return () => {
       isMounted = false;
-
       supabase.removeChannel(channel);
     };
   }, [user, listingId, sellerId, markMessagesAsRead]);
 
-  // ─────────────────────────────
   const displayedMessages = user ? messages : PREVIEW_MESSAGES;
-
   const displayedUserId = user?.id || PREVIEW_USER_ID;
 
-  // Add status
   const enhancedMessages = displayedMessages.map((msg) => {
     const isMine = msg.sender_id === displayedUserId;
 
@@ -326,10 +349,9 @@ export default function ChatPage() {
     };
   });
 
-  // ─────────────────────────────
   if (loadingUser) {
     return (
-      <main className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100 flex items-center justify-center px-6">
+      <main className="min-h-screen bg-white flex items-center justify-center px-6">
         <section className="bg-white border border-gray-200 rounded-3xl shadow-sm px-8 py-7 text-center">
           <p className="mx-auto w-14 h-14 rounded-2xl bg-blue-50 flex items-center justify-center mb-4 text-2xl">
             💬
@@ -347,35 +369,42 @@ export default function ChatPage() {
     );
   }
 
-  // ─────────────────────────────
   return (
-    <main className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100 px-4 py-8 sm:px-6 lg:px-8">
-      <section className="max-w-4xl mx-auto h-[calc(100vh-4rem)] flex flex-col">
-        <header className="mb-6 flex items-center justify-between gap-4">
-          <section>
-            <h1 className="text-3xl font-bold text-gray-900">Chat</h1>
+    <main className="min-h-screen bg-white px-6 py-6">
+      <section className="max-w-7xl mx-auto grid grid-cols-[110px_1fr] gap-6 items-start">
+        <section className="-ml-12 pt-1">
+          <button
+            type="button"
+            aria-label="Back to Messages"
+            onClick={() => navigate(backTarget, { replace: true })}
+            className="px-4 py-2 border border-gray-200 rounded-xl shadow-sm hover:bg-gray-50 transition bg-white"
+          >
+            ← Back
+          </button>
+        </section>
+
+        <section className="mt-6">
+          <header className="mb-8">
+            <h1 className="text-3xl font-bold text-gray-900">
+              Chat
+            </h1>
 
             <p className="text-sm text-gray-500 mt-2">
               Send and receive messages about this marketplace listing.
             </p>
+          </header>
+
+          <section className="h-[calc(100vh-14rem)] min-h-[520px] max-w-6xl">
+            <Chat
+              messages={enhancedMessages}
+              currentUserId={displayedUserId}
+              input={input}
+              setInput={setInput}
+              onSend={handleSend}
+              conversationName={conversationName}
+              listing={listingSummary}
+            />
           </section>
-
-          <button
-            onClick={() => navigate("/messages")}
-            className="px-4 py-2 rounded-xl border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
-          >
-            Back to Messages
-          </button>
-        </header>
-
-        <section className="flex-1 min-h-0">
-          <Chat
-            messages={enhancedMessages}
-            currentUserId={displayedUserId}
-            input={input}
-            setInput={setInput}
-            onSend={handleSend}
-          />
         </section>
       </section>
     </main>
