@@ -25,6 +25,10 @@ describe("AdminDashboard", () => {
       ],
       activeSection: "overview",
       setActiveSection,
+      user: {
+        fullName: "Admin User",
+        name: "Admin",
+      },
       summaryCards: [
         { title: "Active Listings", value: "128", trend: "+6% vs last week" },
       ],
