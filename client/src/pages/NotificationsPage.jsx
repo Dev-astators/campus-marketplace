@@ -12,6 +12,21 @@ const getNotificationIcon = (type) => {
   return "🔔";
 };
 
+// ─────────────────────────────
+// LOCAL STORAGE HELPERS
+const getStoredBookingReads = () => {
+  return JSON.parse(
+    localStorage.getItem("read_booking_notifications") || "[]"
+  );
+};
+
+const saveStoredBookingReads = (ids) => {
+  localStorage.setItem(
+    "read_booking_notifications",
+    JSON.stringify(ids)
+  );
+};
+
 export default function NotificationsPage() {
   const navigate = useNavigate();
 
@@ -48,10 +63,112 @@ export default function NotificationsPage() {
   }, []);
 
   // ─────────────────────────────
+  // Fetch booking notifications
+  const fetchBookingNotifications = useCallback(
+    async (currentUser) => {
+      try {
+        const { data, error } = await supabase
+          .from("facility_bookings")
+          .select(`
+            id,
+            status,
+            booking_type,
+            confirmed_at,
+            student_id,
+
+            slot:facility_slots(
+              slot_date,
+              slot_time,
+
+              facility:trade_facilities(
+                name,
+                location
+              )
+            ),
+
+            transaction:transactions(
+              listing:listings(
+                title
+              )
+            )
+          `)
+          .eq("student_id", currentUser.id)
+          .in("booking_type", ["collection", "drop_off"])
+          .order("confirmed_at", { ascending: false });
+
+        if (error) throw error;
+
+        const readBookingIds = getStoredBookingReads();
+
+        const formattedBookings = (data || []).map((booking) => {
+          const bookingNotificationId = `booking-${booking.id}`;
+
+          const actionText =
+            booking.booking_type === "collection"
+              ? "Collect"
+              : "Drop off";
+
+          const titlePrefix =
+            booking.booking_type === "collection"
+              ? "Collection Booking"
+              : "Drop-off Booking";
+
+          return {
+            id: bookingNotificationId,
+            type: "booking",
+
+            bookingType: booking.booking_type,
+
+            title:
+              booking.status === "confirmed"
+                ? `${titlePrefix} Confirmed`
+                : `${titlePrefix} Update`,
+
+            description: `
+${actionText} "${
+              booking.transaction?.listing?.title || "your item"
+            }"
+at ${booking.slot?.facility?.name || "facility"}
+(${booking.slot?.facility?.location || "campus"})
+on ${booking.slot?.slot_date}
+at ${booking.slot?.slot_time}
+            `,
+
+            time: formatTime(
+              booking.confirmed_at || new Date().toISOString()
+            ),
+
+            rawTime: booking.confirmed_at,
+
+            // ✅ persistent read state using localStorage
+            is_read: readBookingIds.includes(
+              bookingNotificationId
+            ),
+
+            bookingData: booking,
+          };
+        });
+
+        return formattedBookings;
+      } catch (err) {
+        console.error(
+          "Error fetching booking notifications:",
+          err
+        );
+
+        return [];
+      }
+    },
+    [formatTime]
+  );
+
+  // ─────────────────────────────
   // Fetch notifications
   const fetchNotifications = useCallback(
     async (currentUser) => {
       try {
+        // ─────────────────────────────
+        // MESSAGE NOTIFICATIONS
         const { data, error } = await supabase
           .from("messages")
           .select(`
@@ -62,8 +179,12 @@ export default function NotificationsPage() {
             listing_id,
             sender_id,
             receiver_id,
+
             listing:listings(title),
-            sender:profiles!messages_sender_id_fkey(full_name)
+
+            sender:profiles!messages_sender_id_fkey(
+              full_name
+            )
           `)
           .eq("receiver_id", currentUser.id)
           .neq("sender_id", currentUser.id)
@@ -71,33 +192,60 @@ export default function NotificationsPage() {
 
         if (error) throw error;
 
-        const formatted = (data || []).map((msg) => ({
+        const formattedMessages = (data || []).map((msg) => ({
           id: msg.id,
+
           type: "message",
+
           title: `New message from ${
             msg.sender?.full_name || "Unknown user"
           }`,
+
           description: msg.listing?.title
             ? `About "${msg.listing.title}"`
             : msg.content,
+
           time: formatTime(msg.sent_at),
+
+          rawTime: msg.sent_at,
+
           listing_id: msg.listing_id,
+
           sender_id: msg.sender_id,
+
           is_read: msg.is_read ?? false,
         }));
 
-        setNotifications(formatted);
+        // ─────────────────────────────
+        // BOOKING NOTIFICATIONS
+        const bookingNotifications =
+          await fetchBookingNotifications(currentUser);
+
+        // ─────────────────────────────
+        // COMBINE
+        const combined = [
+          ...formattedMessages,
+          ...bookingNotifications,
+        ];
+
+        combined.sort(
+          (a, b) =>
+            new Date(b.rawTime || b.time) -
+            new Date(a.rawTime || a.time)
+        );
+
+        setNotifications(combined);
       } catch (err) {
         console.error("Error fetching notifications:", err);
       } finally {
         setLoading(false);
       }
     },
-    [formatTime],
+    [formatTime, fetchBookingNotifications]
   );
 
   // ─────────────────────────────
-  // Initial fetch
+  // Initial load
   useEffect(() => {
     if (!user) return;
 
@@ -115,6 +263,9 @@ export default function NotificationsPage() {
 
     const channel = supabase
       .channel("notifications-realtime")
+
+      // ─────────────────────────────
+      // MESSAGES
       .on(
         "postgres_changes",
         {
@@ -123,19 +274,59 @@ export default function NotificationsPage() {
           table: "messages",
         },
         async (payload) => {
-          if (payload.new.receiver_id !== user.id) return;
+          if (payload.new.receiver_id !== user.id)
+            return;
 
-          if (payload.new.sender_id === user.id) return;
+          if (payload.new.sender_id === user.id)
+            return;
 
           await fetchNotifications(user);
 
           if (Notification.permission === "granted") {
             new Notification("New Message", {
-              body: "You received a new marketplace message.",
+              body:
+                "You received a new marketplace message.",
             });
           }
-        },
+        }
       )
+
+      // ─────────────────────────────
+      // BOOKINGS
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "facility_bookings",
+        },
+        async (payload) => {
+          if (payload.new.student_id !== user.id)
+            return;
+
+          if (
+            !["collection", "drop_off"].includes(
+              payload.new.booking_type
+            )
+          ) {
+            return;
+          }
+
+          await fetchNotifications(user);
+
+          const type =
+            payload.new.booking_type === "collection"
+              ? "Collection"
+              : "Drop-off";
+
+          if (Notification.permission === "granted") {
+            new Notification(`${type} Booking Updated`, {
+              body: "Your booking has been updated.",
+            });
+          }
+        }
+      )
+
       .subscribe();
 
     if (Notification.permission !== "granted") {
@@ -148,18 +339,29 @@ export default function NotificationsPage() {
   }, [user, fetchNotifications]);
 
   // ─────────────────────────────
-  // Mark all as read
+  // Mark all message notifications as read
   const markAllAsRead = async () => {
     try {
+      // messages → database
       await supabase
         .from("messages")
         .update({ is_read: true })
         .eq("receiver_id", user.id)
         .eq("is_read", false);
 
+      // bookings → localStorage
+      const bookingIds = notifications
+        .filter((n) => n.type === "booking")
+        .map((n) => n.id);
+
+      saveStoredBookingReads(bookingIds);
+
       await fetchNotifications(user);
     } catch (err) {
-      console.error("Error marking notifications as read:", err);
+      console.error(
+        "Error marking notifications as read:",
+        err
+      );
     }
   };
 
@@ -167,171 +369,163 @@ export default function NotificationsPage() {
   // Open notification
   const openNotification = async (notification) => {
     try {
-      await supabase
-        .from("messages")
-        .update({ is_read: true })
-        .eq("id", notification.id);
+      // ─────────────────────────────
+      // MESSAGE
+      if (notification.type === "message") {
+        await supabase
+          .from("messages")
+          .update({ is_read: true })
+          .eq("id", notification.id);
 
-      navigate(
-        `/chat/${notification.listing_id}?seller=${notification.sender_id}`,
-      );
+        navigate(
+          `/chat/${notification.listing_id}?seller=${notification.sender_id}`
+        );
+
+        return;
+      }
+
+      // ─────────────────────────────
+      // BOOKING
+      if (notification.type === "booking") {
+        const existing =
+          getStoredBookingReads();
+
+        if (!existing.includes(notification.id)) {
+          saveStoredBookingReads([
+            ...existing,
+            notification.id,
+          ]);
+        }
+
+        // update UI immediately
+        setNotifications((prev) =>
+          prev.map((n) =>
+            n.id === notification.id
+              ? { ...n, is_read: true }
+              : n
+          )
+        );
+
+        return;
+      }
     } catch (err) {
-      console.error("Error opening notification:", err);
+      console.error(
+        "Error opening notification:",
+        err
+      );
     }
   };
 
   // ─────────────────────────────
-  // Split notifications
-  const unreadNotifications = notifications.filter((n) => !n.is_read);
+  // Split
+  const unread = notifications.filter(
+    (n) => !n.is_read
+  );
 
-  const earlierNotifications = notifications.filter((n) => n.is_read);
+  const read = notifications.filter(
+    (n) => n.is_read
+  );
 
   // ─────────────────────────────
-  // Loading state
   if (loading) {
     return (
-      <main className="min-h-screen flex items-center justify-center bg-gray-50">
-        <p className="text-gray-500">Loading notifications...</p>
+      <main className="min-h-screen flex items-center justify-center">
+        <p>Loading notifications...</p>
       </main>
     );
   }
 
-  // ─────────────────────────────
-  // UI
   return (
-    <main className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100 px-4 py-8 sm:px-6 lg:px-8">
+    <main className="min-h-screen px-6 py-8">
       <section className="max-w-4xl mx-auto">
-        <header className="mb-8 flex items-center justify-between gap-4">
-          <section>
-            <h1 className="text-3xl font-bold text-gray-900">
-              Notifications
-            </h1>
+        <header className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold">
+            Notifications
+          </h1>
 
-            <p className="text-sm text-gray-500 mt-2">
-              Stay updated on new messages sent to you.
-            </p>
-          </section>
-
-          <section className="flex items-center gap-3">
-            {unreadNotifications.length > 0 && (
-              <button
-                type="button"
-                onClick={markAllAsRead}
-                className="px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition"
-              >
-                Mark all as read
-              </button>
-            )}
-          </section>
+          {unread.length > 0 && (
+            <button
+              onClick={markAllAsRead}
+              className="bg-blue-600 text-white px-4 py-2 rounded-xl"
+            >
+              Mark all as read
+            </button>
+          )}
         </header>
 
-        <section className="bg-white/90 backdrop-blur border border-gray-200 rounded-3xl shadow-sm overflow-hidden">
-          {notifications.length === 0 ? (
-            <article className="px-6 py-16 text-center">
-              <p className="mx-auto w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center mb-4 text-3xl">
-                🔔
-              </p>
+        {/* UNREAD */}
+        {unread.length > 0 && (
+          <section>
+            <h2 className="font-bold mb-2">
+              Unread
+            </h2>
 
-              <h2 className="text-xl font-bold text-gray-800">
-                No notifications yet
-              </h2>
+            {unread.map((n) => (
+              <button
+                key={n.id}
+                onClick={() => openNotification(n)}
+                className="w-full text-left p-4 border rounded-lg mb-2"
+              >
+                <div className="flex gap-3">
+                  <span>
+                    {getNotificationIcon(n.type)}
+                  </span>
 
-              <p className="text-sm text-gray-500 mt-2">
-                New incoming messages will appear here.
-              </p>
-            </article>
-          ) : (
-            <>
-              {unreadNotifications.length > 0 && (
-                <section className="border-b border-gray-100">
-                  <header className="px-5 py-4 bg-gray-50">
-                    <h2 className="text-sm font-bold text-gray-700">
-                      Unread
-                    </h2>
-                  </header>
+                  <div>
+                    <p className="font-semibold">
+                      {n.title}
+                    </p>
 
-                  <ul className="divide-y divide-gray-100">
-                    {unreadNotifications.map((notification) => (
-                      <li key={notification.id}>
-                        <button
-                          type="button"
-                          onClick={() => openNotification(notification)}
-                          className="w-full text-left"
-                        >
-                          <article className="px-5 py-5 hover:bg-blue-50/60 transition cursor-pointer">
-                            <section className="flex items-start gap-4">
-                              <p className="w-12 h-12 rounded-2xl bg-blue-100 flex items-center justify-center text-xl">
-                                {getNotificationIcon(notification.type)}
-                              </p>
+                    <p className="text-sm whitespace-pre-line">
+                      {n.description}
+                    </p>
 
-                              <section className="flex-1">
-                                <h3 className="text-base font-semibold text-gray-900">
-                                  {notification.title}
-                                </h3>
+                    <p className="text-xs text-gray-400">
+                      {n.time}
+                    </p>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </section>
+        )}
 
-                                <p className="text-sm text-gray-600 mt-1">
-                                  {notification.description}
-                                </p>
+        {/* READ */}
+        {read.length > 0 && (
+          <section className="mt-6">
+            <h2 className="font-bold mb-2">
+              Read
+            </h2>
 
-                                <time className="text-xs text-gray-400">
-                                  {notification.time}
-                                </time>
-                              </section>
-                            </section>
-                          </article>
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </section>
-              )}
+            {read.map((n) => (
+              <button
+                key={n.id}
+                onClick={() => openNotification(n)}
+                className="w-full text-left p-4 border rounded-lg mb-2 opacity-70"
+              >
+                <div className="flex gap-3">
+                  <span>
+                    {getNotificationIcon(n.type)}
+                  </span>
 
-              {earlierNotifications.length > 0 && (
-                <section>
-                  <header className="px-5 py-4 bg-gray-50">
-                    <h2 className="text-sm font-bold text-gray-700">
-                      Read
-                    </h2>
-                  </header>
+                  <div>
+                    <p className="font-semibold">
+                      {n.title}
+                    </p>
 
-                  <ul className="divide-y divide-gray-100">
-                    {earlierNotifications.map((notification) => (
-                      <li key={notification.id}>
-                        <button
-                          type="button"
-                          onClick={() => openNotification(notification)}
-                          className="w-full text-left"
-                        >
-                          <article className="px-5 py-5 hover:bg-gray-50 transition cursor-pointer">
-                            <section className="flex items-start gap-4">
-                              <p className="w-12 h-12 rounded-2xl bg-gray-100 flex items-center justify-center text-xl">
-                                {getNotificationIcon(notification.type)}
-                              </p>
+                    <p className="text-sm whitespace-pre-line">
+                      {n.description}
+                    </p>
 
-                              <section className="flex-1">
-                                <h3 className="text-base font-semibold text-gray-800">
-                                  {notification.title}
-                                </h3>
-
-                                <p className="text-sm text-gray-600 mt-1">
-                                  {notification.description}
-                                </p>
-
-                                <time className="text-xs text-gray-400">
-                                  {notification.time}
-                                </time>
-                              </section>
-                            </section>
-                          </article>
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </section>
-              )}
-            </>
-          )}
-        </section>
+                    <p className="text-xs text-gray-400">
+                      {n.time}
+                    </p>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </section>
+        )}
       </section>
     </main>
   );
