@@ -13,7 +13,7 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY,
 );
 
-const IS_SANDBOX = process.env.NODE_ENV !== "production";
+const IS_SANDBOX = process.env.PAYFAST_SANDBOX === "true";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // POST /api/payments/initiate
@@ -299,32 +299,31 @@ router.get("/slots/:facilityId", async (req, res) => {
 
   if (error) return res.status(500).json({ error: error.message });
 
-  // Compute availability from actual bookings to avoid relying on stored booked_count.
   const slots = data || [];
+  if (slots.length === 0) return res.json([]);
+
   const slotIds = slots.map((slot) => slot.id);
-
-  if (slotIds.length === 0) {
-    return res.json([]);
-  }
-
-  const { data: bookings, error: bookingsError } = await supabase
+  const { data: bookingRows, error: bookingsError } = await supabase
     .from("facility_bookings")
     .select("slot_id")
     .in("slot_id", slotIds);
 
-  if (bookingsError) {
+  if (bookingsError)
     return res.status(500).json({ error: bookingsError.message });
-  }
 
-  const counts = (bookings || []).reduce((acc, booking) => {
-    acc[booking.slot_id] = (acc[booking.slot_id] || 0) + 1;
+  const bookedBySlot = slotIds.reduce((acc, id) => {
+    acc[id] = 0;
     return acc;
   }, {});
+
+  (bookingRows || []).forEach((row) => {
+    if (bookedBySlot[row.slot_id] !== undefined) bookedBySlot[row.slot_id] += 1;
+  });
 
   const available = slots
     .map((slot) => ({
       ...slot,
-      booked_count: counts[slot.id] || 0,
+      booked_count: bookedBySlot[slot.id] ?? 0,
     }))
     .filter((slot) => slot.booked_count < slot.capacity);
 
@@ -341,14 +340,10 @@ router.post("/book-slot", async (req, res) => {
     return res.status(400).json({ error: "All fields are required." });
   }
 
-  if (bookingType !== "collection") {
-    return res.status(400).json({ error: "bookingType must be collection." });
-  }
-
   try {
     const { data: tx } = await supabase
       .from("transactions")
-      .select("status, buyer_id")
+      .select("id, status, buyer_id")
       .eq("id", transactionId)
       .single();
 
@@ -358,20 +353,26 @@ router.post("/book-slot", async (req, res) => {
         .json({ error: "Payment must be confirmed before booking a slot." });
     }
 
+    if (bookingType !== "collection") {
+      return res
+        .status(400)
+        .json({ error: "Only collection bookings are allowed here." });
+    }
+
     if (tx.buyer_id !== studentId) {
       return res
         .status(403)
         .json({ error: "Only the buyer can book a collection slot." });
     }
 
-    const { data: existing } = await supabase
+    const { data: existingBooking } = await supabase
       .from("facility_bookings")
       .select("id")
       .eq("transaction_id", transactionId)
       .eq("booking_type", bookingType)
       .maybeSingle();
 
-    if (existing) {
+    if (existingBooking) {
       return res
         .status(400)
         .json({
@@ -379,15 +380,11 @@ router.post("/book-slot", async (req, res) => {
         });
     }
 
-    const { data: slot, error: slotError } = await supabase
+    const { data: slot } = await supabase
       .from("facility_slots")
-      .select("capacity, facility_id")
+      .select("capacity")
       .eq("id", slotId)
       .single();
-
-    if (slotError || !slot) {
-      return res.status(404).json({ error: "Slot not found." });
-    }
 
     const { count, error: countError } = await supabase
       .from("facility_bookings")
@@ -395,9 +392,8 @@ router.post("/book-slot", async (req, res) => {
       .eq("slot_id", slotId);
 
     if (countError) throw countError;
-
-    if ((count || 0) >= slot.capacity) {
-      return res.status(409).json({ error: "This slot is fully booked." });
+    if (slot && Number(count || 0) >= Number(slot.capacity || 0)) {
+      return res.status(400).json({ error: "Selected slot is full." });
     }
 
     const { data: booking, error: bookingError } = await supabase
@@ -528,49 +524,31 @@ router.post("/book-dropoff", async (req, res) => {
         });
     }
 
-    const { data: slot, error: slotError } = await supabase
-      .from("facility_slots")
-      .select("capacity, facility_id")
-      .eq("id", slotId)
-      .single();
-
-    if (slotError || !slot) {
-      return res.status(404).json({ error: "Slot not found." });
-    }
-
-    const { data: buyerBooking } = await supabase
+    const { data: collection } = await supabase
       .from("facility_bookings")
-      .select("slot_id, facility_slots ( facility_id )")
+      .select("facility_slots ( facility_id )")
       .eq("transaction_id", transactionId)
       .eq("booking_type", "collection")
       .maybeSingle();
 
-    const buyerFacilityId = buyerBooking?.facility_slots?.facility_id;
-
-    if (!buyerFacilityId) {
+    const collectionFacilityId = collection?.facility_slots?.facility_id;
+    if (!collectionFacilityId) {
       return res
         .status(400)
-        .json({ error: "Buyer must book a collection slot first." });
+        .json({ error: "Buyer must book a collection slot before drop-off." });
     }
 
-    if (buyerFacilityId !== slot.facility_id) {
-      return res
-        .status(400)
-        .json({
-          error:
-            "Drop-off must be at the same facility as the buyer's collection.",
-        });
-    }
+    const { data: slot } = await supabase
+      .from("facility_slots")
+      .select("facility_id")
+      .eq("id", slotId)
+      .single();
 
-    const { count, error: countError } = await supabase
-      .from("facility_bookings")
-      .select("id", { count: "exact", head: true })
-      .eq("slot_id", slotId);
-
-    if (countError) throw countError;
-
-    if ((count || 0) >= slot.capacity) {
-      return res.status(409).json({ error: "This slot is fully booked." });
+    if (slot?.facility_id !== collectionFacilityId) {
+      return res.status(400).json({
+        error:
+          "Drop-off must be at the same facility as the buyer's collection.",
+      });
     }
 
     // Create drop-off booking
