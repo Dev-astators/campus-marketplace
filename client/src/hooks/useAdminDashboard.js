@@ -44,6 +44,7 @@ const initialState = {
   activeSection: "overview",
 
   // Remote data
+  user: null,
   summary: null,
   analytics: null,
   flaggedListings: [],
@@ -150,6 +151,9 @@ function reducer(state, action) {
 
     case "SET_FACILITIES":
       return { ...state, facilities: action.payload };
+
+    case "SET_USER":
+      return { ...state, user: action.payload };
 
     case "SELECT_FACILITY": {
       const fac = action.payload;
@@ -391,6 +395,39 @@ export default function useAdminDashboard() {
     }
   }, []);
 
+  const fetchUser = useCallback(async () => {
+    try {
+      const { data } = await supabase.auth.getSession();
+      if (!data.session) return;
+
+      const authUser = data.session.user;
+      const metadata = authUser.user_metadata ?? {};
+      const fullName =
+        metadata.full_name ||
+        metadata.name ||
+        authUser.email?.split("@")[0] ||
+        "Admin";
+
+      const userData = {
+        name: authUser.email?.split("@")[0] || "Admin",
+        fullName,
+        id: authUser.id,
+        email: authUser.email,
+        role: "administrator",
+        provider: authUser.app_metadata?.provider || "google",
+        createdAt: authUser.created_at,
+        lastSignInAt: authUser.last_sign_in_at,
+        avatarUrl: metadata.avatar_url || metadata.picture || null,
+      };
+
+      if (isMounted.current) {
+        dispatch({ type: "SET_USER", payload: userData });
+      }
+    } catch (err) {
+      console.error("Failed to fetch user:", err);
+    }
+  }, []);
+
   // Bootstrap all data on mount
   useEffect(() => {
     fetchSummary();
@@ -398,12 +435,14 @@ export default function useAdminDashboard() {
     fetchModeration();
     fetchUsers();
     fetchFacilities();
+    fetchUser();
   }, [
     fetchSummary,
     fetchAnalytics,
     fetchModeration,
     fetchUsers,
     fetchFacilities,
+    fetchUser,
   ]);
 
   // ── Derived nav items ──────────────────────────────────────────────────────
@@ -418,6 +457,7 @@ export default function useAdminDashboard() {
       { id: "analytics", label: "Analytics" },
       { id: "users", label: "Users" },
       { id: "settings", label: "Settings" },
+      { id: "profile", label: "Profile" },
     ],
     [pendingModerationCount],
   );
@@ -626,6 +666,9 @@ export default function useAdminDashboard() {
     navItems,
     activeSection: state.activeSection,
     setActiveSection,
+
+    // User
+    user: state.user,
 
     // Summary
     summaryCards,

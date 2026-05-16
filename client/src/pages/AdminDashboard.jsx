@@ -5,6 +5,7 @@ import FacilitySettingsPanel from "../components/adminDashboard/FacilitySettings
 import ModerationPanel from "../components/adminDashboard/ModerationPanel";
 import AnalyticsPanel from "../components/adminDashboard/AnalyticsPanel";
 import UserManagement from "../components/adminDashboard/UserManagement";
+import AdminProfileSettings from "../components/adminDashboard/AdminProfileSettings";
 import useAdminDashboard from "../hooks/useAdminDashboard";
 
 export default function AdminDashboard() {
@@ -12,6 +13,7 @@ export default function AdminDashboard() {
     navItems,
     activeSection,
     setActiveSection,
+    user,
     summaryCards,
 
     facilities,
@@ -100,147 +102,161 @@ export default function AdminDashboard() {
         />
 
         <main className="flex-1 overflow-y-auto px-8 py-6 flex flex-col gap-6">
-          {/* ── Overview heading ─────────────────────────────────────────── */}
-          <section id="overview">
-            <h1 className="text-2xl font-bold text-gray-800">Hello, Admin</h1>
-            <p className="text-sm text-gray-400">
-              Overview of marketplace activity and operations.
-            </p>
-          </section>
-
-          {/* ── Global error banner ──────────────────────────────────────── */}
-          {Object.entries(errors || {}).some(([, msg]) => !!msg) && (
-            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-              <strong>Some data failed to load:</strong>{" "}
-              {Object.entries(errors)
-                .filter(([, msg]) => !!msg)
-                .map(([key, msg]) => `${key}: ${msg}`)
-                .join(" · ")}
-            </div>
-          )}
-
-          {/* ── Summary cards ────────────────────────────────────────────── */}
-          <section className="flex flex-col gap-4">
-            {loadingStates.summary ? (
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                {Array.from({ length: 4 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="h-24 animate-pulse rounded-lg border border-gray-200 bg-gray-100"
-                  />
-                ))}
-              </div>
-            ) : (
-              <AdminSummaryCards cards={summaryCards} />
-            )}
-          </section>
-
-          {/* ── Facility settings ─────────────────────────────────────────── */}
-          {/* Facility selector when there are multiple facilities */}
-          {facilities.length > 1 && (
-            <section className="flex items-center gap-3" id="facility-selector">
-              <label
-                className="text-sm font-medium text-gray-600"
-                htmlFor="facility-select"
-              >
-                Editing facility:
-              </label>
-              <select
-                id="facility-select"
-                value={selectedFacilityId ?? ""}
-                onChange={(e) => selectFacility(e.target.value)}
-                className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-300"
-              >
-                {facilities.map((f) => (
-                  <option key={f.id} value={f.id}>
-                    {f.name} — {f.location}
-                  </option>
-                ))}
-              </select>
+          {/* ── Profile section ───────────────────────────────────────────── */}
+          {activeSection === "profile" && (
+            <section id="profile">
+              <h1 className="text-2xl font-bold text-gray-800 mb-4">Profile</h1>
+              <AdminProfileSettings user={user} />
             </section>
           )}
 
-          <FacilitySettingsPanel
-            settings={facilitySettings}
-            operatingHours={operatingHours}
-            onSettingChange={updateFacilitySetting}
-            onHoursChange={updateOperatingHours}
-            onSave={saveFacilitySettings}
-            lastSavedAt={lastSavedAt}
-            isSaving={savingFacility}
-            isNew={!selectedFacilityId}
-          />
-
-          {/* ── Moderation ────────────────────────────────────────────────── */}
-          {loadingStates.moderation ? (
-            <div className="h-40 animate-pulse rounded-lg border border-gray-200 bg-gray-100" />
-          ) : (
-            <ModerationPanel
-              flaggedListings={flaggedListings}
-              flaggedReviews={flaggedReviews}
-              onResolveListing={resolveListingFlag}
-              onResolveReview={resolveReviewFlag}
-            />
-          )}
-
-          {/* ── Analytics ─────────────────────────────────────────────────── */}
-          {loadingStates.analytics ? (
-            <div className="h-64 animate-pulse rounded-lg border border-gray-200 bg-gray-100" />
-          ) : (
-            <AnalyticsPanel
-              analytics={analytics}
-              onExportCsv={exportCsv}
-              onExportPdf={exportPdf}
-            />
-          )}
-
-          {/* ── User management ───────────────────────────────────────────── */}
-          {loadingStates.users ? (
-            <div className="h-64 animate-pulse rounded-lg border border-gray-200 bg-gray-100" />
-          ) : (
-            <UserManagement
-              users={users}
-              togglingRole={togglingRole}
-              onRoleChange={updateUserRole}
-            />
-          )}
-
-          {/* ── Platform settings ─────────────────────────────────────────── */}
-          <section
-            className="rounded-lg border border-gray-200 bg-white p-6"
-            id="settings"
-          >
-            <header className="flex flex-col gap-2">
-              <h2 className="text-lg font-semibold text-gray-900">
-                Platform Settings
-              </h2>
-              <p className="text-sm text-gray-500">
-                Manage platform-wide preferences and security settings.
+          {/* ── Overview heading ─────────────────────────────────────────── */}
+          {activeSection !== "profile" && (
+            <section id="overview">
+              <h1 className="text-2xl font-bold text-gray-800">Hello, Admin</h1>
+              <p className="text-sm text-gray-400">
+                Overview of marketplace activity and operations.
               </p>
-            </header>
-            <div className="mt-5 grid gap-3">
-              <label className="flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm font-medium text-gray-700 cursor-pointer">
-                <input
-                  type="checkbox"
-                  className="h-4 w-4 text-blue-600"
-                  defaultChecked
+            </section>
+          )}
+
+          {/* ── Global error banner ──────────────────────────────────────── */}
+          {activeSection !== "profile" && (
+            <>
+              {Object.entries(errors || {}).some(([, msg]) => !!msg) && (
+                <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                  <strong>Some data failed to load:</strong>{" "}
+                  {Object.entries(errors)
+                    .filter(([, msg]) => !!msg)
+                    .map(([key, msg]) => `${key}: ${msg}`)
+                    .join(" · ")}
+                </div>
+              )}
+
+              {/* ── Summary cards ────────────────────────────────────────────── */}
+              <section className="flex flex-col gap-4">
+                {loadingStates.summary ? (
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                    {Array.from({ length: 4 }).map((_, i) => (
+                      <div
+                        key={i}
+                        className="h-24 animate-pulse rounded-lg border border-gray-200 bg-gray-100"
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <AdminSummaryCards cards={summaryCards} />
+                )}
+              </section>
+
+              {/* ── Facility settings ─────────────────────────────────────────── */}
+              {/* Facility selector when there are multiple facilities */}
+              {facilities.length > 1 && (
+                <section className="flex items-center gap-3" id="facility-selector">
+                  <label
+                    className="text-sm font-medium text-gray-600"
+                    htmlFor="facility-select"
+                  >
+                    Editing facility:
+                  </label>
+                  <select
+                    id="facility-select"
+                    value={selectedFacilityId ?? ""}
+                    onChange={(e) => selectFacility(e.target.value)}
+                    className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                  >
+                    {facilities.map((f) => (
+                      <option key={f.id} value={f.id}>
+                        {f.name} — {f.location}
+                      </option>
+                    ))}
+                  </select>
+                </section>
+              )}
+
+              <FacilitySettingsPanel
+                settings={facilitySettings}
+                operatingHours={operatingHours}
+                onSettingChange={updateFacilitySetting}
+                onHoursChange={updateOperatingHours}
+                onSave={saveFacilitySettings}
+                lastSavedAt={lastSavedAt}
+                isSaving={savingFacility}
+                isNew={!selectedFacilityId}
+              />
+
+              {/* ── Moderation ────────────────────────────────────────────────── */}
+              {loadingStates.moderation ? (
+                <div className="h-40 animate-pulse rounded-lg border border-gray-200 bg-gray-100" />
+              ) : (
+                <ModerationPanel
+                  flaggedListings={flaggedListings}
+                  flaggedReviews={flaggedReviews}
+                  onResolveListing={resolveListingFlag}
+                  onResolveReview={resolveReviewFlag}
                 />
-                <span>Require student email verification</span>
-              </label>
-              <label className="flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm font-medium text-gray-700 cursor-pointer">
-                <input
-                  type="checkbox"
-                  className="h-4 w-4 text-blue-600"
-                  defaultChecked
+              )}
+
+              {/* ── Analytics ─────────────────────────────────────────────────── */}
+              {loadingStates.analytics ? (
+                <div className="h-64 animate-pulse rounded-lg border border-gray-200 bg-gray-100" />
+              ) : (
+                <AnalyticsPanel
+                  analytics={analytics}
+                  onExportCsv={exportCsv}
+                  onExportPdf={exportPdf}
                 />
-                <span>Enable automated pricing suggestions</span>
-              </label>
-              <label className="flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm font-medium text-gray-700 cursor-pointer">
-                <input type="checkbox" className="h-4 w-4 text-blue-600" />
-                <span>Enable cash shortfall reminders</span>
-              </label>
-            </div>
-          </section>
+              )}
+
+              {/* ── User management ───────────────────────────────────────────── */}
+              {loadingStates.users ? (
+                <div className="h-64 animate-pulse rounded-lg border border-gray-200 bg-gray-100" />
+              ) : (
+                <UserManagement
+                  users={users}
+                  togglingRole={togglingRole}
+                  onRoleChange={updateUserRole}
+                />
+              )}
+
+              {/* ── Platform settings ─────────────────────────────────────────── */}
+              <section
+                className="rounded-lg border border-gray-200 bg-white p-6"
+                id="settings"
+              >
+                <header className="flex flex-col gap-2">
+                  <h2 className="text-lg font-semibold text-gray-900">
+                    Platform Settings
+                  </h2>
+                  <p className="text-sm text-gray-500">
+                    Manage platform-wide preferences and security settings.
+                  </p>
+                </header>
+                <div className="mt-5 grid gap-3">
+                  <label className="flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm font-medium text-gray-700 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 text-blue-600"
+                      defaultChecked
+                    />
+                    <span>Require student email verification</span>
+                  </label>
+                  <label className="flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm font-medium text-gray-700 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 text-blue-600"
+                      defaultChecked
+                    />
+                    <span>Enable automated pricing suggestions</span>
+                  </label>
+                  <label className="flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm font-medium text-gray-700 cursor-pointer">
+                    <input type="checkbox" className="h-4 w-4 text-blue-600" />
+                    <span>Enable cash shortfall reminders</span>
+                  </label>
+                </div>
+              </section>
+            </>
+          )}
         </main>
       </section>
     </section>
