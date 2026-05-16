@@ -24,6 +24,7 @@ export default function StaffDashboard() {
     fullSlots,
     transactionQueue,
     activityLog,
+    selectedDate,
     advanceTransaction,
     loading,
     error,
@@ -81,7 +82,10 @@ export default function StaffDashboard() {
               ) : null}
 
               {showBookingSchedule && !loading ? (
-                <BookingScheduleBoard slots={todaysBookings} />
+                <BookingScheduleBoard
+                  slots={todaysBookings}
+                  selectedDate={selectedDate}
+                />
               ) : null}
 
               {showTransactionFlow && !loading ? (

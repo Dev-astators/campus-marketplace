@@ -76,7 +76,11 @@ const normalizeBookingType = (bookingType) => {
 const normalizeBookingStatus = (bookingStatus) => {
   const normalizedStatus = String(bookingStatus || "").toLowerCase();
 
+<<<<<<< HEAD
   if (normalizedStatus === "scheduled") {
+=======
+  if (["scheduled"].includes(normalizedStatus)) {
+>>>>>>> cb78ea340ad820a3d3570558b90762e1fe808eaf
     return "pending";
   }
 
@@ -84,7 +88,11 @@ const normalizeBookingStatus = (bookingStatus) => {
     return "confirmed";
   }
 
+<<<<<<< HEAD
   if (normalizedStatus === "released") {
+=======
+  if (["released", "completed"].includes(normalizedStatus)) {
+>>>>>>> cb78ea340ad820a3d3570558b90762e1fe808eaf
     return "complete";
   }
 
@@ -94,6 +102,21 @@ const normalizeBookingStatus = (bookingStatus) => {
 const normalizeTransactionStatus = (transactionStatus) => {
   const normalizedStatus = String(transactionStatus || "").toLowerCase();
 
+<<<<<<< HEAD
+=======
+  if (
+    [
+      "item_received",
+      "ready_for_collection",
+      "collection_booked",
+      "buyer_arrived",
+      "cash_confirmed",
+    ].includes(normalizedStatus)
+  ) {
+    return "confirmed";
+  }
+
+>>>>>>> cb78ea340ad820a3d3570558b90762e1fe808eaf
   if (normalizedStatus === "completed") {
     return "complete";
   }
@@ -150,6 +173,7 @@ const getBookingByType = (bookings, bookingType) =>
 const deriveTransactionStage = (transaction, bookings) => {
   const dropOffBooking = getBookingByType(bookings, "dropoff");
   const collectionBooking = getBookingByType(bookings, "collection");
+<<<<<<< HEAD
   const transactionStatus = normalizeTransactionStatus(transaction.status);
   const dropOffStatus = normalizeBookingStatus(dropOffBooking?.status);
   const collectionStatus = normalizeBookingStatus(collectionBooking?.status);
@@ -175,14 +199,46 @@ const deriveTransactionStage = (transaction, bookings) => {
   }
 
   if (buyerArrived) {
+=======
+  const rawTransactionStatus = String(transaction.status || "").toLowerCase();
+  const transactionStatus = normalizeTransactionStatus(transaction.status);
+  const collectionStatus = normalizeBookingStatus(collectionBooking?.status);
+  const dropOffStatus = normalizeBookingStatus(dropOffBooking?.status);
+  const collectionConfirmed =
+    collectionStatus === "confirmed" || collectionStatus === "complete";
+  const dropOffConfirmed =
+    dropOffStatus === "confirmed" || dropOffStatus === "complete";
+
+  if (transactionStatus === "complete" || collectionStatus === "complete") {
+    return "complete";
+  }
+
+  if (
+    (collectionConfirmed && transaction.cash_settled) ||
+    rawTransactionStatus === "cash_confirmed"
+  ) {
+    return "cash_confirmed";
+  }
+
+  if (collectionConfirmed || rawTransactionStatus === "buyer_arrived") {
+>>>>>>> cb78ea340ad820a3d3570558b90762e1fe808eaf
     return "buyer_arrived";
   }
 
   if (
+<<<<<<< HEAD
     dropOffConfirmed ||
     ["item_received", "ready_for_collection", "collection_booked"].includes(
       transactionStatus,
     )
+=======
+    [
+      "item_received",
+      "ready_for_collection",
+      "collection_booked",
+    ].includes(rawTransactionStatus) ||
+    dropOffConfirmed
+>>>>>>> cb78ea340ad820a3d3570558b90762e1fe808eaf
   ) {
     return "collection_booked";
   }
@@ -331,19 +387,27 @@ const buildActivityFeed = ({ slots, bookings, transactions, facility }) => {
     }
 
     const transaction = transactionMap.get(booking.transaction_id);
+    const normalizedBookingStatus = normalizeBookingStatus(booking.status);
     const bookingTypeLabel =
       normalizeBookingType(booking.booking_type) === "dropoff"
         ? "Drop-off"
         : "Collection";
+<<<<<<< HEAD
+=======
+    const bookingActionLabel =
+      normalizedBookingStatus === "complete" ? "completed" : "confirmed";
+>>>>>>> cb78ea340ad820a3d3570558b90762e1fe808eaf
 
     activityEntries.push({
-      id: `${booking.id}-${booking.status || "confirmed"}`,
+      id: `${booking.id}-${normalizedBookingStatus || "confirmed"}`,
       sortValue: new Date(booking.confirmed_at).getTime(),
       time: formatActivityTime(booking.confirmed_at),
-      title: `${bookingTypeLabel} confirmed for ${transaction?.id || "transaction"}`,
+      title: `${bookingTypeLabel} ${bookingActionLabel} for ${transaction?.id || "transaction"}`,
       detail: transaction
-        ? `${transaction.listing?.title || "Item"} was updated by staff at ${facility.name}.`
-        : `${bookingTypeLabel} booking was confirmed by staff.`,
+        ? normalizedBookingStatus === "complete"
+          ? `${transaction.listing?.title || "Item"} completed its facility handoff at ${facility.name}.`
+          : `${transaction.listing?.title || "Item"} was updated by staff at ${facility.name}.`
+        : `${bookingTypeLabel} booking was ${bookingActionLabel} by staff.`,
       audience: "Relevant parties notified",
     });
   }
@@ -438,8 +502,34 @@ const fetchFacilityRecord = async (facilityId) => {
     .maybeSingle();
 };
 
+const fetchSlotsForDate = async (facilityId, selectedDate) =>
+  supabase
+    .from("facility_slots")
+    .select("*")
+    .eq("facility_id", facilityId)
+    .eq("slot_date", selectedDate)
+    .order("slot_time", { ascending: true });
+
+const fetchUpcomingSlots = async (facilityId, fromDate) =>
+  supabase
+    .from("facility_slots")
+    .select("*")
+    .eq("facility_id", facilityId)
+    .gte("slot_date", fromDate)
+    .order("slot_date", { ascending: true })
+    .order("slot_time", { ascending: true })
+    .limit(60);
+
+const fetchBookingsForSlotIds = async (slotIds) =>
+  slotIds.length
+    ? supabase
+        .from("facility_bookings")
+        .select("*")
+        .in("slot_id", slotIds)
+    : { data: [], error: null };
+
 const getFacilityDashboard = async (
-  selectedDate = getTodayInJohannesburg(),
+  selectedDate,
   facilityId,
   userRole = "facility_staff",
 ) => {
@@ -472,6 +562,8 @@ const getFacilityDashboard = async (
   }
 
   if (!facility) {
+    const fallbackDate = selectedDate || getTodayInJohannesburg();
+
     return {
       data: {
         facility: null,
@@ -486,33 +578,72 @@ const getFacilityDashboard = async (
           pendingTransactions: 0,
           completedTransactions: 0,
         },
-        selectedDate,
+        selectedDate: fallbackDate,
       },
       error: null,
     };
   }
 
-  const { data: slots, error: slotsError } = await supabase
-    .from("facility_slots")
-    .select("*")
-    .eq("facility_id", facility.id)
-    .eq("slot_date", selectedDate)
-    .order("slot_time", { ascending: true });
+  const requestedDate = selectedDate;
+  const fallbackDate = getTodayInJohannesburg();
+  let resolvedDate = requestedDate || fallbackDate;
+  let slots = [];
+  let bookings = [];
 
-  if (slotsError) {
-    return { data: null, error: slotsError };
-  }
+  if (requestedDate) {
+    const { data: dateSlots, error: slotsError } = await fetchSlotsForDate(
+      facility.id,
+      requestedDate,
+    );
 
-  const slotIds = (slots || []).map((slot) => slot.id);
-  const { data: bookings, error: bookingsError } = slotIds.length
-    ? await supabase
-        .from("facility_bookings")
-        .select("*")
-        .in("slot_id", slotIds)
-    : { data: [], error: null };
+    if (slotsError) {
+      return { data: null, error: slotsError };
+    }
 
-  if (bookingsError) {
-    return { data: null, error: bookingsError };
+    slots = dateSlots || [];
+
+    const { data: dateBookings, error: bookingsError } =
+      await fetchBookingsForSlotIds(slots.map((slot) => slot.id));
+
+    if (bookingsError) {
+      return { data: null, error: bookingsError };
+    }
+
+    bookings = dateBookings || [];
+  } else {
+    const { data: upcomingSlots, error: slotsError } = await fetchUpcomingSlots(
+      facility.id,
+      fallbackDate,
+    );
+
+    if (slotsError) {
+      return { data: null, error: slotsError };
+    }
+
+    const allUpcomingSlots = upcomingSlots || [];
+    const { data: upcomingBookings, error: bookingsError } =
+      await fetchBookingsForSlotIds(allUpcomingSlots.map((slot) => slot.id));
+
+    if (bookingsError) {
+      return { data: null, error: bookingsError };
+    }
+
+    const allUpcomingBookings = upcomingBookings || [];
+    const bookedSlotIds = new Set(
+      allUpcomingBookings.map((booking) => booking.slot_id),
+    );
+    const firstRelevantSlot =
+      allUpcomingSlots.find((slot) => bookedSlotIds.has(slot.id)) ||
+      allUpcomingSlots[0] ||
+      null;
+
+    resolvedDate = firstRelevantSlot?.slot_date || fallbackDate;
+    slots = allUpcomingSlots.filter((slot) => slot.slot_date === resolvedDate);
+
+    const visibleSlotIds = new Set(slots.map((slot) => slot.id));
+    bookings = allUpcomingBookings.filter((booking) =>
+      visibleSlotIds.has(booking.slot_id),
+    );
   }
 
   const transactionIds = [...new Set((bookings || []).map((booking) => booking.transaction_id))];
@@ -588,14 +719,14 @@ const getFacilityDashboard = async (
         transactions: transactions || [],
         facility: normalizedFacility,
       }),
-      metrics: {
-        totalCapacity,
-        totalBookedSlots,
-        fullSlots,
-        pendingTransactions,
-        completedTransactions,
-      },
-      selectedDate,
+        metrics: {
+          totalCapacity,
+          totalBookedSlots,
+          fullSlots,
+          pendingTransactions,
+          completedTransactions,
+        },
+      selectedDate: resolvedDate,
     },
     error: null,
   };
@@ -658,6 +789,12 @@ const updateBookingConfirmation = async (bookingId, nextStatus, staffIdentifier)
     })
     .eq("id", bookingId);
 
+const updateTransactionRecord = async (transactionId, updates) =>
+  supabase
+    .from("transactions")
+    .update(updates)
+    .eq("id", transactionId);
+
 const advanceFacilityTransaction = async ({
   transactionId,
   action,
@@ -687,6 +824,15 @@ const advanceFacilityTransaction = async ({
   const collectionBooking = bookings.find(
     (booking) => normalizeBookingType(booking.booking_type) === "collection",
   );
+  const dropOffConfirmed =
+    normalizeBookingStatus(dropOffBooking?.status) === "confirmed" ||
+    normalizeBookingStatus(dropOffBooking?.status) === "complete";
+  const collectionConfirmed =
+    normalizeBookingStatus(collectionBooking?.status) === "confirmed" ||
+    normalizeBookingStatus(collectionBooking?.status) === "complete";
+  const cashAlreadySatisfied =
+    Boolean(transaction.cash_settled) ||
+    Number(transaction.cash_shortfall || 0) <= 0;
 
   if (userRole === "facility_staff" && !facilityId) {
     return {
@@ -730,6 +876,17 @@ const advanceFacilityTransaction = async ({
       return { data: null, error: bookingError };
     }
 
+<<<<<<< HEAD
+=======
+    const { error: transactionUpdateError } = await updateTransactionRecord(
+      transactionId,
+      { status: "confirmed" },
+    );
+
+    if (transactionUpdateError) {
+      return { data: null, error: transactionUpdateError };
+    }
+>>>>>>> cb78ea340ad820a3d3570558b90762e1fe808eaf
   }
 
   if (action === "confirm_buyer_arrival") {
@@ -737,6 +894,16 @@ const advanceFacilityTransaction = async ({
       return {
         data: null,
         error: new Error("No collection booking is linked to this transaction"),
+      };
+    }
+
+    if (!dropOffConfirmed) {
+      return {
+        data: null,
+        error: createServiceError(
+          "Item receipt must be confirmed before buyer arrival can be recorded.",
+          400,
+        ),
       };
     }
 
@@ -750,15 +917,42 @@ const advanceFacilityTransaction = async ({
       return { data: null, error: bookingError };
     }
 
+<<<<<<< HEAD
+=======
+    const { error: transactionUpdateError } = await updateTransactionRecord(
+      transactionId,
+      { status: "confirmed" },
+    );
+
+    if (transactionUpdateError) {
+      return { data: null, error: transactionUpdateError };
+    }
+>>>>>>> cb78ea340ad820a3d3570558b90762e1fe808eaf
   }
 
   if (action === "confirm_cash_handoff") {
-    const { error: transactionUpdateError } = await supabase
-      .from("transactions")
-      .update({
+    if (!collectionConfirmed) {
+      return {
+        data: null,
+        error: createServiceError(
+          "Buyer arrival must be confirmed before cash handoff can be recorded.",
+          400,
+        ),
+      };
+    }
+
+    const { error: transactionUpdateError } = await updateTransactionRecord(
+      transactionId,
+      {
         cash_settled: true,
+<<<<<<< HEAD
       })
       .eq("id", transactionId);
+=======
+        status: "confirmed",
+      },
+    );
+>>>>>>> cb78ea340ad820a3d3570558b90762e1fe808eaf
 
     if (transactionUpdateError) {
       return { data: null, error: transactionUpdateError };
@@ -773,6 +967,26 @@ const advanceFacilityTransaction = async ({
       };
     }
 
+    if (!collectionConfirmed) {
+      return {
+        data: null,
+        error: createServiceError(
+          "Buyer arrival must be confirmed before the item can be released.",
+          400,
+        ),
+      };
+    }
+
+    if (!cashAlreadySatisfied) {
+      return {
+        data: null,
+        error: createServiceError(
+          "Cash handoff must be confirmed before releasing the item.",
+          400,
+        ),
+      };
+    }
+
     const { error: bookingError } = await updateBookingConfirmation(
       collectionBooking.id,
       "complete",
@@ -783,12 +997,22 @@ const advanceFacilityTransaction = async ({
       return { data: null, error: bookingError };
     }
 
+<<<<<<< HEAD
     const { error: transactionUpdateError } = await supabase
       .from("transactions")
       .update({
         status: "complete",
       })
       .eq("id", transactionId);
+=======
+    const { error: transactionUpdateError } = await updateTransactionRecord(
+      transactionId,
+      {
+        cash_settled: true,
+        status: "complete",
+      },
+    );
+>>>>>>> cb78ea340ad820a3d3570558b90762e1fe808eaf
 
     if (transactionUpdateError) {
       return { data: null, error: transactionUpdateError };

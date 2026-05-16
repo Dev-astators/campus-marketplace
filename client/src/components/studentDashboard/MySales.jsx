@@ -2,24 +2,23 @@
 // Seller sees all their completed sales and can book a drop-off slot
 // at the same facility the buyer chose for collection.
 import { useEffect, useState } from "react";
-
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
+import { API_BASE_URL } from "../../config/apiBaseUrl";
 
 const STATUS_STYLES = {
-  pending:   "bg-yellow-100 text-yellow-700",
+  pending: "bg-yellow-100 text-yellow-700",
   confirmed: "bg-blue-100 text-blue-700",
-  complete:  "bg-green-100 text-green-700",
+  complete: "bg-green-100 text-green-700",
   cancelled: "bg-red-100 text-red-700",
 };
 
 export default function MySales({ profileId }) {
-  const [sales, setSales]             = useState([]);
-  const [loading, setLoading]         = useState(true);
-  const [error, setError]             = useState(null);
+  const [sales, setSales] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   // Drop-off booking modal state
-  const [bookingTx, setBookingTx]     = useState(null); // transaction being booked
-  const [slots, setSlots]             = useState([]);
+  const [bookingTx, setBookingTx] = useState(null); // transaction being booked
+  const [slots, setSlots] = useState([]);
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [bookingError, setBookingError] = useState(null);
@@ -27,7 +26,9 @@ export default function MySales({ profileId }) {
 
   const fetchSales = async () => {
     try {
-      const res  = await fetch(`${API_URL}/api/payments/my-sales/${profileId}`);
+      const res = await fetch(
+        `${API_BASE_URL}/api/payments/my-sales/${profileId}`,
+      );
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setSales(Array.isArray(data) ? data : []);
@@ -37,7 +38,7 @@ export default function MySales({ profileId }) {
       setLoading(false);
     }
   };
-  
+
   useEffect(() => {
     if (!profileId) return;
 
@@ -45,7 +46,9 @@ export default function MySales({ profileId }) {
 
     const loadSales = async () => {
       try {
-        const res  = await fetch(`${API_URL}/api/payments/my-sales/${profileId}`);
+        const res = await fetch(
+          `${API_BASE_URL}/api/payments/my-sales/${profileId}`,
+        );
         const data = await res.json();
         if (!res.ok) throw new Error(data.error);
         if (!cancelled) setSales(Array.isArray(data) ? data : []);
@@ -63,8 +66,6 @@ export default function MySales({ profileId }) {
     };
   }, [profileId]);
 
-  
-
   // Opens the drop-off booking modal for a given transaction.
   // Loads slots for the SAME facility the buyer chose for collection.
   const openDropoffBooking = async (tx) => {
@@ -76,16 +77,22 @@ export default function MySales({ profileId }) {
 
     try {
       // Find the buyer's collection booking to get the facility
-      const collectionBooking = tx.facility_bookings?.find(b => b.booking_type === "collection");
+      const collectionBooking = tx.facility_bookings?.find(
+        (b) => b.booking_type === "collection",
+      );
       const facilityId = collectionBooking?.facility_slots?.facility_id;
 
       if (!facilityId) {
-        setBookingError("Could not determine the facility. The buyer may not have booked a collection slot yet.");
+        setBookingError(
+          "Could not determine the facility. The buyer may not have booked a collection slot yet.",
+        );
         setLoadingSlots(false);
         return;
       }
 
-      const res  = await fetch(`${API_URL}/api/payments/slots/${facilityId}?type=drop_off`);
+      const res = await fetch(
+        `${API_BASE_URL}/api/payments/slots/${facilityId}?type=drop_off`,
+      );
       const data = await res.json();
       setSlots(Array.isArray(data) ? data : []);
     } catch {
@@ -101,13 +108,13 @@ export default function MySales({ profileId }) {
     setBookingError(null);
 
     try {
-      const res = await fetch(`${API_URL}/api/payments/book-dropoff`, {
-        method:  "POST",
+      const res = await fetch(`${API_BASE_URL}/api/payments/book-dropoff`, {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           transactionId: bookingTx.id,
-          slotId:        selectedSlot,
-          sellerId:      profileId,
+          slotId: selectedSlot,
+          sellerId: profileId,
         }),
       });
 
@@ -117,7 +124,7 @@ export default function MySales({ profileId }) {
         setBookingError(data.error || "Booking failed.");
       } else {
         setBookingTx(null); // close modal
-        fetchSales();       // refresh list to show drop-off booked
+        fetchSales(); // refresh list to show drop-off booked
       }
     } catch {
       setBookingError("Something went wrong. Please try again.");
@@ -126,11 +133,15 @@ export default function MySales({ profileId }) {
     }
   };
 
-  if (loading) return <p className="text-sm text-slate-400 py-4">Loading sales…</p>;
-  if (error)   return <p className="text-sm text-red-500 py-4">Error: {error}</p>;
-  if (sales.length === 0) return (
-    <p className="text-sm text-slate-400 py-4">You haven't sold anything yet.</p>
-  );
+  if (loading)
+    return <p className="text-sm text-slate-400 py-4">Loading sales…</p>;
+  if (error) return <p className="text-sm text-red-500 py-4">Error: {error}</p>;
+  if (sales.length === 0)
+    return (
+      <p className="text-sm text-slate-400 py-4">
+        You haven't sold anything yet.
+      </p>
+    );
 
   return (
     <section aria-label="My Sales">
@@ -138,19 +149,28 @@ export default function MySales({ profileId }) {
 
       <ul className="flex flex-col gap-4 list-none p-0 m-0">
         {sales.map((tx) => {
-          const collection = tx.facility_bookings?.find(b => b.booking_type === "collection");
-          const dropoff    = tx.facility_bookings?.find(b => b.booking_type === "drop_off");
-          const collSlot   = collection?.facility_slots;
-          const dropSlot   = dropoff?.facility_slots;
-          const facility   = collSlot?.trade_facilities;
+          const collection = tx.facility_bookings?.find(
+            (b) => b.booking_type === "collection",
+          );
+          const dropoff = tx.facility_bookings?.find(
+            (b) => b.booking_type === "drop_off",
+          );
+          const collSlot = collection?.facility_slots;
+          const dropSlot = dropoff?.facility_slots;
+          const facility = collSlot?.trade_facilities;
 
           return (
-            <li key={tx.id} className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+            <li
+              key={tx.id}
+              className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm"
+            >
               <header className="flex items-start justify-between gap-3 mb-3">
                 <h3 className="font-semibold text-[#0D1B4B] text-sm">
                   {tx.listings?.title || "Unknown item"}
                 </h3>
-                <mark className={`text-xs font-semibold px-2 py-1 rounded-full capitalize ${STATUS_STYLES[tx.status] || "bg-slate-100 text-slate-600"}`}>
+                <mark
+                  className={`text-xs font-semibold px-2 py-1 rounded-full capitalize ${STATUS_STYLES[tx.status] || "bg-slate-100 text-slate-600"}`}
+                >
                   {tx.status}
                 </mark>
               </header>
@@ -174,9 +194,13 @@ export default function MySales({ profileId }) {
 
                 <dt className="font-medium text-slate-400">Your drop-off</dt>
                 <dd>
-                  {dropSlot
-                    ? `${new Date(dropSlot.slot_date).toDateString()} · ${dropSlot.slot_time?.slice(0, 5)}`
-                    : <span className="text-orange-500 font-medium">Not booked yet</span>}
+                  {dropSlot ? (
+                    `${new Date(dropSlot.slot_date).toDateString()} · ${dropSlot.slot_time?.slice(0, 5)}`
+                  ) : (
+                    <span className="text-orange-500 font-medium">
+                      Not booked yet
+                    </span>
+                  )}
                 </dd>
               </dl>
 
@@ -193,7 +217,8 @@ export default function MySales({ profileId }) {
 
               {dropoff && (
                 <p className="text-xs text-green-600 font-semibold text-center">
-                  ✅ Drop-off booked — bring the item to the facility at your slot time
+                  ✅ Drop-off booked — bring the item to the facility at your
+                  slot time
                 </p>
               )}
             </li>
@@ -211,10 +236,13 @@ export default function MySales({ profileId }) {
         >
           <article className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-md">
             <header className="mb-4">
-              <h2 className="text-lg font-bold text-[#0D1B4B]">Book Drop-off Slot</h2>
+              <h2 className="text-lg font-bold text-[#0D1B4B]">
+                Book Drop-off Slot
+              </h2>
               <p className="text-sm text-slate-500 mt-1">
-                Choose a slot to drop off <strong>{bookingTx.listings?.title}</strong>.
-                Must be before the buyer's collection time.
+                Choose a slot to drop off{" "}
+                <strong>{bookingTx.listings?.title}</strong>. Must be before the
+                buyer's collection time.
               </p>
             </header>
 
@@ -225,7 +253,9 @@ export default function MySales({ profileId }) {
             )}
 
             {loadingSlots ? (
-              <p className="text-sm text-slate-400 text-center py-4">Loading slots…</p>
+              <p className="text-sm text-slate-400 text-center py-4">
+                Loading slots…
+              </p>
             ) : (
               <fieldset className="border-0 p-0 m-0">
                 <legend className="text-sm font-semibold text-[#0D1B4B] mb-2">
@@ -239,7 +269,8 @@ export default function MySales({ profileId }) {
                   )}
                   {slots.map((slot) => (
                     <li key={slot.id}>
-                      <label className={`flex items-center justify-between px-4 py-3 rounded-xl border-[1.5px] cursor-pointer transition-colors
+                      <label
+                        className={`flex items-center justify-between px-4 py-3 rounded-xl border-[1.5px] cursor-pointer transition-colors
                         ${selectedSlot === slot.id ? "border-[#1C3FAA] bg-blue-50" : "border-slate-200 hover:border-slate-300"}`}
                       >
                         <input
@@ -251,7 +282,8 @@ export default function MySales({ profileId }) {
                           className="sr-only"
                         />
                         <span className="text-sm font-medium text-[#0D1B4B]">
-                          {new Date(slot.slot_date).toDateString()} · {slot.slot_time?.slice(0, 5)}
+                          {new Date(slot.slot_date).toDateString()} ·{" "}
+                          {slot.slot_time?.slice(0, 5)}
                         </span>
                         <span className="text-xs text-slate-400">
                           {slot.capacity - slot.booked_count} left

@@ -1,10 +1,12 @@
 // client/src/pages/PaymentPage.jsx
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useCallback, useEffect, useState, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "../config/supabaseClient";
 
+
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
-const IS_DEV = import.meta.env.DEV;
+// Drives whether to call confirm-dev (sandbox) or poll for ITN (production)
+const IS_SANDBOX = import.meta.env.VITE_PAYFAST_SANDBOX === "true";
 
 export default function PaymentPage({ result }) {
   const [searchParams] = useSearchParams();
@@ -25,7 +27,7 @@ export default function PaymentPage({ result }) {
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [loadingBooking, setLoadingBooking] = useState(false);
 
-  // ── Fetch active trade facilities from DB ────────────────────────────────
+  // ── Fetch slots for a given facility ────────────────────────────────────
   const fetchSlots = useCallback(async (facilityId) => {
     setLoadingSlots(true);
     setSlots([]);
@@ -43,6 +45,7 @@ export default function PaymentPage({ result }) {
     }
   }, []);
 
+  // ── Fetch active trade facilities from DB ────────────────────────────────
   const fetchFacilities = useCallback(async () => {
     setLoadingFacilities(true);
     try {
@@ -62,10 +65,13 @@ export default function PaymentPage({ result }) {
     }
   }, [fetchSlots]);
 
-  const handleFacilityChange = (facilityId) => {
-    setSelectedFacility(facilityId);
-    fetchSlots(facilityId);
-  };
+  const handleFacilityChange = useCallback(
+    (facilityId) => {
+      setSelectedFacility(facilityId);
+      fetchSlots(facilityId);
+    },
+    [fetchSlots],
+  );
 
   // ── Main effect: confirm then show slots ─────────────────────────────────
   useEffect(() => {
@@ -75,7 +81,7 @@ export default function PaymentPage({ result }) {
 
     const run = async () => {
       try {
-        if (IS_DEV) {
+        if (IS_SANDBOX) {
           // Sandbox: auto-call confirm-dev so DB is updated immediately.
           // In production this is handled by the PayFast ITN webhook instead.
           const confirmRes = await fetch(

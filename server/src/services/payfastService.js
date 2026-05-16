@@ -3,7 +3,10 @@ const crypto = require("crypto");
 
 const PAYFAST_SANDBOX_URL = "https://sandbox.payfast.co.za/eng/process";
 const PAYFAST_LIVE_URL    = "https://www.payfast.co.za/eng/process";
-const IS_SANDBOX = process.env.NODE_ENV !== "production";
+// Decouple sandbox mode from NODE_ENV so you can run production infra
+// with sandbox PayFast credentials during testing.
+// Set PAYFAST_SANDBOX=true in Azure env vars to use sandbox, false for live.
+const IS_SANDBOX = process.env.PAYFAST_SANDBOX === "true";
 
 /**
  * PHP-style urlencode — PayFast is built in PHP and expects spaces as '+'

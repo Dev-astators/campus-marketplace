@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useReducer, useRef } from "react";
 import { supabase } from "../config/supabaseClient";
+import { API_BASE_URL } from "../config/apiBaseUrl";
 
 // ─── API base URL ─────────────────────────────────────────────────────────────
-const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api";
+const API_BASE = `${API_BASE_URL}/api`;
 
 const getAuthHeaders = async () => {
   const {
@@ -43,6 +44,7 @@ const initialState = {
   activeSection: "overview",
 
   // Remote data
+  user: null,
   summary: null,
   analytics: null,
   flaggedListings: [],
@@ -150,6 +152,9 @@ function reducer(state, action) {
     case "SET_FACILITIES":
       return { ...state, facilities: action.payload };
 
+    case "SET_USER":
+      return { ...state, user: action.payload };
+
     case "SELECT_FACILITY": {
       const fac = action.payload;
       // Normalise operating_hours from DB to the array shape the panel expects
@@ -249,7 +254,9 @@ const buildCsv = (rows) => {
   const headers = Object.keys(rows[0]);
   const escape = (v) => {
     const s = String(v ?? "");
-    return s.includes(",") || s.includes("\n") ? `"${s.replace(/"/g, '""')}"` : s;
+    return s.includes(",") || s.includes("\n")
+      ? `"${s.replace(/"/g, '""')}"`
+      : s;
   };
   return [
     headers.join(","),
@@ -308,7 +315,9 @@ export default function useAdminDashboard() {
 
   useEffect(() => {
     isMounted.current = true;
-    return () => { isMounted.current = false; };
+    return () => {
+      isMounted.current = false;
+    };
   }, []);
 
   // ── Fetch helpers ──────────────────────────────────────────────────────────
@@ -386,6 +395,39 @@ export default function useAdminDashboard() {
     }
   }, []);
 
+  const fetchUser = useCallback(async () => {
+    try {
+      const { data } = await supabase.auth.getSession();
+      if (!data.session) return;
+
+      const authUser = data.session.user;
+      const metadata = authUser.user_metadata ?? {};
+      const fullName =
+        metadata.full_name ||
+        metadata.name ||
+        authUser.email?.split("@")[0] ||
+        "Admin";
+
+      const userData = {
+        name: authUser.email?.split("@")[0] || "Admin",
+        fullName,
+        id: authUser.id,
+        email: authUser.email,
+        role: "administrator",
+        provider: authUser.app_metadata?.provider || "google",
+        createdAt: authUser.created_at,
+        lastSignInAt: authUser.last_sign_in_at,
+        avatarUrl: metadata.avatar_url || metadata.picture || null,
+      };
+
+      if (isMounted.current) {
+        dispatch({ type: "SET_USER", payload: userData });
+      }
+    } catch (err) {
+      console.error("Failed to fetch user:", err);
+    }
+  }, []);
+
   // Bootstrap all data on mount
   useEffect(() => {
     fetchSummary();
@@ -393,7 +435,15 @@ export default function useAdminDashboard() {
     fetchModeration();
     fetchUsers();
     fetchFacilities();
-  }, [fetchSummary, fetchAnalytics, fetchModeration, fetchUsers, fetchFacilities]);
+    fetchUser();
+  }, [
+    fetchSummary,
+    fetchAnalytics,
+    fetchModeration,
+    fetchUsers,
+    fetchFacilities,
+    fetchUser,
+  ]);
 
   // ── Derived nav items ──────────────────────────────────────────────────────
   const pendingModerationCount =
@@ -407,6 +457,7 @@ export default function useAdminDashboard() {
       { id: "analytics", label: "Analytics" },
       { id: "users", label: "Users" },
       { id: "settings", label: "Settings" },
+      { id: "profile", label: "Profile" },
     ],
     [pendingModerationCount],
   );
@@ -496,11 +547,7 @@ export default function useAdminDashboard() {
       dispatch({ type: "FACILITY_SAVE_ERROR" });
       console.error("Failed to save facility settings:", err.message);
     }
-  }, [
-    state.facilitySettings,
-    state.operatingHours,
-    state.selectedFacilityId,
-  ]);
+  }, [state.facilitySettings, state.operatingHours, state.selectedFacilityId]);
 
   const selectFacility = useCallback(
     (facilityId) => {
@@ -510,34 +557,40 @@ export default function useAdminDashboard() {
     [state.facilities],
   );
 
-  const resolveListingFlag = useCallback(async (id) => {
-    // Optimistic update
-    dispatch({ type: "RESOLVE_LISTING", id });
-    try {
-      await apiFetch(`/admin/moderation/listings/${id}/resolve`, {
-        method: "PATCH",
-      });
-      // Refresh summary badge
-      fetchSummary();
-    } catch (err) {
-      // Roll back on failure
-      fetchModeration();
-      console.error("Failed to resolve listing flag:", err.message);
-    }
-  }, [fetchModeration, fetchSummary]);
+  const resolveListingFlag = useCallback(
+    async (id) => {
+      // Optimistic update
+      dispatch({ type: "RESOLVE_LISTING", id });
+      try {
+        await apiFetch(`/admin/moderation/listings/${id}/resolve`, {
+          method: "PATCH",
+        });
+        // Refresh summary badge
+        fetchSummary();
+      } catch (err) {
+        // Roll back on failure
+        fetchModeration();
+        console.error("Failed to resolve listing flag:", err.message);
+      }
+    },
+    [fetchModeration, fetchSummary],
+  );
 
-  const resolveReviewFlag = useCallback(async (id) => {
-    dispatch({ type: "RESOLVE_REVIEW", id });
-    try {
-      await apiFetch(`/admin/moderation/reviews/${id}/resolve`, {
-        method: "PATCH",
-      });
-      fetchSummary();
-    } catch (err) {
-      fetchModeration();
-      console.error("Failed to resolve review flag:", err.message);
-    }
-  }, [fetchModeration, fetchSummary]);
+  const resolveReviewFlag = useCallback(
+    async (id) => {
+      dispatch({ type: "RESOLVE_REVIEW", id });
+      try {
+        await apiFetch(`/admin/moderation/reviews/${id}/resolve`, {
+          method: "PATCH",
+        });
+        fetchSummary();
+      } catch (err) {
+        fetchModeration();
+        console.error("Failed to resolve review flag:", err.message);
+      }
+    },
+    [fetchModeration, fetchSummary],
+  );
 
   const updateUserRole = useCallback(async (userId, newRole) => {
     dispatch({ type: "TOGGLING_ROLE", userId });
@@ -585,10 +638,22 @@ export default function useAdminDashboard() {
   const exportPdf = useCallback(
     (reportId) => {
       const configs = {
-        categories: { title: "Popular Categories", rows: analytics.popularCategories },
-        transactions: { title: "Transactions Over Time", rows: analytics.transactionsOverTime },
-        utilization: { title: "Facility Utilisation", rows: [analytics.facilityUtilization] },
-        moderation: { title: "Flagged Content Summary", rows: [analytics.flaggedSummary] },
+        categories: {
+          title: "Popular Categories",
+          rows: analytics.popularCategories,
+        },
+        transactions: {
+          title: "Transactions Over Time",
+          rows: analytics.transactionsOverTime,
+        },
+        utilization: {
+          title: "Facility Utilisation",
+          rows: [analytics.facilityUtilization],
+        },
+        moderation: {
+          title: "Flagged Content Summary",
+          rows: [analytics.flaggedSummary],
+        },
       };
       const config = configs[reportId];
       if (config?.rows?.length) openPrintWindow(config.title, config.rows);
@@ -601,6 +666,9 @@ export default function useAdminDashboard() {
     navItems,
     activeSection: state.activeSection,
     setActiveSection,
+
+    // User
+    user: state.user,
 
     // Summary
     summaryCards,

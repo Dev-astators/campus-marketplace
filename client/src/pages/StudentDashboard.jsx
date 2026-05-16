@@ -13,8 +13,7 @@ import ProfileSettings from "../components/studentDashboard/ProfileSettings";
 import MyPurchases from "../components/studentDashboard/MyPurchases";
 import MySales from "../components/studentDashboard/MySales";
 import InAppNotifications from "../components/studentDashboard/InAppNotifications";
-
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
+import { API_BASE_URL } from "../config/apiBaseUrl";
 
 // Tabs that don't use the marketplace listings feed at all
 const NON_LISTING_TABS = [
@@ -63,7 +62,7 @@ export default function StudentDashboard() {
     const fetchUnread = async () => {
       try {
         const res = await fetch(
-          `${API_URL}/api/payments/notifications/${user.profileId}`,
+          `${API_BASE_URL}/api/payments/notifications/${user.profileId}`,
         );
         const data = await res.json();
         const count = Array.isArray(data)
