@@ -318,8 +318,8 @@ describe("facilityDashboardService", () => {
 
       expect(data.metrics).toEqual({
         totalCapacity: 20,
-        totalBookedSlots: 16,
-        fullSlots: 1,
+        totalBookedSlots: 2,
+        fullSlots: 0,
         pendingTransactions: 1,
         completedTransactions: 1,
       });
@@ -329,15 +329,20 @@ describe("facilityDashboardService", () => {
         expect.objectContaining({
           id: "slot-1",
           time: "09:00",
-          booked: 10,
+          booked: 1,
           capacity: 10,
-          availabilityLabel: "Full",
-          status: "Full",
+          availabilityLabel: "9 left",
+          status: "Open",
           dropOffCount: 1,
-          collectionCount: 1,
-          bookingSummary: "1 drop-off, 1 collection",
-          leadTransactionId: "tx-1",
-          leadItemTitle: "Laptop",
+          collectionCount: 0,
+          bookingSummary: "1 drop-off, 0 collection",
+          linkedTransactions: [
+            {
+              id: "tx-1",
+              itemTitle: "Laptop",
+              bookingType: "dropoff",
+            },
+          ],
           facilityName: "Wits Exchange Hub",
         }),
       );
@@ -375,10 +380,10 @@ describe("facilityDashboardService", () => {
         expect.arrayContaining([
           "Drop-off confirmed for tx-1",
           "Collection completed for tx-2",
-          "09:00 slot reached capacity",
           "Transaction completed for tx-2",
         ]),
       );
+      expect(activityTitles).not.toContain("09:00 slot reached capacity");
     });
 
     test("Given no explicit date and future bookings exist, when fetched, then the dashboard resolves to the earliest upcoming booked date", async () => {

@@ -43,7 +43,7 @@ router.post(
   requireRole("facility_staff", "admin"),
   async (req, res) => {
     const { transactionId } = req.params;
-    const { action } = req.body;
+    const { action, selectedDate } = req.body;
 
     const validActions = [
       "confirm_dropoff",
@@ -65,6 +65,7 @@ router.post(
     const { data, error } = await advanceFacilityTransaction({
       transactionId,
       action,
+      selectedDate,
       staffIdentifier: req.profile.full_name || req.profile.id,
       facilityId: req.profile.facility_id,
       userRole: req.userRole,

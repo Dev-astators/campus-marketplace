@@ -23,8 +23,10 @@ export default function StaffDashboard() {
     pendingTransactions,
     fullSlots,
     transactionQueue,
+    confirmedTransactionQueue,
     activityLog,
     selectedDate,
+    changeSelectedDate,
     advanceTransaction,
     loading,
     error,
@@ -34,7 +36,13 @@ export default function StaffDashboard() {
   const showFacilityOverview = activeNav === "bookings";
   const showBookingSchedule = activeNav === "bookings" || activeNav === "meetups";
   const showTransactionFlow =
-    activeNav === "bookings" || activeNav === "verification";
+    activeNav === "bookings" ||
+    activeNav === "verification" ||
+    activeNav === "confirmed";
+  const showingConfirmedTransactions = activeNav === "confirmed";
+  const visibleTransactions = showingConfirmedTransactions
+    ? confirmedTransactionQueue
+    : transactionQueue;
 
   return (
     <section className="flex min-h-screen overflow-hidden bg-slate-50  text-slate-900">
@@ -85,14 +93,36 @@ export default function StaffDashboard() {
                 <BookingScheduleBoard
                   slots={todaysBookings}
                   selectedDate={selectedDate}
+                  onDateChange={changeSelectedDate}
                 />
               ) : null}
 
               {showTransactionFlow && !loading ? (
                 <TransactionFlowPanel
-                  transactions={transactionQueue}
+                  transactions={visibleTransactions}
+                  selectedDate={selectedDate}
                   onAdvance={advanceTransaction}
                   actionLoadingId={actionLoadingId}
+                  eyebrow={
+                    showingConfirmedTransactions
+                      ? "Confirmed transactions"
+                      : "Transaction flow"
+                  }
+                  title={
+                    showingConfirmedTransactions
+                      ? "Archived facility handoffs"
+                      : "End-to-end handoff queue"
+                  }
+                  description={
+                    showingConfirmedTransactions
+                      ? "Completed and released transactions are grouped here so active staff work stays focused on pending handoffs."
+                      : "Staff actions below move a transaction from accepted booking to completed collection, while keeping a visible trail of receipt and release confirmations."
+                  }
+                  emptyMessage={
+                    showingConfirmedTransactions
+                      ? "No confirmed transactions are archived for the selected day yet."
+                      : "No booked facility transactions are available for staff action yet."
+                  }
                 />
               ) : null}
             </section>

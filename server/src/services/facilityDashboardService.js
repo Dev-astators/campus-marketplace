@@ -154,6 +154,12 @@ const createSlotStatus = (booked, capacity) => {
   return "Open";
 };
 
+const countBookingsBySlotId = (bookings) =>
+  bookings.reduce((counts, booking) => {
+    counts[booking.slot_id] = (counts[booking.slot_id] || 0) + 1;
+    return counts;
+  }, {});
+
 const getBookingByType = (bookings, bookingType) =>
   bookings.find(
     (booking) => normalizeBookingType(booking.bookingType) === bookingType,
@@ -220,12 +226,23 @@ const mapSlotRecord = (slot, facility, bookings, transactionMap) => {
   const collectionCount = slotBookings.filter(
     (booking) => normalizeBookingType(booking.booking_type) === "collection",
   ).length;
-  const booked = Number(slot.booked_count ?? slotBookings.length ?? 0);
+  const booked = slotBookings.length;
   const capacity = Number(slot.capacity || 0);
-  const leadBooking = slotBookings[0] || null;
-  const leadTransaction = leadBooking
-    ? transactionMap.get(leadBooking.transaction_id)
-    : null;
+  const linkedTransactions = slotBookings
+    .map((booking) => {
+      const transaction = transactionMap.get(booking.transaction_id);
+
+      if (!transaction) {
+        return null;
+      }
+
+      return {
+        id: transaction.id,
+        itemTitle: transaction.listing?.title || "Listing unavailable",
+        bookingType: normalizeBookingType(booking.booking_type),
+      };
+    })
+    .filter(Boolean);
 
   return {
     id: slot.id,
@@ -234,13 +251,12 @@ const mapSlotRecord = (slot, facility, bookings, transactionMap) => {
     booked,
     capacity,
     availabilityLabel:
-      booked >= capacity ? "Full" : `${capacity - booked} left`,
+      booked >= capacity ? "Full" : `${Math.max(capacity - booked, 0)} left`,
     status: createSlotStatus(booked, capacity),
     dropOffCount,
     collectionCount,
     bookingSummary: `${dropOffCount} drop-off, ${collectionCount} collection`,
-    leadTransactionId: leadTransaction?.id || null,
-    leadItemTitle: leadTransaction?.listing?.title || "No linked listing yet",
+    linkedTransactions,
     facilityName: facility.name,
     facilityLocation: facility.location,
   };
@@ -299,9 +315,16 @@ const mapTransactionRecord = (transaction, bookings, facility) => {
   };
 };
 
-const buildActivityFeed = ({ slots, bookings, transactions, facility }) => {
+const buildActivityFeed = ({
+  slots,
+  bookings,
+  activeBookings,
+  transactions,
+  facility,
+}) => {
   const activityEntries = [];
   const transactionMap = new Map(transactions.map((transaction) => [transaction.id, transaction]));
+  const activeSlotCounts = countBookingsBySlotId(activeBookings);
 
   for (const booking of bookings) {
     if (!booking.confirmed_at) {
@@ -332,7 +355,7 @@ const buildActivityFeed = ({ slots, bookings, transactions, facility }) => {
   }
 
   for (const slot of slots) {
-    const booked = Number(slot.booked_count || 0);
+    const booked = Number(activeSlotCounts[slot.id] || 0);
     const capacity = Number(slot.capacity || 0);
 
     if (booked >= capacity && capacity > 0) {
@@ -592,9 +615,6 @@ const getFacilityDashboard = async (
   };
 
   const operatingHours = normalizeOperatingHours(facility.operating_hours);
-  const normalizedSlots = (slots || []).map((slot) =>
-    mapSlotRecord(slot, normalizedFacility, bookings || [], transactionMap),
-  );
   const normalizedTransactions = (transactions || []).map((transaction) => {
     const transactionBookings = (bookingsByTransactionId[transaction.id] || []).map(
       (booking) => ({
@@ -609,6 +629,17 @@ const getFacilityDashboard = async (
 
     return mapTransactionRecord(transaction, transactionBookings, normalizedFacility);
   });
+  const activeTransactionIds = new Set(
+    normalizedTransactions
+      .filter((transaction) => transaction.stage !== "complete")
+      .map((transaction) => transaction.id),
+  );
+  const activeBookings = (bookings || []).filter((booking) =>
+    activeTransactionIds.has(booking.transaction_id),
+  );
+  const normalizedSlots = (slots || []).map((slot) =>
+    mapSlotRecord(slot, normalizedFacility, activeBookings, transactionMap),
+  );
 
   const totalCapacity = normalizedSlots.reduce(
     (sum, slot) => sum + Number(slot.capacity || 0),
@@ -635,16 +666,17 @@ const getFacilityDashboard = async (
       activityLog: buildActivityFeed({
         slots: slots || [],
         bookings: bookings || [],
+        activeBookings,
         transactions: transactions || [],
         facility: normalizedFacility,
       }),
-        metrics: {
-          totalCapacity,
-          totalBookedSlots,
-          fullSlots,
-          pendingTransactions,
-          completedTransactions,
-        },
+      metrics: {
+        totalCapacity,
+        totalBookedSlots,
+        fullSlots,
+        pendingTransactions,
+        completedTransactions,
+      },
       selectedDate: resolvedDate,
     },
     error: null,
@@ -717,6 +749,7 @@ const updateTransactionRecord = async (transactionId, updates) =>
 const advanceFacilityTransaction = async ({
   transactionId,
   action,
+  selectedDate,
   staffIdentifier,
   facilityId,
   userRole = "facility_staff",
@@ -918,7 +951,11 @@ const advanceFacilityTransaction = async ({
     }
   }
 
-  return getFacilityDashboard(undefined, facilityId || transactionFacilityId, userRole);
+  return getFacilityDashboard(
+    selectedDate,
+    facilityId || transactionFacilityId,
+    userRole,
+  );
 };
 
 module.exports = {

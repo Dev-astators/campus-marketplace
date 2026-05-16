@@ -1,5 +1,5 @@
 import "@testing-library/jest-dom";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import StaffDashboard from "../../pages/StaffDashboard";
@@ -9,13 +9,16 @@ jest.mock("../../hooks/useStaffDashboard");
 
 describe("StaffDashboard", () => {
   const setActiveNav = jest.fn();
+  const changeSelectedDate = jest.fn();
   const advanceTransaction = jest.fn();
+  let hookState;
 
   beforeEach(() => {
     setActiveNav.mockReset();
+    changeSelectedDate.mockReset();
     advanceTransaction.mockReset();
 
-    useStaffDashboard.mockReturnValue({
+    hookState = {
       activeNav: "bookings",
       setActiveNav,
       viewContent: {
@@ -55,8 +58,13 @@ describe("StaffDashboard", () => {
           dropOffCount: 6,
           collectionCount: 4,
           bookingSummary: "6 drop-off, 4 collection",
-          leadTransactionId: "TX-204",
-          leadItemTitle: "Canon EOS R6 Mark II",
+          linkedTransactions: [
+            {
+              id: "TX-204",
+              itemTitle: "Canon EOS R6 Mark II",
+              bookingType: "dropoff",
+            },
+          ],
           facilityName: "Braamfontein Trade Facility",
           facilityLocation: "Wits Central Campus Exchange Hub",
         },
@@ -84,6 +92,25 @@ describe("StaffDashboard", () => {
           progressMax: 5,
         },
       ],
+      confirmedTransactionQueue: [
+        {
+          id: "TX-301",
+          item: "MacBook Air",
+          seller: "Chris Ndlovu",
+          buyer: "Ava Singh",
+          priceDisplay: "R14 000.00",
+          category: "Electronics",
+          dropOffSlot: "2026-05-10 11:00",
+          collectionSlot: "2026-05-10 14:00",
+          location: "Wits Central Campus Exchange Hub",
+          stageLabel: "Complete",
+          stageTone: "green",
+          action: null,
+          actionLabel: "",
+          progressValue: 5,
+          progressMax: 5,
+        },
+      ],
       activityLog: [
         {
           id: "activity-1",
@@ -94,11 +121,14 @@ describe("StaffDashboard", () => {
         },
       ],
       selectedDate: "2026-05-10",
+      changeSelectedDate,
       advanceTransaction,
       loading: false,
       error: "",
       actionLoadingId: "",
-    });
+    };
+
+    useStaffDashboard.mockReturnValue(hookState);
   });
 
   it("renders the real-data staff dashboard layout", () => {
@@ -113,6 +143,11 @@ describe("StaffDashboard", () => {
     expect(
       screen.getByRole("heading", { name: /drop-off and collection windows/i }),
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /confirmed transactions/i }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/canon eos r6 mark ii/i)).toBeInTheDocument();
+    expect(screen.queryByText(/macbook air/i)).not.toBeInTheDocument();
   });
 
   it("delegates transaction actions to the hook", async () => {
@@ -128,5 +163,15 @@ describe("StaffDashboard", () => {
       "TX-204",
       "confirm_dropoff",
     );
+  });
+
+  it("delegates booking date filtering to the hook", async () => {
+    render(<StaffDashboard />);
+
+    fireEvent.change(screen.getByLabelText(/filter by date/i), {
+      target: { value: "2026-05-12" },
+    });
+
+    expect(changeSelectedDate).toHaveBeenLastCalledWith("2026-05-12");
   });
 });

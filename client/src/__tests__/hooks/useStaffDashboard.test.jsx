@@ -15,8 +15,10 @@ function HookHarness() {
     facilityProfile,
     todaysBookings,
     transactionQueue,
+    confirmedTransactionQueue,
     activityLog,
     selectedDate,
+    changeSelectedDate,
     advanceTransaction,
     loading,
     error,
@@ -32,6 +34,9 @@ function HookHarness() {
       <p data-testid="facility-name">{facilityProfile?.name || ""}</p>
       <p data-testid="booking-count">{todaysBookings.length}</p>
       <p data-testid="transaction-count">{transactionQueue.length}</p>
+      <p data-testid="confirmed-transaction-count">
+        {confirmedTransactionQueue.length}
+      </p>
       <p data-testid="activity-count">{activityLog.length}</p>
       <p data-testid="selected-date">{selectedDate}</p>
       <p data-testid="reserved-slots">{heroStats[0]?.value ?? ""}</p>
@@ -45,6 +50,20 @@ function HookHarness() {
         onClick={() => setActiveNav("verification")}
       >
         Show verification
+      </button>
+
+      <button
+        type="button"
+        onClick={() => setActiveNav("confirmed")}
+      >
+        Show confirmed
+      </button>
+
+      <button
+        type="button"
+        onClick={() => changeSelectedDate("2026-05-11")}
+      >
+        Filter date
       </button>
 
       <button
@@ -81,13 +100,16 @@ const initialDashboard = {
   },
   operatingHours: [{ day: "Monday", open: "08:00", close: "18:00" }],
   slots: [{ id: "slot-1" }],
-  transactions: [{ id: "TX-204" }],
+  transactions: [
+    { id: "TX-204", stage: "dropoff_booked" },
+    { id: "TX-205", stage: "complete" },
+  ],
   activityLog: [{ id: "activity-1" }],
   metrics: {
     totalCapacity: 10,
     totalBookedSlots: 6,
     fullSlots: 1,
-    pendingTransactions: 2,
+    pendingTransactions: 1,
     completedTransactions: 1,
   },
   selectedDate: "2026-05-10",
@@ -95,11 +117,11 @@ const initialDashboard = {
 
 const updatedDashboard = {
   ...initialDashboard,
-  transactions: [],
+  transactions: [{ id: "TX-205", stage: "complete" }],
   metrics: {
     ...initialDashboard.metrics,
-    pendingTransactions: 1,
-    completedTransactions: 2,
+    pendingTransactions: 0,
+    completedTransactions: 1,
   },
 };
 
@@ -132,12 +154,15 @@ describe("useStaffDashboard", () => {
     );
     expect(screen.getByTestId("booking-count")).toHaveTextContent("1");
     expect(screen.getByTestId("transaction-count")).toHaveTextContent("1");
+    expect(screen.getByTestId("confirmed-transaction-count")).toHaveTextContent(
+      "1",
+    );
     expect(screen.getByTestId("activity-count")).toHaveTextContent("1");
     expect(screen.getByTestId("selected-date")).toHaveTextContent(
       "2026-05-10",
     );
     expect(screen.getByTestId("reserved-slots")).toHaveTextContent("6");
-    expect(screen.getByTestId("pending-handoffs")).toHaveTextContent("2");
+    expect(screen.getByTestId("pending-handoffs")).toHaveTextContent("1");
     expect(screen.getByTestId("loading-state")).toHaveTextContent("idle");
     expect(global.fetch).toHaveBeenCalledWith(
       expect.stringContaining("/api/facility-dashboard"),
@@ -155,6 +180,13 @@ describe("useStaffDashboard", () => {
     expect(screen.getByTestId("active-nav")).toHaveTextContent("verification");
     expect(screen.getByTestId("view-title")).toHaveTextContent(
       "Staff handoff controls",
+    );
+
+    await user.click(screen.getByRole("button", { name: /show confirmed/i }));
+
+    expect(screen.getByTestId("active-nav")).toHaveTextContent("confirmed");
+    expect(screen.getByTestId("view-title")).toHaveTextContent(
+      "Completed transaction archive",
     );
   });
 
@@ -226,7 +258,10 @@ describe("useStaffDashboard", () => {
 
     await waitFor(() => {
       expect(screen.getByTestId("transaction-count")).toHaveTextContent("0");
-      expect(screen.getByTestId("pending-handoffs")).toHaveTextContent("1");
+      expect(screen.getByTestId("confirmed-transaction-count")).toHaveTextContent(
+        "1",
+      );
+      expect(screen.getByTestId("pending-handoffs")).toHaveTextContent("0");
       expect(screen.getByTestId("action-loading-id")).toBeEmptyDOMElement();
     });
 
@@ -240,8 +275,56 @@ describe("useStaffDashboard", () => {
           Authorization: "Bearer staff-token",
           "Content-Type": "application/json",
         }),
-        body: JSON.stringify({ action: "confirm_dropoff" }),
+        body: JSON.stringify({
+          action: "confirm_dropoff",
+          selectedDate: "2026-05-10",
+        }),
       }),
+    );
+  });
+
+  it("refetches the dashboard for a selected date filter", async () => {
+    const user = userEvent.setup();
+
+    supabase.auth.getSession.mockResolvedValue(buildSession());
+    global.fetch
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => initialDashboard,
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          ...initialDashboard,
+          selectedDate: "2026-05-11",
+          slots: [{ id: "slot-2" }, { id: "slot-3" }],
+        }),
+      });
+
+    render(<HookHarness />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId("selected-date")).toHaveTextContent(
+        "2026-05-10",
+      );
+    });
+
+    await user.click(screen.getByRole("button", { name: /filter date/i }));
+
+    await waitFor(() => {
+      expect(screen.getByTestId("selected-date")).toHaveTextContent(
+        "2026-05-11",
+      );
+      expect(screen.getByTestId("booking-count")).toHaveTextContent("2");
+    });
+
+    expect(global.fetch).toHaveBeenLastCalledWith(
+      expect.stringContaining("/api/facility-dashboard?date=2026-05-11"),
+      {
+        headers: {
+          Authorization: "Bearer staff-token",
+        },
+      },
     );
   });
 
