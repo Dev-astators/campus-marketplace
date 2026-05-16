@@ -46,7 +46,7 @@ export default function useStaffDashboard() {
   const [actionLoadingId, setActionLoadingId] = useState("");
   const [error, setError] = useState("");
 
-  const fetchDashboard = useCallback(async () => {
+  const fetchDashboard = useCallback(async (requestedDate = "") => {
     setLoading(true);
     setError("");
 
@@ -61,7 +61,16 @@ export default function useStaffDashboard() {
         throw new Error("You must be signed in to view the staff dashboard.");
       }
 
-      const response = await fetch(`${API_BASE_URL}/api/facility-dashboard`, {
+      const requestUrl = new URL(
+        `${API_BASE_URL}/api/facility-dashboard`,
+        window.location.origin,
+      );
+
+      if (requestedDate) {
+        requestUrl.searchParams.set("date", requestedDate);
+      }
+
+      const response = await fetch(requestUrl.toString(), {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
@@ -124,7 +133,10 @@ export default function useStaffDashboard() {
               "Content-Type": "application/json",
               Authorization: `Bearer ${accessToken}`,
             },
-            body: JSON.stringify({ action }),
+            body: JSON.stringify({
+              action,
+              selectedDate: dashboardData.selectedDate,
+            }),
           },
         );
 
@@ -154,7 +166,14 @@ export default function useStaffDashboard() {
         setActionLoadingId("");
       }
     },
-    [],
+    [dashboardData.selectedDate],
+  );
+
+  const changeSelectedDate = useCallback(
+    async (nextDate) => {
+      await fetchDashboard(nextDate);
+    },
+    [fetchDashboard],
   );
 
   const heroStats = useMemo(
@@ -173,6 +192,22 @@ export default function useStaffDashboard() {
     [dashboardData.metrics],
   );
 
+  const transactionQueue = useMemo(
+    () =>
+      dashboardData.transactions.filter(
+        (transaction) => transaction.stage !== "complete",
+      ),
+    [dashboardData.transactions],
+  );
+
+  const confirmedTransactionQueue = useMemo(
+    () =>
+      dashboardData.transactions.filter(
+        (transaction) => transaction.stage === "complete",
+      ),
+    [dashboardData.transactions],
+  );
+
   const viewContent =
     STAFF_VIEW_CONTENT[activeNav] || STAFF_VIEW_CONTENT.bookings;
 
@@ -189,9 +224,11 @@ export default function useStaffDashboard() {
     totalBookedSlots: dashboardData.metrics.totalBookedSlots,
     pendingTransactions: dashboardData.metrics.pendingTransactions,
     fullSlots: dashboardData.metrics.fullSlots,
-    transactionQueue: dashboardData.transactions,
+    transactionQueue,
+    confirmedTransactionQueue,
     activityLog: dashboardData.activityLog,
     selectedDate: dashboardData.selectedDate,
+    changeSelectedDate,
     advanceTransaction,
     loading,
     error,

@@ -3,6 +3,7 @@ export const NAV_ITEMS = [
   { id: "listings",    label: "My Listings", icon: "list" },
   { id: "meetups",     label: "Meetups",     icon: "map-pin" },
   { id: "verification",label: "Verification",icon: "shield" },
+  { id: "confirmed",   label: "Confirmed Transactions", icon: "check" },
   { id: "bookings",    label: "Bookings",    icon: "calendar" },
 ];
 
@@ -19,11 +20,17 @@ export const STAFF_VIEW_CONTENT = {
     description:
       "Confirm physical receipt at drop-off, verify buyer arrival, and release items only after cash handoff is confirmed.",
   },
+  confirmed: {
+    eyebrow: "Confirmed handoffs",
+    title: "Completed transaction archive",
+    description:
+      "Review fully confirmed facility handoffs separately so the active transaction flow stays focused on work that still needs staff action.",
+  },
   bookings: {
     eyebrow: "Trade facility management",
     title: "Campus exchange operations",
     description:
-      "Monitor operating hours, slot capacity, active bookings, and the full transaction flow from accepted offer to completed collection.",
+      "Monitor operating hours, slot capacity, active bookings, and the pending transaction flow that still needs staff action.",
   },
 };
 

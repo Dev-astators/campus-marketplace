@@ -127,27 +127,6 @@ export default function FacilityOverview({
           )}
         </article>
 
-        <article className="rounded-2xl border border-slate-200 p-4">
-          <h3 className="text-sm font-semibold text-slate-900">
-            Staff coordination
-          </h3>
-          <dl className="mt-3 space-y-3 text-sm text-slate-700">
-            <section className="rounded-xl bg-slate-50 px-3 py-3">
-              <dt className="font-semibold text-slate-900">Supervisor</dt>
-              <dd className="mt-1">{facility.supervisor}</dd>
-            </section>
-            <section className="rounded-xl bg-slate-50 px-3 py-3">
-              <dt className="font-semibold text-slate-900">Support line</dt>
-              <dd className="mt-1">{facility.supportLine}</dd>
-            </section>
-            <section className="rounded-xl bg-slate-50 px-3 py-3">
-              <dt className="font-semibold text-slate-900">Desk status</dt>
-              <dd className="mt-1">
-                {facility.status} across {facility.deskCount} staffed counters
-              </dd>
-            </section>
-          </dl>
-        </article>
       </section>
     </article>
   );
