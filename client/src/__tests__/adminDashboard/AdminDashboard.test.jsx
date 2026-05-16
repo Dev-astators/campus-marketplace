@@ -34,13 +34,17 @@ describe("AdminDashboard", () => {
         slotCapacity: 6,
         isActive: true,
       },
+      facilities: [],
+      selectedFacilityId: null,
       operatingHours: [
         { day: "Mon", open: "08:00", close: "18:00", active: true },
       ],
       lastSavedAt: new Date("2025-01-01T10:00:00Z"),
+      savingFacility: false,
       updateFacilitySetting: jest.fn(),
       updateOperatingHours: jest.fn(),
       saveFacilitySettings: jest.fn(),
+      selectFacility: jest.fn(),
       flaggedListings: [
         {
           id: "L-102",
@@ -67,6 +71,17 @@ describe("AdminDashboard", () => {
       },
       exportCsv: jest.fn(),
       exportPdf: jest.fn(),
+      users: [],
+      togglingRole: null,
+      updateUserRole: jest.fn(),
+      loadingStates: {
+        summary: false,
+        analytics: false,
+        moderation: false,
+        users: false,
+        facilities: false,
+      },
+      errors: {},
     });
   });
 

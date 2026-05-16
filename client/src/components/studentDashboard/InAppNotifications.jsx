@@ -3,8 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../../config/supabaseClient";
 import { useNavigate } from "react-router-dom";
-
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
+import { API_BASE_URL } from "../../config/apiBaseUrl";
 
 const TYPE_ICON = {
   sale: "💰",
@@ -24,7 +23,7 @@ export default function InAppNotifications({ profileId }) {
     if (!profileId) return;
     try {
       const res = await fetch(
-        `${API_URL}/api/payments/notifications/${profileId}`,
+        `${API_BASE_URL}/api/payments/notifications/${profileId}`,
       );
       const data = await res.json();
       setNotifications(Array.isArray(data) ? data : []);
@@ -46,7 +45,7 @@ export default function InAppNotifications({ profileId }) {
 
       try {
         const res = await fetch(
-          `${API_URL}/api/payments/notifications/${profileId}`,
+          `${API_BASE_URL}/api/payments/notifications/${profileId}`,
         );
         const data = await res.json();
         if (active) setNotifications(Array.isArray(data) ? data : []);
@@ -88,7 +87,7 @@ export default function InAppNotifications({ profileId }) {
   }, [profileId, fetchNotifications]);
 
   const markAsRead = async (id) => {
-    await fetch(`${API_URL}/api/payments/notifications/${id}/read`, {
+    await fetch(`${API_BASE_URL}/api/payments/notifications/${id}/read`, {
       method: "PATCH",
     });
     setNotifications((prev) =>
@@ -100,7 +99,7 @@ export default function InAppNotifications({ profileId }) {
     const unread = notifications.filter((n) => !n.is_read);
     await Promise.all(
       unread.map((n) =>
-        fetch(`${API_URL}/api/payments/notifications/${n.id}/read`, {
+        fetch(`${API_BASE_URL}/api/payments/notifications/${n.id}/read`, {
           method: "PATCH",
         }),
       ),
