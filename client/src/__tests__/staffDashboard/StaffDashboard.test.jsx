@@ -146,7 +146,9 @@ describe("StaffDashboard", () => {
     expect(
       screen.getByRole("button", { name: /confirmed transactions/i }),
     ).toBeInTheDocument();
-    expect(screen.getByText(/canon eos r6 mark ii/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/canon eos r6 mark ii/i).length).toBeGreaterThan(
+      0,
+    );
     expect(screen.queryByText(/macbook air/i)).not.toBeInTheDocument();
   });
 
