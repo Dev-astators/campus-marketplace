@@ -55,7 +55,8 @@ export default function AdminDashboard() {
     [setActiveSection],
   );
 
-  const firstName = user?.fullName?.split(" ")[0] || user?.name || "Student";
+  const firstName = user?.fullName?.split(" ")[0] || user?.name || "Admin";
+  
   
 
   return (

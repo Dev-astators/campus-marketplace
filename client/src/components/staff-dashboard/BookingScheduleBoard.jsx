@@ -22,7 +22,22 @@ const formatSelectedDate = (selectedDate) => {
   }).format(parsedDate);
 };
 
-export default function BookingScheduleBoard({ slots, selectedDate = "" }) {
+const formatBookingType = (bookingType) =>
+  bookingType === "dropoff" ? "Drop-off" : "Collection";
+
+const getBarWidth = (count, capacity) => {
+  if (!capacity || capacity <= 0) {
+    return "0%";
+  }
+
+  return `${Math.min((count / capacity) * 100, 100)}%`;
+};
+
+export default function BookingScheduleBoard({
+  slots,
+  selectedDate = "",
+  onDateChange,
+}) {
   const displayDate = formatSelectedDate(selectedDate);
 
   return (
@@ -38,6 +53,21 @@ export default function BookingScheduleBoard({ slots, selectedDate = "" }) {
           Full windows stop accepting more bookings automatically, helping the
           facility enforce slot capacity throughout the day.
         </p>
+        <div className="mt-4 flex flex-col gap-2 sm:max-w-xs">
+          <label
+            htmlFor="booking-date-filter"
+            className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500"
+          >
+            Filter by date
+          </label>
+          <input
+            id="booking-date-filter"
+            type="date"
+            value={selectedDate}
+            onChange={(event) => onDateChange?.(event.target.value)}
+            className="rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+          />
+        </div>
         {displayDate ? (
           <p className="mt-3 text-xs font-medium uppercase tracking-[0.18em] text-slate-400">
             Showing bookings for {displayDate}
@@ -63,7 +93,7 @@ export default function BookingScheduleBoard({ slots, selectedDate = "" }) {
                   Capacity
                 </th>
                 <th scope="col" className="pb-2 font-semibold">
-                  Lead transaction
+                  Transactions
                 </th>
                 <th scope="col" className="pb-2 font-semibold">
                   Facility
@@ -92,28 +122,69 @@ export default function BookingScheduleBoard({ slots, selectedDate = "" }) {
                     </p>
                   </td>
                   <td className="px-4 py-4 text-sm text-slate-700">
-                    <label
-                      className="block text-xs font-semibold uppercase tracking-[0.16em] text-slate-500"
-                      htmlFor={`meter-${slot.id}`}
-                    >
-                      {slot.booked} of {slot.capacity} booked
-                    </label>
-                    <meter
-                      id={`meter-${slot.id}`}
-                      className="mt-2 block h-3 w-full"
-                      min="0"
-                      max={slot.capacity}
-                      value={slot.booked}
-                    />
-                    <p className="mt-2 text-xs text-slate-500">
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                      {slot.booked} active of {slot.capacity} capacity
+                    </p>
+                    <div className="mt-3 space-y-3">
+                      <div>
+                        <div className="flex items-center justify-between text-xs font-medium text-slate-600">
+                          <span>Drop-off</span>
+                          <span>
+                            {slot.dropOffCount}/{slot.capacity}
+                          </span>
+                        </div>
+                        <div className="mt-1 h-2.5 overflow-hidden rounded-2 bg-slate-200">
+                          <div
+                            className="h-full rounded-1 bg-green-500"
+                            style={{
+                              width: getBarWidth(slot.dropOffCount, slot.capacity),
+                            }}
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <div className="flex items-center justify-between text-xs font-medium text-slate-600">
+                          <span>Collection</span>
+                          <span>
+                            {slot.collectionCount}/{slot.capacity}
+                          </span>
+                        </div>
+                        <div className="mt-1 h-2.5 overflow-hidden rounded- bg-slate-200">
+                          <div
+                            className="h-full rounded-1 bg-blue-500"
+                            style={{
+                              width: getBarWidth(
+                                slot.collectionCount,
+                                slot.capacity,
+                              ),
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    <p className="mt-3 text-xs text-slate-500">
                       {slot.availabilityLabel}
                     </p>
                   </td>
                   <td className="px-4 py-4 text-sm text-slate-700">
-                    <strong className="block font-semibold text-slate-900">
-                      {slot.leadTransactionId || "No transaction yet"}
-                    </strong>
-                    <p className="mt-1">{slot.leadItemTitle}</p>
+                    {slot.linkedTransactions?.length ? (
+                      <ul className="space-y-2">
+                        {slot.linkedTransactions.map((transaction) => (
+                          <li key={`${slot.id}-${transaction.id}`} className="bg-blue-50 flex-wrap">
+
+                            <p className="mt-1 p-1  text-center text-wrap"><strong>{transaction.itemTitle}</strong></p>
+                            <p className="mt-1 p-1 text-xs text-center text-wrap">
+                              {formatBookingType(transaction.bookingType)}
+                            </p>
+                            
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="font-medium text-slate-500">
+                        No transactions yet
+                      </p>
+                    )}
                   </td>
                   <td className="px-4 py-4 text-sm text-slate-700">
                     <p className="font-medium text-slate-900">

@@ -14,25 +14,53 @@ const LIFECYCLE_LABELS = [
   "Complete",
 ];
 
+const formatSelectedDate = (selectedDate) => {
+  if (!selectedDate) {
+    return "";
+  }
+
+  const parsedDate = new Date(`${selectedDate}T00:00:00`);
+
+  if (Number.isNaN(parsedDate.getTime())) {
+    return selectedDate;
+  }
+
+  return new Intl.DateTimeFormat("en-ZA", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(parsedDate);
+};
+
 export default function TransactionFlowPanel({
   transactions,
+  selectedDate = "",
   onAdvance,
   actionLoadingId = "",
+  eyebrow = "Transaction flow",
+  title = "End-to-end handoff queue",
+  description = "Staff actions below move a transaction from accepted booking to completed collection, while keeping a visible trail of receipt and release confirmations.",
+  emptyMessage = "No booked facility transactions are available for staff action yet.",
 }) {
+  const displayDate = formatSelectedDate(selectedDate);
+
   return (
     <article className="rounded-3xl border border-slate-200 bg-white shadow-sm">
       <header className="border-b border-slate-100 px-6 py-5">
         <p className="text-xs font-semibold uppercase tracking-[0.22em] text-blue-600">
-          Transaction flow
+          {eyebrow}
         </p>
         <h2 className="mt-2 text-xl font-bold text-slate-900">
-          End-to-end handoff queue
+          {title}
         </h2>
         <p className="mt-2 text-sm text-slate-500">
-          Staff actions below move a transaction from accepted booking to
-          completed collection, while keeping a visible trail of receipt and
-          release confirmations.
+          {description}
         </p>
+        {displayDate ? (
+          <p className="mt-3 text-xs font-medium uppercase tracking-[0.18em] text-slate-400">
+            Showing transactions for {displayDate}
+          </p>
+        ) : null}
       </header>
 
       {transactions.length > 0 ? (
@@ -146,7 +174,7 @@ export default function TransactionFlowPanel({
         </ol>
       ) : (
         <p className="px-6 py-5 text-sm text-slate-500">
-          No booked facility transactions are available for staff action yet.
+          {emptyMessage}
         </p>
       )}
     </article>
