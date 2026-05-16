@@ -145,8 +145,14 @@ export default function MessagesPage() {
   }, [user, fetchConversations]);
 
   const openChat = (conv) => {
-    navigate(`/chat/${conv.listing_id}?seller=${conv.otherUserId}`);
-  };
+    try {
+      sessionStorage.removeItem("chatBackTarget");
+    } catch {
+      // sessionStorage may not be available in some test/runtime environments
+    }
+
+  navigate(`/chat/${conv.listing_id}?seller=${conv.otherUserId}`);
+};
 
   const formatTime = (dateString) => {
     if (!dateString) return "";

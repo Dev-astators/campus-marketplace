@@ -35,6 +35,12 @@ export default function ListingDetails() {
   });
 
   const handleContactSeller = () => {
+    try {
+      sessionStorage.setItem("chatBackTarget", `/listing/${listing.id}`);
+    } catch {
+    // sessionStorage may not be available in some test/runtime environments
+    }
+
     navigate(`/chat/${listing.id}?seller=${listing.seller.id}`);
   };
 

@@ -1,5 +1,10 @@
 import { useEffect, useState, useCallback } from "react";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import {
+  useNavigate,
+  useParams,
+  useSearchParams,
+  useLocation,
+} from "react-router-dom";
 import { supabase } from "../config/supabaseClient";
 import Chat from "../components/Chat";
 import { API_BASE_URL } from "../config/apiBaseUrl";
@@ -38,6 +43,7 @@ const PREVIEW_MESSAGES = [
 
 export default function ChatPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { id: listingId } = useParams();
   const [searchParams] = useSearchParams();
 
@@ -50,7 +56,8 @@ export default function ChatPage() {
   const [conversationName, setConversationName] = useState("Unknown user");
   const [listingSummary, setListingSummary] = useState(null);
 
-  // Get logged-in user
+  const backTarget = location.state?.backTo || "/messages";
+
   useEffect(() => {
     const getUser = async () => {
       const { data } = await supabase.auth.getSession();
@@ -62,7 +69,6 @@ export default function ChatPage() {
     getUser();
   }, []);
 
-  // Fetch user name and listing summary
   useEffect(() => {
     if (!listingId) return;
 
@@ -73,7 +79,7 @@ export default function ChatPage() {
             .from("profiles")
             .select("full_name")
             .eq("id", sellerId)
-            .maybeSingle();
+            .single();
 
           if (profileError) {
             console.error("Error loading chat profile:", profileError);
@@ -112,7 +118,6 @@ export default function ChatPage() {
     fetchChatContext();
   }, [listingId, sellerId]);
 
-  // Mark messages as read
   const markMessagesAsRead = useCallback(async () => {
     if (!user || !sellerId || !listingId) return;
 
@@ -137,7 +142,6 @@ export default function ChatPage() {
     }
   }, [user, sellerId, listingId]);
 
-  // Fetch messages
   useEffect(() => {
     if (!user || !sellerId || !listingId) return;
 
@@ -159,7 +163,6 @@ export default function ChatPage() {
     fetchMessages();
   }, [user, sellerId, listingId, markMessagesAsRead]);
 
-  // Send message
   const handleSend = async () => {
     if (!input.trim()) return;
 
@@ -221,7 +224,6 @@ export default function ChatPage() {
     }
   };
 
-  // Realtime subscriptions
   useEffect(() => {
     if (!user || !listingId || !sellerId) return;
 
@@ -370,18 +372,17 @@ export default function ChatPage() {
   return (
     <main className="min-h-screen bg-white px-6 py-6">
       <section className="max-w-7xl mx-auto grid grid-cols-[110px_1fr] gap-6 items-start">
-        {/* Back Button */}
         <section className="-ml-12 pt-1">
           <button
             type="button"
-            onClick={() => navigate(-1)}
+            aria-label="Back to Messages"
+            onClick={() => navigate(backTarget, { replace: true })}
             className="px-4 py-2 border border-gray-200 rounded-xl shadow-sm hover:bg-gray-50 transition bg-white"
           >
             ← Back
           </button>
         </section>
 
-        {/* Main Chat Content */}
         <section className="mt-6">
           <header className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900">
