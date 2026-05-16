@@ -7,6 +7,7 @@ const supabase = {
     getSession: jest.fn().mockResolvedValue({
       data: { session: null },
     }),
+    signInWithOAuth: jest.fn().mockResolvedValue({ error: null }),
     signOut: jest.fn().mockResolvedValue({ error: null }),
     onAuthStateChange: jest.fn().mockReturnValue({
       data: {
@@ -22,6 +23,11 @@ const supabase = {
     eq: jest.fn().mockReturnThis(),
     single: jest.fn().mockResolvedValue({ data: null, error: null }),
   }),
+  channel: jest.fn().mockReturnValue({
+    on: jest.fn().mockReturnThis(),
+    subscribe: jest.fn().mockReturnThis(),
+  }),
+  removeChannel: jest.fn(),
 };
 
 module.exports = { supabase };

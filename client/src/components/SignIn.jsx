@@ -13,7 +13,7 @@ export default function SignIn() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/student-dashboard`,
+        redirectTo: window.location.origin,
       },
     });
 

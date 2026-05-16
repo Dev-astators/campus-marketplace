@@ -1,6 +1,6 @@
 // src/pages/StudentDashboard.jsx
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import Navbar from "../components/studentDashboard/Navbar";
 import Sidebar from "../components/studentDashboard/Sidebar";
 import CategoryFilter from "../components/studentDashboard/CategoryFilter";
@@ -9,18 +9,34 @@ import ListingsFiltersPanel from "../components/studentDashboard/ListingsFilters
 import { CATEGORIES } from "../components/studentDashboard/listingFiltersConfig";
 import useDashboardListings from "../hooks/useDashboardListings";
 import useListingFilters from "../hooks/useListingFilters";
-import { useNavigate } from "react-router-dom";
 import ProfileSettings from "../components/studentDashboard/ProfileSettings";
+import MyPurchases from "../components/studentDashboard/MyPurchases";
+import MySales from "../components/studentDashboard/MySales";
+import InAppNotifications from "../components/studentDashboard/InAppNotifications";
+import { API_BASE_URL } from "../config/apiBaseUrl";
+
+// Tabs that don't use the marketplace listings feed at all
+const NON_LISTING_TABS = [
+  "my-purchases",
+  "my-sales",
+  "notifications",
+  "profile",
+  "messages",
+];
 
 export default function StudentDashboard() {
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const [activeNav, setActiveNav] = useState("marketplace");
+  // Support navigating directly to a tab via router state (e.g. from notifications click)
+  const [activeNav, setActiveNav] = useState(
+    location.state?.tab || "marketplace",
+  );
   const [showFilters, setShowFilters] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
-  // The dashboard page now acts as an orchestrator: hooks manage state/data,
-  // while child components handle presentation.
   const { user, listings, loading } = useDashboardListings(activeNav);
+
   const {
     search,
     setSearch,
@@ -39,16 +55,56 @@ export default function StudentDashboard() {
     listingsHeading,
   } = useListingFilters({ listings, activeNav });
 
-  // Keep local tab navigation in-page, but route to dedicated pages where needed.
+  // Fetch unread notification count for the sidebar badge
+  useEffect(() => {
+    if (!user?.profileId) return;
+
+    const fetchUnread = async () => {
+      try {
+        const res = await fetch(
+          `${API_BASE_URL}/api/payments/notifications/${user.profileId}`,
+        );
+        const data = await res.json();
+        const count = Array.isArray(data)
+          ? data.filter((n) => !n.is_read).length
+          : 0;
+        setUnreadCount(count);
+      } catch {
+        // silently fail — badge just won't show
+      }
+    };
+
+    fetchUnread();
+  }, [user?.profileId, activeNav]); // re-fetch when switching tabs
+
   const handleNavigate = (item) => {
     setActiveNav(item);
-
-    if (item === "messages") {
-      navigate("/messages"); // ✅ THIS MAKES IT WORK
-    }
+    if (item === "messages") navigate("/messages");
   };
 
   const firstName = user?.fullName?.split(" ")[0] || user?.name || "Student";
+  const isListingView = !NON_LISTING_TABS.includes(activeNav);
+  const isProfileView = activeNav === "profile";
+  const isMyListingsView = activeNav === "my-listings";
+
+  const normalizeStatus = (status) => String(status || "active").toLowerCase();
+  const activeListings = isMyListingsView
+    ? filteredListings.filter(
+        (listing) => normalizeStatus(listing.status) === "active",
+      )
+    : [];
+  const reservedListings = isMyListingsView
+    ? filteredListings.filter(
+        (listing) => normalizeStatus(listing.status) === "reserved",
+      )
+    : [];
+  const otherListings = isMyListingsView
+    ? filteredListings.filter(
+        (listing) =>
+          !["active", "reserved"].includes(normalizeStatus(listing.status)),
+      )
+    : [];
+
   const activeFilterCount = [
     selectedCategory !== "All Categories",
     selectedCondition !== "all",
@@ -56,8 +112,6 @@ export default function StudentDashboard() {
     maxPrice !== "",
     sortBy !== "newest",
   ].filter(Boolean).length;
-
-  const isProfileView = activeNav === "profile";
 
   return (
     <section
@@ -70,7 +124,11 @@ export default function StudentDashboard() {
         className="flex flex-1 overflow-hidden"
         aria-label="Dashboard workspace"
       >
-        <Sidebar activeItem={activeNav} onNavigate={handleNavigate} />
+        <Sidebar
+          activeItem={activeNav}
+          onNavigate={handleNavigate}
+          unreadCount={unreadCount}
+        />
 
         <main className="flex-1 overflow-y-auto px-8 py-6 flex flex-col gap-6">
           <header>
@@ -80,7 +138,8 @@ export default function StudentDashboard() {
             <p className="text-sm text-gray-400">Welcome Back!</p>
           </header>
 
-          {!isProfileView && (
+          {/* ── Marketplace + My Listings ── */}
+          {isListingView && (
             <>
               <button
                 onClick={() => navigate("/create-listing")}
@@ -93,10 +152,10 @@ export default function StudentDashboard() {
                 <section className="flex items-center gap-3">
                   <button
                     type="button"
-                    onClick={() => setShowFilters((current) => !current)}
+                    onClick={() => setShowFilters((c) => !c)}
                     aria-expanded={showFilters}
                     aria-controls="listings-filter-controls"
-                    className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:border-gray-400 hover:text-gray-900 cursor-pointer"
+                    className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:border-gray-400 hover:text-gray-900 cursor-pointer"
                   >
                     {showFilters ? "Hide Filters" : "Show Filters"}
                   </button>
@@ -118,7 +177,6 @@ export default function StudentDashboard() {
                       selected={selectedCategory}
                       onSelect={setSelectedCategory}
                     />
-
                     <ListingsFiltersPanel
                       selectedCondition={selectedCondition}
                       onConditionChange={setSelectedCondition}
@@ -137,11 +195,94 @@ export default function StudentDashboard() {
               <h2 className="text-lg font-semibold text-gray-700">
                 {listingsHeading}
               </h2>
+              {isMyListingsView ? (
+                loading ? (
+                  <ListingsGrid listings={[]} loading />
+                ) : (
+                  <section
+                    className="flex flex-col gap-6"
+                    aria-label="My listings sections"
+                  >
+                    <section className="flex flex-col gap-3">
+                      <header className="flex items-center justify-between">
+                        <h3 className="text-sm font-semibold text-gray-600">
+                          Active
+                        </h3>
+                        <span className="text-xs text-gray-400">
+                          {activeListings.length}
+                        </span>
+                      </header>
+                      {activeListings.length > 0 ? (
+                        <ListingsGrid
+                          listings={activeListings}
+                          loading={false}
+                        />
+                      ) : (
+                        <p className="text-sm text-gray-400">
+                          No active listings yet.
+                        </p>
+                      )}
+                    </section>
 
-              <ListingsGrid listings={filteredListings} loading={loading} />
+                    <section className="flex flex-col gap-3">
+                      <header className="flex items-center justify-between">
+                        <h3 className="text-sm font-semibold text-gray-600">
+                          Reserved
+                        </h3>
+                        <span className="text-xs text-gray-400">
+                          {reservedListings.length}
+                        </span>
+                      </header>
+                      {reservedListings.length > 0 ? (
+                        <ListingsGrid
+                          listings={reservedListings}
+                          loading={false}
+                        />
+                      ) : (
+                        <p className="text-sm text-gray-400">
+                          No reserved listings yet.
+                        </p>
+                      )}
+                    </section>
+
+                    {otherListings.length > 0 && (
+                      <section className="flex flex-col gap-3">
+                        <header className="flex items-center justify-between">
+                          <h3 className="text-sm font-semibold text-gray-600">
+                            Other
+                          </h3>
+                          <span className="text-xs text-gray-400">
+                            {otherListings.length}
+                          </span>
+                        </header>
+                        <ListingsGrid
+                          listings={otherListings}
+                          loading={false}
+                        />
+                      </section>
+                    )}
+                  </section>
+                )
+              ) : (
+                <ListingsGrid listings={filteredListings} loading={loading} />
+              )}
             </>
           )}
 
+          {/* ── My Purchases ── */}
+          {activeNav === "my-purchases" && (
+            <MyPurchases profileId={user?.profileId} />
+          )}
+
+          {/* ── My Sales ── */}
+          {activeNav === "my-sales" && <MySales profileId={user?.profileId} />}
+
+          {/* ── Notifications ── */}
+          {activeNav === "notifications" && (
+            <InAppNotifications profileId={user?.profileId} />
+          )}
+
+          {/* ── Profile ── */}
           {isProfileView && <ProfileSettings user={user} />}
         </main>
       </section>

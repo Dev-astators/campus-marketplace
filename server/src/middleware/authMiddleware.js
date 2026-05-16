@@ -68,7 +68,7 @@ const requireRole = (...allowedRoles) => {
       const { data, error } = await supabase
         .from('profiles')
         .select('role')
-        .eq('auth_user_id', req.user.id)
+        .eq('id', req.user.id)
         .single();
 
       if (error || !data) {
@@ -85,7 +85,7 @@ const requireRole = (...allowedRoles) => {
       // Attach role to req for use in route handlers
       req.userRole = data.role;
 
-      next();
+      return next();
 
     } catch (err) {
       return res.status(500).json({ message: 'Internal server error during authorisation' });
@@ -112,8 +112,8 @@ const attachProfile = async (req, res, next) => {
 
     const { data, error } = await supabase
       .from('profiles')
-      .select('id, full_name, email, student_number, university, role, average_rating')
-      .eq('auth_user_id', req.user.id)
+      .select('id, full_name, email, student_number, university, role, average_rating, facility_id')
+      .eq('id', req.user.id)
       .single();
 
     if (error || !data) {
@@ -123,7 +123,7 @@ const attachProfile = async (req, res, next) => {
     // Attach profile to request for use in downstream middleware and route handlers
     req.profile = data;
 
-    next();
+    return next();
 
   } catch (err) {
     return res.status(500).json({ message: 'Internal server error while fetching profile' });

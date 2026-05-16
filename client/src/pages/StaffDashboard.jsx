@@ -1,66 +1,109 @@
-import { useState } from "react";
 import Sidebar from "../components/staff-dashboard/Sidebar";
 import Topbar from "../components/staff-dashboard/Topbar";
 import HeroBanner from "../components/staff-dashboard/HeroBanner";
-import TodaysSchedule from "../components/staff-dashboard/TodaysSchedule";
-import VerificationQueue from "../components/staff-dashboard/VerificationQueue";
 import HelpDesk from "../components/staff-dashboard/HelpDesk";
+import FacilityOverview from "../components/staff-dashboard/FacilityOverview";
+import BookingScheduleBoard from "../components/staff-dashboard/BookingScheduleBoard";
+import TransactionFlowPanel from "../components/staff-dashboard/TransactionFlowPanel";
+import ActivityFeed from "../components/staff-dashboard/ActivityFeed";
+import useStaffDashboard from "../hooks/useStaffDashboard";
 
 export default function StaffDashboard() {
-  const [activeNav, setActiveNav] = useState("marketplace");
+  const {
+    activeNav,
+    setActiveNav,
+    viewContent,
+    heroStats,
+    staffProfile,
+    facilityProfile,
+    facilityHours,
+    todaysBookings,
+    totalCapacity,
+    totalBookedSlots,
+    pendingTransactions,
+    fullSlots,
+    transactionQueue,
+    activityLog,
+    selectedDate,
+    advanceTransaction,
+    loading,
+    error,
+    actionLoadingId,
+  } = useStaffDashboard();
+
+  const showFacilityOverview = activeNav === "bookings";
+  const showBookingSchedule = activeNav === "bookings" || activeNav === "meetups";
+  const showTransactionFlow =
+    activeNav === "bookings" || activeNav === "verification";
 
   return (
-    <div className="flex min-h-screen bg-white text-white font-sans overflow-hidden">
-      
-      {/* ================= SIDEBAR ================= */}
+    <section className="flex min-h-screen overflow-hidden bg-slate-50  text-slate-900">
       <Sidebar
         activeNav={activeNav}
         onNavChange={setActiveNav}
       />
 
-      {/* ================= MAIN CONTENT ================= */}
-      <div className="flex flex-col flex-1 ml-55">
-        
-        {/* ================= TOPBAR ================= */}
-        <Topbar />
+      <section className="ml-55 flex flex-1 flex-col">
+        <Topbar staffProfile={staffProfile} />
 
-        {/* ================= PAGE CONTENT ================= */}
-        <main className="flex-1 px-10 py-8">
-          
-          {/* Main layout exactly like screenshot */}
-          <div className="grid grid-cols-[1fr_320px] gap-6 items-start">
-            
-            {/* ================= LEFT SECTION ================= */}
-            <div className="flex flex-col gap-6">
+        <main className="flex-1 px-6 py-8 md:px-8 xl:px-10">
+          {error ? (
+            <aside className="mb-6 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+              {error}
+            </aside>
+          ) : null}
 
-              {/* Hero / Welcome Banner */}
-              <div className="rounded-3xl bg-white border  shadow-lg p-8">
-                <HeroBanner />
-              </div>
+          <section className="grid items-start gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+            <section className="space-y-6">
+              <HeroBanner
+                eyebrow={viewContent.eyebrow}
+                title={viewContent.title}
+                description={viewContent.description}
+                stats={heroStats}
+              />
 
-              {/* Today's Schedule Section */}
-              <div className="rounded-3xl bg-white border  shadow-lg p-6">
-                <TodaysSchedule />
-              </div>
+              {loading ? (
+                <article className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+                  <p className="text-sm text-slate-500">
+                    Loading live facility data...
+                  </p>
+                </article>
+              ) : null}
 
-            </div>
-            {/* ================= RIGHT SECTION ================= */}
-            <div className="flex flex-col gap-6">
+              {showFacilityOverview && !loading ? (
+                <FacilityOverview
+                  facility={facilityProfile}
+                  operatingHours={facilityHours}
+                  totalCapacity={totalCapacity}
+                  totalBookedSlots={totalBookedSlots}
+                  fullSlots={fullSlots}
+                  pendingTransactions={pendingTransactions}
+                />
+              ) : null}
 
-              {/* Verification Queue */}
-              <div className="rounded-3xl bg-white border  shadow-lg p-5">
-                <VerificationQueue />
-              </div>
+              {showBookingSchedule && !loading ? (
+                <BookingScheduleBoard
+                  slots={todaysBookings}
+                  selectedDate={selectedDate}
+                />
+              ) : null}
 
-              {/* Help Desk */}
-              <div className="rounded-3xl bg-white border  shadow-lg p-5">
-                <HelpDesk />
-              </div>
+              {showTransactionFlow && !loading ? (
+                <TransactionFlowPanel
+                  transactions={transactionQueue}
+                  onAdvance={advanceTransaction}
+                  actionLoadingId={actionLoadingId}
+                />
+              ) : null}
+            </section>
 
-            </div>
-          </div>
+            <aside className="space-y-6">
+              <ActivityFeed activityLog={activityLog} />
+              <HelpDesk />
+            </aside>
+          </section>
         </main>
-      </div>
-    </div>
+      </section>
+    </section>
   );
 }

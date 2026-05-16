@@ -11,7 +11,6 @@ export default function ListingDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  // Keep navigation side-effects outside the hook so the hook stays reusable.
   const handleDeleteSuccess = useCallback(() => {
     navigate("/student-dashboard");
   }, [navigate]);
@@ -37,7 +36,6 @@ export default function ListingDetails() {
     onDeleteSuccess: handleDeleteSuccess,
   });
 
-  // Contact seller handler
   const handleContactSeller = () => {
     navigate(`/chat/${listing.id}?seller=${listing.seller.id}`);
   };

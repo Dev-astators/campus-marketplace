@@ -5,6 +5,7 @@ import { describe, it, expect, beforeEach, jest } from "@jest/globals";
 import StudentDashboard from "../../pages/StudentDashboard";
 import useDashboardListings from "../../hooks/useDashboardListings";
 import useListingFilters from "../../hooks/useListingFilters";
+import { MemoryRouter } from "react-router-dom";
 
 const mockNavigate = jest.fn();
 
@@ -55,7 +56,11 @@ describe("StudentDashboard", () => {
   });
 
   it("renders the greeting and listings heading", () => {
-    render(<StudentDashboard />);
+    render(
+      <MemoryRouter>
+        <StudentDashboard />
+      </MemoryRouter>
+    );
 
     expect(
       screen.getByRole("heading", { name: /hello, ada/i }),
@@ -66,7 +71,11 @@ describe("StudentDashboard", () => {
   it("navigates to messages when the sidebar button is clicked", async () => {
     const userDriver = userEvent.setup();
 
-    render(<StudentDashboard />);
+    render(
+      <MemoryRouter>
+        <StudentDashboard />
+      </MemoryRouter>
+    );
 
     await userDriver.click(screen.getByRole("button", { name: /messages/i }));
 
@@ -76,7 +85,11 @@ describe("StudentDashboard", () => {
   it("shows profile settings when profile tab is selected", async () => {
     const userDriver = userEvent.setup();
 
-    render(<StudentDashboard />);
+    render(
+      <MemoryRouter>
+        <StudentDashboard />
+      </MemoryRouter>
+    );
 
     await userDriver.click(
       screen.getByRole("button", { name: /profile settings/i }),

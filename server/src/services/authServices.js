@@ -20,10 +20,10 @@ const validateUniversityEmail = (email) =>{
 };
 
 //getRoleRedirect-> Returns the correct route based on the role read for profiles
-const getRoleRedirect = (role) =>{
+const getRoleRedirect = (role, facilityId = null) =>{
     const redirectMap= {
         student: '/student-dashboard',
-        facility_staff: '/facility-dashboard',
+        facility_staff: facilityId ? `/facility-dashboard/${facilityId}` : '/facility-dashboard',
         admin: '/admin-dashboard'
     };
 

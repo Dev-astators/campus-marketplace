@@ -1,6 +1,35 @@
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useRef } from "react";
+import { supabase } from "../config/supabaseClient";
+import { API_BASE_URL } from "../config/apiBaseUrl";
 
-const INITIAL_OPERATING_HOURS = [
+// ─── API base URL ─────────────────────────────────────────────────────────────
+const API_BASE = `${API_BASE_URL}/api`;
+
+const getAuthHeaders = async () => {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  return {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${session?.access_token ?? ""}`,
+  };
+};
+
+const apiFetch = async (path, options = {}) => {
+  const headers = await getAuthHeaders();
+  const res = await fetch(`${API_BASE}${path}`, {
+    ...options,
+    headers: { ...headers, ...(options.headers ?? {}) },
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.message || `Request failed: ${res.status}`);
+  }
+  return res.json();
+};
+
+// ─── Default operating hours ──────────────────────────────────────────────────
+const DEFAULT_HOURS = [
   { day: "Mon", open: "08:00", close: "18:00", active: true },
   { day: "Tue", open: "08:00", close: "18:00", active: true },
   { day: "Wed", open: "08:00", close: "18:00", active: true },
@@ -10,68 +39,229 @@ const INITIAL_OPERATING_HOURS = [
   { day: "Sun", open: "", close: "", active: false },
 ];
 
-const INITIAL_FLAGGED_LISTINGS = [
-  {
-    id: "L-102",
-    title: "Calculus Textbook",
-    reason: "Potential counterfeit",
-    reportedBy: "Student 284",
+// ─── State shape ──────────────────────────────────────────────────────────────
+const initialState = {
+  activeSection: "overview",
+
+  // Remote data
+  user: null,
+  summary: null,
+  analytics: null,
+  flaggedListings: [],
+  flaggedReviews: [],
+  users: [],
+  facilities: [],
+
+  // Facility edit form (currently selected facility)
+  selectedFacilityId: null,
+  facilitySettings: {
+    name: "",
+    location: "",
+    slotCapacity: 6,
+    isActive: true,
   },
-  {
-    id: "L-118",
-    title: "Gaming Laptop",
-    reason: "Suspicious pricing",
-    reportedBy: "System",
+  operatingHours: DEFAULT_HOURS,
+  lastSavedAt: null,
+
+  // UI state
+  loadingStates: {
+    summary: false,
+    analytics: false,
+    moderation: false,
+    users: false,
+    facilities: false,
   },
-];
+  errors: {},
+  savingFacility: false,
+  togglingRole: null, // userId currently being updated
+};
 
-const INITIAL_FLAGGED_REVIEWS = [
-  {
-    id: "R-21",
-    listing: "Desk Lamp",
-    reason: "Abusive language",
-    reportedBy: "Student 109",
-  },
-  {
-    id: "R-34",
-    listing: "Physics Notes",
-    reason: "Personal info shared",
-    reportedBy: "System",
-  },
-];
+// ─── Reducer ──────────────────────────────────────────────────────────────────
+function reducer(state, action) {
+  switch (action.type) {
+    case "SET_SECTION":
+      return { ...state, activeSection: action.payload };
 
-const POPULAR_CATEGORIES = [
-  { label: "Textbooks", count: 42 },
-  { label: "Electronics", count: 31 },
-  { label: "Furniture", count: 18 },
-  { label: "Clothing", count: 12 },
-];
+    case "LOADING":
+      return {
+        ...state,
+        loadingStates: { ...state.loadingStates, [action.key]: true },
+        errors: { ...state.errors, [action.key]: null },
+      };
+    case "LOADED":
+      return {
+        ...state,
+        loadingStates: { ...state.loadingStates, [action.key]: false },
+      };
+    case "ERROR":
+      return {
+        ...state,
+        loadingStates: { ...state.loadingStates, [action.key]: false },
+        errors: { ...state.errors, [action.key]: action.message },
+      };
 
-const TRANSACTIONS_OVER_TIME = [
-  { label: "Jan", count: 24 },
-  { label: "Feb", count: 29 },
-  { label: "Mar", count: 36 },
-  { label: "Apr", count: 41 },
-];
+    case "SET_SUMMARY":
+      return { ...state, summary: action.payload };
 
-const buildCsv = (rows) => {
-  if (!rows || rows.length === 0) return "";
+    case "SET_ANALYTICS":
+      return { ...state, analytics: action.payload };
 
-  const headers = Object.keys(rows[0]);
-  const escapeValue = (value) => {
-    const stringValue = String(value ?? "");
-    if (stringValue.includes(",") || stringValue.includes("\n")) {
-      return `"${stringValue.replace(/"/g, '""')}"`;
+    case "SET_MODERATION":
+      return {
+        ...state,
+        flaggedListings: action.payload.flaggedListings,
+        flaggedReviews: action.payload.flaggedReviews,
+      };
+
+    case "RESOLVE_LISTING":
+      return {
+        ...state,
+        flaggedListings: state.flaggedListings.filter(
+          (item) => item.id !== action.id,
+        ),
+      };
+
+    case "RESOLVE_REVIEW":
+      return {
+        ...state,
+        flaggedReviews: state.flaggedReviews.filter(
+          (item) => item.id !== action.id,
+        ),
+      };
+
+    case "SET_USERS":
+      return { ...state, users: action.payload };
+
+    case "TOGGLING_ROLE":
+      return { ...state, togglingRole: action.userId };
+
+    case "ROLE_UPDATED": {
+      const updated = action.payload;
+      return {
+        ...state,
+        togglingRole: null,
+        users: state.users.map((u) =>
+          u.id === updated.id ? { ...u, role: updated.role } : u,
+        ),
+      };
     }
-    return stringValue;
-  };
 
-  const lines = [headers.join(",")];
-  for (const row of rows) {
-    lines.push(headers.map((header) => escapeValue(row[header])).join(","));
+    case "ROLE_ERROR":
+      return { ...state, togglingRole: null };
+
+    case "SET_FACILITIES":
+      return { ...state, facilities: action.payload };
+
+    case "SET_USER":
+      return { ...state, user: action.payload };
+
+    case "SELECT_FACILITY": {
+      const fac = action.payload;
+      // Normalise operating_hours from DB to the array shape the panel expects
+      const hours = normaliseFacilityHours(fac.operating_hours);
+      return {
+        ...state,
+        selectedFacilityId: fac.id,
+        facilitySettings: {
+          name: fac.name,
+          location: fac.location,
+          slotCapacity: fac.slot_capacity,
+          isActive: fac.is_active,
+        },
+        operatingHours: hours,
+        lastSavedAt: null,
+      };
+    }
+
+    case "UPDATE_SETTING":
+      return {
+        ...state,
+        facilitySettings: {
+          ...state.facilitySettings,
+          [action.field]: action.value,
+        },
+      };
+
+    case "UPDATE_HOURS":
+      return {
+        ...state,
+        operatingHours: state.operatingHours.map((entry) =>
+          entry.day === action.day
+            ? { ...entry, [action.field]: action.value }
+            : entry,
+        ),
+      };
+
+    case "SAVING_FACILITY":
+      return { ...state, savingFacility: true };
+
+    case "FACILITY_SAVED":
+      return {
+        ...state,
+        savingFacility: false,
+        lastSavedAt: new Date(),
+        facilities: state.facilities.map((f) =>
+          f.id === action.payload.id ? action.payload : f,
+        ),
+      };
+
+    case "FACILITY_SAVE_ERROR":
+      return { ...state, savingFacility: false };
+
+    default:
+      return state;
+  }
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function normaliseFacilityHours(raw) {
+  if (!raw) return DEFAULT_HOURS;
+
+  if (Array.isArray(raw)) {
+    // Already in array shape: [{day, open, close, active}]
+    return raw.map((entry) => ({
+      day: entry.day ?? "Unknown",
+      open: entry.open ?? "",
+      close: entry.close ?? "",
+      active: Boolean(entry.active),
+    }));
   }
 
-  return lines.join("\n");
+  if (typeof raw === "object") {
+    // Object shape: { mon: { open, close }, ... }
+    const dayOrder = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    const keyMap = Object.fromEntries(
+      Object.keys(raw).map((k) => [k.toLowerCase().slice(0, 3), k]),
+    );
+    return dayOrder.map((day) => {
+      const key = keyMap[day.toLowerCase()];
+      const val = key ? raw[key] : null;
+      return {
+        day,
+        open: val?.open ?? "",
+        close: val?.close ?? "",
+        active: Boolean(val?.active ?? !!val?.open),
+      };
+    });
+  }
+
+  return DEFAULT_HOURS;
+}
+
+// ─── CSV / PDF helpers (unchanged from original) ──────────────────────────────
+const buildCsv = (rows) => {
+  if (!rows || rows.length === 0) return "";
+  const headers = Object.keys(rows[0]);
+  const escape = (v) => {
+    const s = String(v ?? "");
+    return s.includes(",") || s.includes("\n")
+      ? `"${s.replace(/"/g, '""')}"`
+      : s;
+  };
+  return [
+    headers.join(","),
+    ...rows.map((row) => headers.map((h) => escape(row[h])).join(",")),
+  ].join("\n");
 };
 
 const triggerDownload = (filename, content, mimeType) => {
@@ -86,19 +276,10 @@ const triggerDownload = (filename, content, mimeType) => {
 };
 
 const openPrintWindow = (title, rows) => {
-  if (typeof window === "undefined") return;
+  if (typeof window === "undefined" || !rows.length) return;
   const popup = window.open("", "_blank", "width=900,height=700");
   if (!popup) return;
-
-  const tableRows = rows
-    .map(
-      (row) =>
-        `<tr>${Object.values(row)
-          .map((value) => `<td>${value ?? ""}</td>`)
-          .join("")}</tr>`,
-    )
-    .join("");
-
+  const headers = Object.keys(rows[0]);
   popup.document.write(`
     <html>
       <head>
@@ -107,19 +288,17 @@ const openPrintWindow = (title, rows) => {
           body { font-family: Arial, sans-serif; padding: 24px; }
           h1 { font-size: 20px; margin-bottom: 16px; }
           table { width: 100%; border-collapse: collapse; }
-          th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-          th { background: #f4f4f4; }
+          th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 13px; }
+          th { background: #f4f4f4; font-weight: 600; }
         </style>
       </head>
       <body>
         <h1>${title}</h1>
         <table>
-          <thead>
-            <tr>${Object.keys(rows[0] || {})
-              .map((key) => `<th>${key}</th>`)
-              .join("")}</tr>
-          </thead>
-          <tbody>${tableRows}</tbody>
+          <thead><tr>${headers.map((h) => `<th>${h}</th>`).join("")}</tr></thead>
+          <tbody>
+            ${rows.map((row) => `<tr>${headers.map((h) => `<td>${row[h] ?? ""}</td>`).join("")}</tr>`).join("")}
+          </tbody>
         </table>
       </body>
     </html>
@@ -129,22 +308,146 @@ const openPrintWindow = (title, rows) => {
   popup.print();
 };
 
+// ─── Hook ─────────────────────────────────────────────────────────────────────
 export default function useAdminDashboard() {
-  const [activeSection, setActiveSection] = useState("overview");
-  const [facilitySettings, setFacilitySettings] = useState({
-    name: "University Square",
-    location: "Wits Central Campus",
-    slotCapacity: 6,
-    isActive: true,
-  });
-  const [operatingHours, setOperatingHours] = useState(INITIAL_OPERATING_HOURS);
-  const [lastSavedAt, setLastSavedAt] = useState(null);
-  const [flaggedListings, setFlaggedListings] = useState(
-    INITIAL_FLAGGED_LISTINGS,
-  );
-  const [flaggedReviews, setFlaggedReviews] = useState(INITIAL_FLAGGED_REVIEWS);
+  const [state, dispatch] = useReducer(reducer, initialState);
+  const isMounted = useRef(true);
 
-  const pendingModerationCount = flaggedListings.length + flaggedReviews.length;
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
+
+  // ── Fetch helpers ──────────────────────────────────────────────────────────
+  const fetchSummary = useCallback(async () => {
+    dispatch({ type: "LOADING", key: "summary" });
+    try {
+      const data = await apiFetch("/admin/summary");
+      if (!isMounted.current) return;
+      dispatch({ type: "SET_SUMMARY", payload: data });
+    } catch (err) {
+      if (!isMounted.current) return;
+      dispatch({ type: "ERROR", key: "summary", message: err.message });
+    } finally {
+      if (isMounted.current) dispatch({ type: "LOADED", key: "summary" });
+    }
+  }, []);
+
+  const fetchAnalytics = useCallback(async () => {
+    dispatch({ type: "LOADING", key: "analytics" });
+    try {
+      const data = await apiFetch("/admin/analytics");
+      if (!isMounted.current) return;
+      dispatch({ type: "SET_ANALYTICS", payload: data });
+    } catch (err) {
+      if (!isMounted.current) return;
+      dispatch({ type: "ERROR", key: "analytics", message: err.message });
+    } finally {
+      if (isMounted.current) dispatch({ type: "LOADED", key: "analytics" });
+    }
+  }, []);
+
+  const fetchModeration = useCallback(async () => {
+    dispatch({ type: "LOADING", key: "moderation" });
+    try {
+      const data = await apiFetch("/admin/moderation");
+      if (!isMounted.current) return;
+      dispatch({ type: "SET_MODERATION", payload: data });
+    } catch (err) {
+      if (!isMounted.current) return;
+      dispatch({ type: "ERROR", key: "moderation", message: err.message });
+    } finally {
+      if (isMounted.current) dispatch({ type: "LOADED", key: "moderation" });
+    }
+  }, []);
+
+  const fetchUsers = useCallback(async () => {
+    dispatch({ type: "LOADING", key: "users" });
+    try {
+      const data = await apiFetch("/admin/users");
+      if (!isMounted.current) return;
+      dispatch({ type: "SET_USERS", payload: data });
+    } catch (err) {
+      if (!isMounted.current) return;
+      dispatch({ type: "ERROR", key: "users", message: err.message });
+    } finally {
+      if (isMounted.current) dispatch({ type: "LOADED", key: "users" });
+    }
+  }, []);
+
+  const fetchFacilities = useCallback(async () => {
+    dispatch({ type: "LOADING", key: "facilities" });
+    try {
+      const data = await apiFetch("/admin/facilities");
+      if (!isMounted.current) return;
+      dispatch({ type: "SET_FACILITIES", payload: data });
+      // Auto-select first facility if none selected
+      if (data.length > 0) {
+        dispatch({ type: "SELECT_FACILITY", payload: data[0] });
+      }
+    } catch (err) {
+      if (!isMounted.current) return;
+      dispatch({ type: "ERROR", key: "facilities", message: err.message });
+    } finally {
+      if (isMounted.current) dispatch({ type: "LOADED", key: "facilities" });
+    }
+  }, []);
+
+  const fetchUser = useCallback(async () => {
+    try {
+      const { data } = await supabase.auth.getSession();
+      if (!data.session) return;
+
+      const authUser = data.session.user;
+      const metadata = authUser.user_metadata ?? {};
+      const fullName =
+        metadata.full_name ||
+        metadata.name ||
+        authUser.email?.split("@")[0] ||
+        "Admin";
+
+      const userData = {
+        name: authUser.email?.split("@")[0] || "Admin",
+        fullName,
+        id: authUser.id,
+        email: authUser.email,
+        role: "administrator",
+        provider: authUser.app_metadata?.provider || "google",
+        createdAt: authUser.created_at,
+        lastSignInAt: authUser.last_sign_in_at,
+        avatarUrl: metadata.avatar_url || metadata.picture || null,
+      };
+
+      if (isMounted.current) {
+        dispatch({ type: "SET_USER", payload: userData });
+      }
+    } catch (err) {
+      console.error("Failed to fetch user:", err);
+    }
+  }, []);
+
+  // Bootstrap all data on mount
+  useEffect(() => {
+    fetchSummary();
+    fetchAnalytics();
+    fetchModeration();
+    fetchUsers();
+    fetchFacilities();
+    fetchUser();
+  }, [
+    fetchSummary,
+    fetchAnalytics,
+    fetchModeration,
+    fetchUsers,
+    fetchFacilities,
+    fetchUser,
+  ]);
+
+  // ── Derived nav items ──────────────────────────────────────────────────────
+  const pendingModerationCount =
+    state.flaggedListings.length + state.flaggedReviews.length;
 
   const navItems = useMemo(
     () => [
@@ -152,181 +455,254 @@ export default function useAdminDashboard() {
       { id: "facility", label: "Facility" },
       { id: "moderation", label: "Moderation", badge: pendingModerationCount },
       { id: "analytics", label: "Analytics" },
+      { id: "users", label: "Users" },
       { id: "settings", label: "Settings" },
+      { id: "profile", label: "Profile" },
     ],
     [pendingModerationCount],
   );
 
-  const utilizationCapacity =
-    facilitySettings.slotCapacity * operatingHours.length;
-  const utilizationBooked = Math.round(utilizationCapacity * 0.72);
-
-  const summaryCards = useMemo(
-    () => [
+  // ── Summary cards ──────────────────────────────────────────────────────────
+  const summaryCards = useMemo(() => {
+    const s = state.summary;
+    if (!s) {
+      return [
+        { title: "Active Listings", value: "—", trend: "Loading…" },
+        { title: "Pending Moderation", value: "—", trend: "Loading…" },
+        { title: "Facility Utilisation", value: "—", trend: "Loading…" },
+        { title: "Transactions (30d)", value: "—", trend: "Loading…" },
+      ];
+    }
+    return [
       {
         title: "Active Listings",
-        value: "128",
-        trend: "+6% vs last week",
+        value: String(s.activeListings),
+        trend: "Currently live on the platform",
       },
       {
         title: "Pending Moderation",
-        value: String(pendingModerationCount),
-        trend: pendingModerationCount ? "Needs review" : "All clear",
+        value: String(s.pendingModeration),
+        trend: s.pendingModeration > 0 ? "Needs review" : "All clear",
       },
       {
-        title: "Facility Utilization",
-        value: `${Math.round((utilizationBooked / utilizationCapacity) * 100)}%`,
-        trend: `${utilizationBooked}/${utilizationCapacity} slots booked`,
+        title: "Facility Utilisation",
+        value: `${s.utilizationPct}%`,
+        trend: `${s.utilizationBooked}/${s.utilizationCapacity} slots booked`,
       },
       {
         title: "Transactions (30d)",
-        value: "214",
-        trend: "Stable trend",
+        value: String(s.transactions30d),
+        trend: "Completed in the last 30 days",
       },
-    ],
-    [pendingModerationCount, utilizationBooked, utilizationCapacity],
+    ];
+  }, [state.summary]);
+
+  // ── Analytics object passed to AnalyticsPanel ─────────────────────────────
+  const analytics = useMemo(() => {
+    if (!state.analytics) {
+      return {
+        popularCategories: [],
+        transactionsOverTime: [],
+        facilityUtilization: { booked: 0, capacity: 0 },
+        flaggedSummary: { listings: 0, reviews: 0, messages: 0 },
+      };
+    }
+    return state.analytics;
+  }, [state.analytics]);
+
+  // ── Actions ────────────────────────────────────────────────────────────────
+  const setActiveSection = useCallback((id) => {
+    dispatch({ type: "SET_SECTION", payload: id });
+  }, []);
+
+  const updateFacilitySetting = useCallback((field, value) => {
+    dispatch({ type: "UPDATE_SETTING", field, value });
+  }, []);
+
+  const updateOperatingHours = useCallback((day, field, value) => {
+    dispatch({ type: "UPDATE_HOURS", day, field, value });
+  }, []);
+
+  const saveFacilitySettings = useCallback(async () => {
+    dispatch({ type: "SAVING_FACILITY" });
+    try {
+      const payload = {
+        ...state.facilitySettings,
+        operatingHours: state.operatingHours,
+        id: state.selectedFacilityId,
+      };
+
+      const method = state.selectedFacilityId ? "PATCH" : "POST";
+      const path = state.selectedFacilityId
+        ? `/admin/facilities/${state.selectedFacilityId}`
+        : "/admin/facilities";
+
+      const data = await apiFetch(path, {
+        method,
+        body: JSON.stringify(payload),
+      });
+
+      dispatch({ type: "FACILITY_SAVED", payload: data });
+    } catch (err) {
+      dispatch({ type: "FACILITY_SAVE_ERROR" });
+      console.error("Failed to save facility settings:", err.message);
+    }
+  }, [state.facilitySettings, state.operatingHours, state.selectedFacilityId]);
+
+  const selectFacility = useCallback(
+    (facilityId) => {
+      const fac = state.facilities.find((f) => f.id === facilityId);
+      if (fac) dispatch({ type: "SELECT_FACILITY", payload: fac });
+    },
+    [state.facilities],
   );
 
-  const analytics = useMemo(
-    () => ({
-      popularCategories: POPULAR_CATEGORIES,
-      transactionsOverTime: TRANSACTIONS_OVER_TIME,
-      facilityUtilization: {
-        booked: utilizationBooked,
-        capacity: utilizationCapacity,
-      },
-      flaggedSummary: {
-        listings: flaggedListings.length,
-        reviews: flaggedReviews.length,
-        messages: 1,
-      },
-    }),
-    [
-      flaggedListings.length,
-      flaggedReviews.length,
-      utilizationBooked,
-      utilizationCapacity,
-    ],
+  const resolveListingFlag = useCallback(
+    async (id) => {
+      // Optimistic update
+      dispatch({ type: "RESOLVE_LISTING", id });
+      try {
+        await apiFetch(`/admin/moderation/listings/${id}/resolve`, {
+          method: "PATCH",
+        });
+        // Refresh summary badge
+        fetchSummary();
+      } catch (err) {
+        // Roll back on failure
+        fetchModeration();
+        console.error("Failed to resolve listing flag:", err.message);
+      }
+    },
+    [fetchModeration, fetchSummary],
   );
 
-  const updateFacilitySetting = (field, value) => {
-    setFacilitySettings((prev) => ({ ...prev, [field]: value }));
-  };
+  const resolveReviewFlag = useCallback(
+    async (id) => {
+      dispatch({ type: "RESOLVE_REVIEW", id });
+      try {
+        await apiFetch(`/admin/moderation/reviews/${id}/resolve`, {
+          method: "PATCH",
+        });
+        fetchSummary();
+      } catch (err) {
+        fetchModeration();
+        console.error("Failed to resolve review flag:", err.message);
+      }
+    },
+    [fetchModeration, fetchSummary],
+  );
 
-  const updateOperatingHours = (day, field, value) => {
-    setOperatingHours((prev) =>
-      prev.map((entry) =>
-        entry.day === day ? { ...entry, [field]: value } : entry,
-      ),
-    );
-  };
+  const updateUserRole = useCallback(async (userId, newRole) => {
+    dispatch({ type: "TOGGLING_ROLE", userId });
+    try {
+      const data = await apiFetch(`/admin/users/${userId}/role`, {
+        method: "PATCH",
+        body: JSON.stringify({ role: newRole }),
+      });
+      dispatch({ type: "ROLE_UPDATED", payload: data });
+    } catch (err) {
+      dispatch({ type: "ROLE_ERROR" });
+      console.error("Failed to update role:", err.message);
+    }
+  }, []);
 
-  const saveFacilitySettings = () => {
-    setLastSavedAt(new Date());
-  };
+  // ── Export helpers ─────────────────────────────────────────────────────────
+  const exportCsv = useCallback(
+    (reportId) => {
+      const configs = {
+        categories: {
+          filename: "popular-categories.csv",
+          rows: analytics.popularCategories,
+        },
+        transactions: {
+          filename: "transactions-over-time.csv",
+          rows: analytics.transactionsOverTime,
+        },
+        utilization: {
+          filename: "facility-utilization.csv",
+          rows: [analytics.facilityUtilization],
+        },
+        moderation: {
+          filename: "flagged-content.csv",
+          rows: [analytics.flaggedSummary],
+        },
+      };
+      const config = configs[reportId];
+      if (!config) return;
+      const csv = buildCsv(config.rows);
+      if (csv) triggerDownload(config.filename, csv, "text/csv;charset=utf-8;");
+    },
+    [analytics],
+  );
 
-  const resolveListingFlag = (id) => {
-    setFlaggedListings((prev) => prev.filter((item) => item.id !== id));
-  };
-
-  const resolveReviewFlag = (id) => {
-    setFlaggedReviews((prev) => prev.filter((item) => item.id !== id));
-  };
-
-  const exportCsv = (reportId) => {
-    const reportConfig = {
-      categories: {
-        filename: "popular-categories.csv",
-        rows: POPULAR_CATEGORIES,
-      },
-      transactions: {
-        filename: "transactions-over-time.csv",
-        rows: TRANSACTIONS_OVER_TIME,
-      },
-      utilization: {
-        filename: "facility-utilization.csv",
-        rows: [
-          {
-            booked: utilizationBooked,
-            capacity: utilizationCapacity,
-          },
-        ],
-      },
-      moderation: {
-        filename: "flagged-content.csv",
-        rows: [
-          {
-            listings: flaggedListings.length,
-            reviews: flaggedReviews.length,
-            messages: 1,
-          },
-        ],
-      },
-    };
-
-    const config = reportConfig[reportId];
-    if (!config) return;
-
-    const csv = buildCsv(config.rows);
-    if (!csv) return;
-
-    triggerDownload(config.filename, csv, "text/csv;charset=utf-8;");
-  };
-
-  const exportPdf = (reportId) => {
-    const reportConfig = {
-      categories: {
-        title: "Popular Categories",
-        rows: POPULAR_CATEGORIES,
-      },
-      transactions: {
-        title: "Transactions Over Time",
-        rows: TRANSACTIONS_OVER_TIME,
-      },
-      utilization: {
-        title: "Facility Utilization",
-        rows: [
-          {
-            booked: utilizationBooked,
-            capacity: utilizationCapacity,
-          },
-        ],
-      },
-      moderation: {
-        title: "Flagged Content Summary",
-        rows: [
-          {
-            listings: flaggedListings.length,
-            reviews: flaggedReviews.length,
-            messages: 1,
-          },
-        ],
-      },
-    };
-
-    const config = reportConfig[reportId];
-    if (!config || config.rows.length === 0) return;
-
-    openPrintWindow(config.title, config.rows);
-  };
+  const exportPdf = useCallback(
+    (reportId) => {
+      const configs = {
+        categories: {
+          title: "Popular Categories",
+          rows: analytics.popularCategories,
+        },
+        transactions: {
+          title: "Transactions Over Time",
+          rows: analytics.transactionsOverTime,
+        },
+        utilization: {
+          title: "Facility Utilisation",
+          rows: [analytics.facilityUtilization],
+        },
+        moderation: {
+          title: "Flagged Content Summary",
+          rows: [analytics.flaggedSummary],
+        },
+      };
+      const config = configs[reportId];
+      if (config?.rows?.length) openPrintWindow(config.title, config.rows);
+    },
+    [analytics],
+  );
 
   return {
+    // Navigation
     navItems,
-    activeSection,
+    activeSection: state.activeSection,
     setActiveSection,
+
+    // User
+    user: state.user,
+
+    // Summary
     summaryCards,
-    facilitySettings,
-    operatingHours,
-    lastSavedAt,
+
+    // Facility
+    facilities: state.facilities,
+    selectedFacilityId: state.selectedFacilityId,
+    facilitySettings: state.facilitySettings,
+    operatingHours: state.operatingHours,
+    lastSavedAt: state.lastSavedAt,
+    savingFacility: state.savingFacility,
     updateFacilitySetting,
     updateOperatingHours,
     saveFacilitySettings,
-    flaggedListings,
-    flaggedReviews,
+    selectFacility,
+
+    // Moderation
+    flaggedListings: state.flaggedListings,
+    flaggedReviews: state.flaggedReviews,
     resolveListingFlag,
     resolveReviewFlag,
+
+    // Analytics
     analytics,
     exportCsv,
     exportPdf,
+
+    // Users
+    users: state.users,
+    togglingRole: state.togglingRole,
+    updateUserRole,
+
+    // UI state
+    loadingStates: state.loadingStates,
+    errors: state.errors,
   };
 }
