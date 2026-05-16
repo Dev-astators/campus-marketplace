@@ -4,7 +4,27 @@ const statusClasses = {
   Open: "bg-emerald-50 text-emerald-700",
 };
 
-export default function BookingScheduleBoard({ slots }) {
+const formatSelectedDate = (selectedDate) => {
+  if (!selectedDate) {
+    return "";
+  }
+
+  const parsedDate = new Date(`${selectedDate}T00:00:00`);
+
+  if (Number.isNaN(parsedDate.getTime())) {
+    return selectedDate;
+  }
+
+  return new Intl.DateTimeFormat("en-ZA", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(parsedDate);
+};
+
+export default function BookingScheduleBoard({ slots, selectedDate = "" }) {
+  const displayDate = formatSelectedDate(selectedDate);
+
   return (
     <article className="rounded-3xl border border-slate-200 bg-white shadow-sm">
       <header className="border-b border-slate-100 px-6 py-5">
@@ -18,6 +38,11 @@ export default function BookingScheduleBoard({ slots }) {
           Full windows stop accepting more bookings automatically, helping the
           facility enforce slot capacity throughout the day.
         </p>
+        {displayDate ? (
+          <p className="mt-3 text-xs font-medium uppercase tracking-[0.18em] text-slate-400">
+            Showing bookings for {displayDate}
+          </p>
+        ) : null}
       </header>
 
       <section className="overflow-x-auto px-6 py-5">
