@@ -55,6 +55,9 @@ export default function AdminDashboard() {
     [setActiveSection],
   );
 
+  const firstName = user?.fullName?.split(" ")[0] || user?.name || "Student";
+  
+
   return (
     <section
       className="h-screen flex flex-col bg-gray-50 overflow-hidden"
@@ -71,8 +74,15 @@ export default function AdminDashboard() {
         </a>
         <span className="text-sm font-medium text-gray-500">Admin Console</span>
         <div className="ml-auto flex items-center gap-3">
-          <span className="text-sm font-medium text-gray-800">Admin</span>
+          <span className="text-sm font-medium text-gray-800">{user?.fullName}</span>
           <figure className="w-9 h-9 rounded-full bg-gray-300 overflow-hidden flex items-center justify-center">
+            {user?.avatarUrl ? (
+            <img
+              src={user.avatarUrl}
+              alt={`${user?.fullName} avatar`}
+              className="w-full h-full object-cover"
+            />
+          ) : (
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
@@ -86,7 +96,9 @@ export default function AdminDashboard() {
                 clipRule="evenodd"
               />
             </svg>
+          )}
             <figcaption className="sr-only">Admin profile picture</figcaption>
+            
           </figure>
         </div>
       </header>
@@ -113,7 +125,7 @@ export default function AdminDashboard() {
           {/* ── Overview heading ─────────────────────────────────────────── */}
           {activeSection !== "profile" && (
             <section id="overview">
-              <h1 className="text-2xl font-bold text-gray-800">Hello, Admin</h1>
+              <h1 className="text-2xl font-bold text-gray-800">Hello, {firstName}</h1>
               <p className="text-sm text-gray-400">
                 Overview of marketplace activity and operations.
               </p>

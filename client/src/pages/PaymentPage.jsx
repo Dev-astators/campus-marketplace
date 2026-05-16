@@ -154,7 +154,7 @@ export default function PaymentPage({ result }) {
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("id")
-        .eq("auth_user_id", session.user.id)
+        .eq("id", session.user.id)
         .single();
 
       console.log("Session user id:", session.user.id);
