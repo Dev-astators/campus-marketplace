@@ -28,6 +28,19 @@ const createOrderBuilder = (result) => {
   return builder;
 };
 
+const createUpcomingSlotsBuilder = (result) => {
+  const builder = {};
+  builder.select = jest.fn(() => builder);
+  builder.eq = jest.fn(() => builder);
+  builder.gte = jest.fn(() => builder);
+  builder.order = jest
+    .fn()
+    .mockImplementationOnce(() => builder)
+    .mockImplementationOnce(() => builder);
+  builder.limit = jest.fn().mockResolvedValue(result);
+  return builder;
+};
+
 const createInBuilder = (result) => {
   const builder = {};
   builder.select = jest.fn(() => builder);
@@ -195,8 +208,8 @@ describe("facilityDashboardService", () => {
                 id: "booking-1",
                 transaction_id: "tx-1",
                 slot_id: "slot-1",
-                booking_type: "dropoff",
-                status: "received",
+                booking_type: "drop_off",
+                status: "confirmed",
                 confirmed_at: "2026-05-10T07:00:00.000Z",
                 staff_confirmed_by: "Staff A",
               },
@@ -205,7 +218,7 @@ describe("facilityDashboardService", () => {
                 transaction_id: "tx-1",
                 slot_id: "slot-2",
                 booking_type: "collection",
-                status: "scheduled",
+                status: "pending",
                 confirmed_at: null,
                 staff_confirmed_by: null,
               },
@@ -214,7 +227,7 @@ describe("facilityDashboardService", () => {
                 transaction_id: "tx-2",
                 slot_id: "slot-1",
                 booking_type: "collection",
-                status: "released",
+                status: "complete",
                 confirmed_at: "2026-05-10T08:00:00.000Z",
                 staff_confirmed_by: "Staff A",
               },
@@ -227,7 +240,7 @@ describe("facilityDashboardService", () => {
             data: [
               {
                 id: "tx-1",
-                status: "item_received",
+                status: "confirmed",
                 online_amount: 500,
                 cash_shortfall: 100,
                 cash_settled: false,
@@ -251,7 +264,7 @@ describe("facilityDashboardService", () => {
               },
               {
                 id: "tx-2",
-                status: "completed",
+                status: "complete",
                 online_amount: 0,
                 cash_shortfall: 0,
                 cash_settled: true,
@@ -361,10 +374,122 @@ describe("facilityDashboardService", () => {
       expect(activityTitles).toEqual(
         expect.arrayContaining([
           "Drop-off confirmed for tx-1",
-          "Collection confirmed for tx-2",
+          "Collection completed for tx-2",
           "09:00 slot reached capacity",
           "Transaction completed for tx-2",
         ]),
+      );
+    });
+
+    test("Given no explicit date and future bookings exist, when fetched, then the dashboard resolves to the earliest upcoming booked date", async () => {
+      queueFromBuilders({
+        trade_facilities: [
+          createMaybeSingleBuilder({
+            data: {
+              id: "facility-1",
+              name: "Wits Exchange Hub",
+              location: "Braamfontein Campus",
+              slot_capacity: 10,
+              is_active: true,
+              operating_hours: [],
+            },
+            error: null,
+          }),
+        ],
+        facility_slots: [
+          createUpcomingSlotsBuilder({
+            data: [
+              {
+                id: "slot-empty",
+                facility_id: "facility-1",
+                slot_date: "2026-05-16",
+                slot_time: "09:00:00",
+                capacity: 10,
+                booked_count: 0,
+              },
+              {
+                id: "slot-booked",
+                facility_id: "facility-1",
+                slot_date: "2026-05-17",
+                slot_time: "10:00:00",
+                capacity: 10,
+                booked_count: 1,
+              },
+            ],
+            error: null,
+          }),
+        ],
+        facility_bookings: [
+          createInBuilder({
+            data: [
+              {
+                id: "booking-1",
+                transaction_id: "tx-1",
+                slot_id: "slot-booked",
+                booking_type: "collection",
+                status: "pending",
+                confirmed_at: null,
+                staff_confirmed_by: null,
+              },
+            ],
+            error: null,
+          }),
+        ],
+        transactions: [
+          createInBuilder({
+            data: [
+              {
+                id: "tx-1",
+                status: "confirmed",
+                online_amount: 500,
+                cash_shortfall: 0,
+                cash_settled: true,
+                created_at: "2026-05-16T06:00:00.000Z",
+                listing: {
+                  id: "listing-1",
+                  title: "Laptop",
+                  category: "Electronics",
+                  asking_price: 500,
+                },
+                buyer: {
+                  id: "buyer-1",
+                  full_name: "Buyer One",
+                  email: "buyer@example.com",
+                },
+                seller: {
+                  id: "seller-1",
+                  full_name: "Seller One",
+                  email: "seller@example.com",
+                },
+              },
+            ],
+            error: null,
+          }),
+        ],
+      });
+
+      const { data, error } = await getFacilityDashboard(
+        undefined,
+        "facility-1",
+        "facility_staff",
+      );
+
+      expect(error).toBeNull();
+      expect(data.selectedDate).toBe("2026-05-17");
+      expect(data.slots).toHaveLength(1);
+      expect(data.slots[0]).toEqual(
+        expect.objectContaining({
+          id: "slot-booked",
+          date: "2026-05-17",
+          bookingSummary: "0 drop-off, 1 collection",
+        }),
+      );
+      expect(data.transactions).toHaveLength(1);
+      expect(data.transactions[0]).toEqual(
+        expect.objectContaining({
+          id: "tx-1",
+          collectionSlot: "2026-05-17 10:00",
+        }),
       );
     });
 
@@ -385,6 +510,87 @@ describe("facilityDashboardService", () => {
   });
 
   describe("advanceFacilityTransaction", () => {
+    const facilityRecord = {
+      id: "facility-1",
+      name: "Wits Exchange Hub",
+      location: "Braamfontein Campus",
+      slot_capacity: 10,
+      is_active: true,
+      operating_hours: [],
+    };
+
+    const upcomingSlots = [
+      {
+        id: "slot-1",
+        facility_id: "facility-1",
+        slot_date: "2026-05-18",
+        slot_time: "09:00:00",
+        capacity: 10,
+        booked_count: 1,
+      },
+      {
+        id: "slot-2",
+        facility_id: "facility-1",
+        slot_date: "2026-05-18",
+        slot_time: "10:30:00",
+        capacity: 10,
+        booked_count: 1,
+      },
+    ];
+
+    const dashboardTransaction = (overrides = {}) => ({
+      id: "tx-1",
+      status: "confirmed",
+      online_amount: 500,
+      cash_shortfall: 120,
+      cash_settled: false,
+      created_at: "2026-05-10T06:00:00.000Z",
+      listing: {
+        id: "listing-1",
+        title: "Laptop",
+        category: "Electronics",
+        asking_price: 620,
+      },
+      buyer: {
+        id: "buyer-1",
+        full_name: "Buyer One",
+        email: "buyer@example.com",
+      },
+      seller: {
+        id: "seller-1",
+        full_name: "Seller One",
+        email: "seller@example.com",
+      },
+      ...overrides,
+    });
+
+    const transactionLookupRecord = (overrides = {}) => ({
+      id: "tx-1",
+      status: "confirmed",
+      online_amount: 500,
+      cash_shortfall: 120,
+      cash_settled: false,
+      created_at: "2026-05-10T06:00:00.000Z",
+      bookings: [],
+      listing: {
+        id: "listing-1",
+        title: "Laptop",
+        category: "Electronics",
+        asking_price: 620,
+      },
+      buyer: {
+        id: "buyer-1",
+        full_name: "Buyer One",
+        email: "buyer@example.com",
+      },
+      seller: {
+        id: "seller-1",
+        full_name: "Seller One",
+        email: "seller@example.com",
+      },
+      ...overrides,
+    });
+
     test("Given transaction lookup fails, when action is advanced, then the lookup error is returned", async () => {
       queueFromBuilders({
         transactions: [
@@ -439,77 +645,77 @@ describe("facilityDashboardService", () => {
       );
     });
 
-    test("Given confirm_dropoff succeeds, when advanced, then booking and transaction statuses are updated and a refreshed dashboard is returned", async () => {
+    test("Given confirm_dropoff succeeds, when advanced, then item receipt is confirmed and the next buyer-arrival action is returned", async () => {
       const transactionLookupBuilder = createSingleBuilder({
-        data: {
-          id: "tx-1",
-          status: "pending",
-          online_amount: 500,
-          cash_shortfall: 0,
-          cash_settled: false,
-          created_at: "2026-05-10T06:00:00.000Z",
+        data: transactionLookupRecord({
           bookings: [
             {
               id: "booking-1",
-              booking_type: "dropoff",
-              status: "scheduled",
+              booking_type: "drop_off",
+              status: "pending",
               confirmed_at: null,
               staff_confirmed_by: null,
-              slot: {
-                id: "slot-1",
-                facility_id: "facility-1",
-                slot_date: "2026-05-10",
-                slot_time: "09:00:00",
-                capacity: 10,
-                booked_count: 1,
-              },
+              slot: upcomingSlots[0],
+            },
+            {
+              id: "booking-2",
+              booking_type: "collection",
+              status: "pending",
+              confirmed_at: null,
+              staff_confirmed_by: null,
+              slot: upcomingSlots[1],
             },
           ],
-          listing: {
-            id: "listing-1",
-            title: "Laptop",
-            category: "Electronics",
-            asking_price: 500,
-          },
-          buyer: {
-            id: "buyer-1",
-            full_name: "Buyer One",
-            email: "buyer@example.com",
-          },
-          seller: {
-            id: "seller-1",
-            full_name: "Seller One",
-            email: "seller@example.com",
-          },
-        },
+        }),
         error: null,
       });
-
       const bookingUpdateBuilder = createUpdateEqBuilder({ error: null });
       const transactionUpdateBuilder = createUpdateEqBuilder({ error: null });
 
       queueFromBuilders({
-        transactions: [
-          transactionLookupBuilder,
-          transactionUpdateBuilder,
-        ],
-        facility_bookings: [bookingUpdateBuilder],
-        trade_facilities: [
-          createMaybeSingleBuilder({
-            data: {
-              id: "facility-1",
-              name: "Wits Exchange Hub",
-              location: "Braamfontein Campus",
-              slot_capacity: 10,
-              is_active: true,
-              operating_hours: [],
-            },
+        facility_bookings: [
+          bookingUpdateBuilder,
+          createInBuilder({
+            data: [
+              {
+                id: "booking-1",
+                transaction_id: "tx-1",
+                slot_id: "slot-1",
+                booking_type: "drop_off",
+                status: "confirmed",
+                confirmed_at: "2026-05-18T07:00:00.000Z",
+                staff_confirmed_by: "Karabo Tlaka",
+              },
+              {
+                id: "booking-2",
+                transaction_id: "tx-1",
+                slot_id: "slot-2",
+                booking_type: "collection",
+                status: "pending",
+                confirmed_at: null,
+                staff_confirmed_by: null,
+              },
+            ],
             error: null,
           }),
         ],
         facility_slots: [
-          createOrderBuilder({
-            data: [],
+          createUpcomingSlotsBuilder({
+            data: upcomingSlots,
+            error: null,
+          }),
+        ],
+        trade_facilities: [
+          createMaybeSingleBuilder({
+            data: facilityRecord,
+            error: null,
+          }),
+        ],
+        transactions: [
+          transactionLookupBuilder,
+          transactionUpdateBuilder,
+          createInBuilder({
+            data: [dashboardTransaction()],
             error: null,
           }),
         ],
@@ -526,25 +732,456 @@ describe("facilityDashboardService", () => {
       expect(error).toBeNull();
       expect(bookingUpdateBuilder.update).toHaveBeenCalledWith(
         expect.objectContaining({
-          status: "received",
+          status: "confirmed",
           staff_confirmed_by: "Karabo Tlaka",
           confirmed_at: expect.any(String),
         }),
       );
       expect(bookingUpdateBuilder.eq).toHaveBeenCalledWith("id", "booking-1");
       expect(transactionUpdateBuilder.update).toHaveBeenCalledWith({
-        status: "item_received",
+        status: "confirmed",
       });
       expect(transactionUpdateBuilder.eq).toHaveBeenCalledWith("id", "tx-1");
-      expect(data).toEqual(
-        expect.objectContaining({
-          facility: expect.objectContaining({
-            id: "facility-1",
-            name: "Wits Exchange Hub",
+      expect(data.transactions).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: "tx-1",
+            stage: "collection_booked",
+            action: "confirm_buyer_arrival",
+            actionLabel: "Confirm buyer arrival",
           }),
-          slots: [],
-          transactions: [],
+        ]),
+      );
+    });
+
+    test("Given confirm_buyer_arrival is attempted before drop-off confirmation, when advanced, then the service blocks the step", async () => {
+      queueFromBuilders({
+        transactions: [
+          createSingleBuilder({
+            data: transactionLookupRecord({
+              bookings: [
+                {
+                  id: "booking-1",
+                  booking_type: "drop_off",
+                  status: "pending",
+                  slot: { facility_id: "facility-1" },
+                },
+                {
+                  id: "booking-2",
+                  booking_type: "collection",
+                  status: "pending",
+                },
+              ],
+            }),
+            error: null,
+          }),
+        ],
+      });
+
+      const result = await advanceFacilityTransaction({
+        transactionId: "tx-1",
+        action: "confirm_buyer_arrival",
+        staffIdentifier: "Karabo Tlaka",
+        facilityId: "facility-1",
+        userRole: "facility_staff",
+      });
+
+      expect(result.data).toBeNull();
+      expect(result.error).toBeInstanceOf(Error);
+      expect(result.error.statusCode).toBe(400);
+      expect(result.error.message).toBe(
+        "Item receipt must be confirmed before buyer arrival can be recorded.",
+      );
+    });
+
+    test("Given confirm_buyer_arrival succeeds, when advanced, then buyer arrival is confirmed and the next cash-handoff action is returned", async () => {
+      const transactionLookupBuilder = createSingleBuilder({
+        data: transactionLookupRecord({
+          bookings: [
+            {
+              id: "booking-1",
+              booking_type: "drop_off",
+              status: "confirmed",
+              confirmed_at: "2026-05-18T07:00:00.000Z",
+              staff_confirmed_by: "Karabo Tlaka",
+              slot: upcomingSlots[0],
+            },
+            {
+              id: "booking-2",
+              booking_type: "collection",
+              status: "pending",
+              confirmed_at: null,
+              staff_confirmed_by: null,
+              slot: upcomingSlots[1],
+            },
+          ],
         }),
+        error: null,
+      });
+      const bookingUpdateBuilder = createUpdateEqBuilder({ error: null });
+      const transactionUpdateBuilder = createUpdateEqBuilder({ error: null });
+
+      queueFromBuilders({
+        facility_bookings: [
+          bookingUpdateBuilder,
+          createInBuilder({
+            data: [
+              {
+                id: "booking-1",
+                transaction_id: "tx-1",
+                slot_id: "slot-1",
+                booking_type: "drop_off",
+                status: "confirmed",
+                confirmed_at: "2026-05-18T07:00:00.000Z",
+                staff_confirmed_by: "Karabo Tlaka",
+              },
+              {
+                id: "booking-2",
+                transaction_id: "tx-1",
+                slot_id: "slot-2",
+                booking_type: "collection",
+                status: "confirmed",
+                confirmed_at: "2026-05-18T08:00:00.000Z",
+                staff_confirmed_by: "Karabo Tlaka",
+              },
+            ],
+            error: null,
+          }),
+        ],
+        facility_slots: [
+          createUpcomingSlotsBuilder({
+            data: upcomingSlots,
+            error: null,
+          }),
+        ],
+        trade_facilities: [
+          createMaybeSingleBuilder({
+            data: facilityRecord,
+            error: null,
+          }),
+        ],
+        transactions: [
+          transactionLookupBuilder,
+          transactionUpdateBuilder,
+          createInBuilder({
+            data: [dashboardTransaction()],
+            error: null,
+          }),
+        ],
+      });
+
+      const { data, error } = await advanceFacilityTransaction({
+        transactionId: "tx-1",
+        action: "confirm_buyer_arrival",
+        staffIdentifier: "Karabo Tlaka",
+        facilityId: "facility-1",
+        userRole: "facility_staff",
+      });
+
+      expect(error).toBeNull();
+      expect(bookingUpdateBuilder.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          status: "confirmed",
+          staff_confirmed_by: "Karabo Tlaka",
+          confirmed_at: expect.any(String),
+        }),
+      );
+      expect(bookingUpdateBuilder.eq).toHaveBeenCalledWith("id", "booking-2");
+      expect(transactionUpdateBuilder.update).toHaveBeenCalledWith({
+        status: "confirmed",
+      });
+      expect(data.transactions).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: "tx-1",
+            stage: "buyer_arrived",
+            action: "confirm_cash_handoff",
+            actionLabel: "Confirm cash handoff",
+          }),
+        ]),
+      );
+    });
+
+    test("Given confirm_cash_handoff is attempted before buyer arrival confirmation, when advanced, then the service blocks the step", async () => {
+      queueFromBuilders({
+        transactions: [
+          createSingleBuilder({
+            data: transactionLookupRecord({
+              bookings: [
+                {
+                  id: "booking-1",
+                  booking_type: "drop_off",
+                  status: "confirmed",
+                  slot: { facility_id: "facility-1" },
+                },
+                {
+                  id: "booking-2",
+                  booking_type: "collection",
+                  status: "pending",
+                },
+              ],
+            }),
+            error: null,
+          }),
+        ],
+      });
+
+      const result = await advanceFacilityTransaction({
+        transactionId: "tx-1",
+        action: "confirm_cash_handoff",
+        staffIdentifier: "Karabo Tlaka",
+        facilityId: "facility-1",
+        userRole: "facility_staff",
+      });
+
+      expect(result.data).toBeNull();
+      expect(result.error).toBeInstanceOf(Error);
+      expect(result.error.statusCode).toBe(400);
+      expect(result.error.message).toBe(
+        "Buyer arrival must be confirmed before cash handoff can be recorded.",
+      );
+    });
+
+    test("Given confirm_cash_handoff succeeds, when advanced, then the transaction becomes cash-settled and the release action is returned", async () => {
+      const transactionLookupBuilder = createSingleBuilder({
+        data: transactionLookupRecord({
+          bookings: [
+            {
+              id: "booking-1",
+              booking_type: "drop_off",
+              status: "confirmed",
+              slot: upcomingSlots[0],
+            },
+            {
+              id: "booking-2",
+              booking_type: "collection",
+              status: "confirmed",
+              slot: upcomingSlots[1],
+            },
+          ],
+        }),
+        error: null,
+      });
+      const transactionUpdateBuilder = createUpdateEqBuilder({ error: null });
+
+      queueFromBuilders({
+        facility_bookings: [
+          createInBuilder({
+            data: [
+              {
+                id: "booking-1",
+                transaction_id: "tx-1",
+                slot_id: "slot-1",
+                booking_type: "drop_off",
+                status: "confirmed",
+                confirmed_at: "2026-05-18T07:00:00.000Z",
+                staff_confirmed_by: "Karabo Tlaka",
+              },
+              {
+                id: "booking-2",
+                transaction_id: "tx-1",
+                slot_id: "slot-2",
+                booking_type: "collection",
+                status: "confirmed",
+                confirmed_at: "2026-05-18T08:00:00.000Z",
+                staff_confirmed_by: "Karabo Tlaka",
+              },
+            ],
+            error: null,
+          }),
+        ],
+        facility_slots: [
+          createUpcomingSlotsBuilder({
+            data: upcomingSlots,
+            error: null,
+          }),
+        ],
+        trade_facilities: [
+          createMaybeSingleBuilder({
+            data: facilityRecord,
+            error: null,
+          }),
+        ],
+        transactions: [
+          transactionLookupBuilder,
+          transactionUpdateBuilder,
+          createInBuilder({
+            data: [dashboardTransaction({ cash_settled: true })],
+            error: null,
+          }),
+        ],
+      });
+
+      const { data, error } = await advanceFacilityTransaction({
+        transactionId: "tx-1",
+        action: "confirm_cash_handoff",
+        staffIdentifier: "Karabo Tlaka",
+        facilityId: "facility-1",
+        userRole: "facility_staff",
+      });
+
+      expect(error).toBeNull();
+      expect(transactionUpdateBuilder.update).toHaveBeenCalledWith({
+        cash_settled: true,
+        status: "confirmed",
+      });
+      expect(transactionUpdateBuilder.eq).toHaveBeenCalledWith("id", "tx-1");
+      expect(data.transactions).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: "tx-1",
+            stage: "cash_confirmed",
+            action: "release_item",
+            actionLabel: "Release item and complete",
+          }),
+        ]),
+      );
+    });
+
+    test("Given release_item is attempted before cash settlement, when advanced, then the service blocks the final release", async () => {
+      queueFromBuilders({
+        transactions: [
+          createSingleBuilder({
+            data: transactionLookupRecord({
+              bookings: [
+                {
+                  id: "booking-1",
+                  booking_type: "drop_off",
+                  status: "confirmed",
+                  slot: { facility_id: "facility-1" },
+                },
+                {
+                  id: "booking-2",
+                  booking_type: "collection",
+                  status: "confirmed",
+                },
+              ],
+            }),
+            error: null,
+          }),
+        ],
+      });
+
+      const result = await advanceFacilityTransaction({
+        transactionId: "tx-1",
+        action: "release_item",
+        staffIdentifier: "Karabo Tlaka",
+        facilityId: "facility-1",
+        userRole: "facility_staff",
+      });
+
+      expect(result.data).toBeNull();
+      expect(result.error).toBeInstanceOf(Error);
+      expect(result.error.statusCode).toBe(400);
+      expect(result.error.message).toBe(
+        "Cash handoff must be confirmed before releasing the item.",
+      );
+    });
+
+    test("Given release_item succeeds, when advanced, then the collection booking and transaction are marked complete", async () => {
+      const transactionLookupBuilder = createSingleBuilder({
+        data: transactionLookupRecord({
+          cash_settled: true,
+          bookings: [
+            {
+              id: "booking-1",
+              booking_type: "drop_off",
+              status: "confirmed",
+              slot: upcomingSlots[0],
+            },
+            {
+              id: "booking-2",
+              booking_type: "collection",
+              status: "confirmed",
+              slot: upcomingSlots[1],
+            },
+          ],
+        }),
+        error: null,
+      });
+      const bookingUpdateBuilder = createUpdateEqBuilder({ error: null });
+      const transactionUpdateBuilder = createUpdateEqBuilder({ error: null });
+
+      queueFromBuilders({
+        facility_bookings: [
+          bookingUpdateBuilder,
+          createInBuilder({
+            data: [
+              {
+                id: "booking-1",
+                transaction_id: "tx-1",
+                slot_id: "slot-1",
+                booking_type: "drop_off",
+                status: "confirmed",
+                confirmed_at: "2026-05-18T07:00:00.000Z",
+                staff_confirmed_by: "Karabo Tlaka",
+              },
+              {
+                id: "booking-2",
+                transaction_id: "tx-1",
+                slot_id: "slot-2",
+                booking_type: "collection",
+                status: "complete",
+                confirmed_at: "2026-05-18T09:00:00.000Z",
+                staff_confirmed_by: "Karabo Tlaka",
+              },
+            ],
+            error: null,
+          }),
+        ],
+        facility_slots: [
+          createUpcomingSlotsBuilder({
+            data: upcomingSlots,
+            error: null,
+          }),
+        ],
+        trade_facilities: [
+          createMaybeSingleBuilder({
+            data: facilityRecord,
+            error: null,
+          }),
+        ],
+        transactions: [
+          transactionLookupBuilder,
+          transactionUpdateBuilder,
+          createInBuilder({
+            data: [dashboardTransaction({ status: "complete", cash_settled: true })],
+            error: null,
+          }),
+        ],
+      });
+
+      const { data, error } = await advanceFacilityTransaction({
+        transactionId: "tx-1",
+        action: "release_item",
+        staffIdentifier: "Karabo Tlaka",
+        facilityId: "facility-1",
+        userRole: "facility_staff",
+      });
+
+      expect(error).toBeNull();
+      expect(bookingUpdateBuilder.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          status: "complete",
+          staff_confirmed_by: "Karabo Tlaka",
+          confirmed_at: expect.any(String),
+        }),
+      );
+      expect(bookingUpdateBuilder.eq).toHaveBeenCalledWith("id", "booking-2");
+      expect(transactionUpdateBuilder.update).toHaveBeenCalledWith({
+        cash_settled: true,
+        status: "complete",
+      });
+      expect(transactionUpdateBuilder.eq).toHaveBeenCalledWith("id", "tx-1");
+      expect(data.transactions).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: "tx-1",
+            stage: "complete",
+            action: null,
+            actionLabel: "",
+          }),
+        ]),
       );
     });
 
