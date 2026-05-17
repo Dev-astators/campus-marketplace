@@ -8,11 +8,14 @@ import useListingDetails from "../hooks/useListingDetails";
 const mockNavigate = jest.fn();
 
 jest.mock("react-router-dom", () => {
-  const actual = jest.requireActual("react-router-dom");
   return {
-    ...actual,
     useParams: () => ({ id: "listing-1" }),
     useNavigate: () => mockNavigate,
+    Link: ({ to, children, className }) => (
+      <a href={to} className={className}>
+        {children}
+      </a>
+    ),
   };
 });
 
@@ -128,6 +131,9 @@ describe("ListingDetails", () => {
       screen.getByRole("heading", { name: /canon eos r6/i }),
     ).toBeInTheDocument();
     expect(screen.getByText(/sold by/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /alex chen/i }),
+    ).toHaveAttribute("href", "/seller-profile/seller-1");
     expect(screen.getByAltText(/listing/i)).toHaveAttribute(
       "src",
       "https://example.com/canon.png",

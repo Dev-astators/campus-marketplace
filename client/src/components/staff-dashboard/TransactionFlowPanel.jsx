@@ -46,7 +46,7 @@ export default function TransactionFlowPanel({
 
   return (
     <article className="rounded-3xl border border-slate-200 bg-white shadow-sm">
-      <header className="border-b border-slate-100 px-6 py-5">
+      <header className="border-b border-slate-100 px-4 py-5 sm:px-6">
         <p className="text-xs font-semibold uppercase tracking-[0.22em] text-blue-600">
           {eyebrow}
         </p>
@@ -64,10 +64,10 @@ export default function TransactionFlowPanel({
       </header>
 
       {transactions.length > 0 ? (
-        <ol className="space-y-4 px-6 py-5">
+        <ol className="space-y-4 px-4 py-5 sm:px-6">
           {transactions.map((transaction) => (
             <li key={transaction.id}>
-              <article className="rounded-2xl border border-slate-200 p-5">
+              <article className="rounded-2xl border border-slate-200 p-4 sm:p-5">
                 <header className="border-b border-slate-100 pb-4">
                   <p
                     className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${stageClasses[transaction.stageTone]}`}
@@ -173,7 +173,7 @@ export default function TransactionFlowPanel({
           ))}
         </ol>
       ) : (
-        <p className="px-6 py-5 text-sm text-slate-500">
+        <p className="px-4 py-5 text-sm text-slate-500 sm:px-6">
           {emptyMessage}
         </p>
       )}

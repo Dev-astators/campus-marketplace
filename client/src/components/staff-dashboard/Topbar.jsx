@@ -1,13 +1,39 @@
 import { useState } from "react";
 import Icon from "./Icon";
 
-export default function Topbar({ staffProfile }) {
+export default function Topbar({
+  staffProfile,
+  onMenuToggle,
+  onSidebarToggle,
+  isSidebarCollapsed = false,
+}) {
   const [query, setQuery] = useState("");
 
   return (
-    <header className="sticky top-0 z-40 h-20 bg-white border-b border-slate-200 px-8 flex items-center gap-5">
-      {/* Search */}
-      <div className="relative flex-1 max-w-3xl">
+    <header className="sticky top-0 z-40 border-b border-slate-200 bg-white px-4 py-4 sm:px-6 lg:px-8">
+      <section className="flex flex-wrap items-center gap-3 lg:gap-5">
+        <button
+          type="button"
+          onClick={onMenuToggle}
+          aria-label="Open sidebar"
+          className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-slate-200 text-slate-600 transition-colors hover:border-slate-300 hover:bg-slate-100 lg:hidden"
+        >
+          <Icon name="menu" size={20} />
+        </button>
+
+        <button
+          type="button"
+          onClick={onSidebarToggle}
+          aria-label={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          className="hidden h-12 w-12 items-center justify-center rounded-2xl border border-slate-200 text-slate-600 transition-colors hover:border-slate-300 hover:bg-slate-100 lg:inline-flex"
+        >
+          <Icon
+            name={isSidebarCollapsed ? "chevron-right" : "chevron-left"}
+            size={20}
+          />
+        </button>
+
+        <section className="order-3 relative w-full md:order-none md:flex-1 md:max-w-3xl">
         <Icon
           name="search"
           size={18}
@@ -21,11 +47,10 @@ export default function Topbar({ staffProfile }) {
           placeholder="Search listings, students, categories..."
           className="w-full h-14 bg-slate-50 border border-slate-200 rounded-2xl pl-14 pr-5 text-[14px] text-slate-700 placeholder-slate-400 outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200"
         />
-      </div>
+        </section>
 
-      {/* Right Side */}
-      <section className="ml-auto flex items-center gap-3">
-        <article className="flex items-center gap-3 pl-2">
+        <section className="ml-auto flex items-center gap-3">
+          <article className="flex items-center gap-3 pl-2">
           <header className="hidden text-right md:block">
             <p className="text-[13px] font-semibold text-slate-700">
               {staffProfile?.email || "Facility staff"}
@@ -42,7 +67,8 @@ export default function Topbar({ staffProfile }) {
               className="text-slate-600"
             />
           </figure>
-        </article>
+          </article>
+        </section>
       </section>
     </header>
   );

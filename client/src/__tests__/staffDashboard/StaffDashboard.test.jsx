@@ -176,4 +176,26 @@ describe("StaffDashboard", () => {
 
     expect(changeSelectedDate).toHaveBeenLastCalledWith("2026-05-12");
   });
+
+  it("lets staff collapse and expand the sidebar", async () => {
+    const user = userEvent.setup();
+
+    render(<StaffDashboard />);
+
+    const collapseButtons = screen.getAllByRole("button", {
+      name: /collapse sidebar/i,
+    });
+
+    await user.click(collapseButtons[0]);
+
+    expect(
+      screen.getAllByRole("button", { name: /expand sidebar/i }).length,
+    ).toBeGreaterThan(0);
+
+    await user.click(screen.getAllByRole("button", { name: /expand sidebar/i })[0]);
+
+    expect(
+      screen.getAllByRole("button", { name: /collapse sidebar/i }).length,
+    ).toBeGreaterThan(0);
+  });
 });

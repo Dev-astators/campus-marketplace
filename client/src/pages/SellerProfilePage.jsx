@@ -1,115 +1,168 @@
-// src/pages/SellerProfilePage.jsx
+import { useEffect, useMemo, useState } from "react";
+import { Link, useParams } from "react-router-dom";
+import Navbar from "../components/studentDashboard/Navbar";
+import ListingsGrid from "../components/studentDashboard/ListingsGrid";
+import { API_BASE_URL } from "../config/apiBaseUrl";
+import { supabase } from "../config/supabaseClient";
 
-import Navbar from '../components/studentDashboard/Navbar';
-import ListingsGrid from '../components/studentDashboard/ListingsGrid';
+function getInitials(name) {
+  if (!name) {
+    return "?";
+  }
 
-const MOCK_USER = {
-  name: 'Nkosinathi Khumalo',
-  avatarUrl: null,
-};
-
-const MOCK_SELLER = {
-  id: 'seller-1',
-  name: 'Mpho Murashiwa',
-  avatarUrl: null,
-  rating: 4.7,
-  totalReviews: 23,
-  email: '0000000@students.wits.ac.za',
-  university: 'University of the Witwatersrand'
-};
-
-const MOCK_SELLER_LISTINGS = [
-  {
-    id: '1',
-    title: 'Computer Science Textbook',
-    price: 200,
-    condition: 'Good',
-    category: 'Textbooks',
-    imageUrl: null,
-  },
-  {
-    id: '2',
-    title: 'Desk Lamp',
-    price: 120,
-    condition: 'Good',
-    category: 'Furniture',
-    imageUrl: null,
-  },
-  {
-    id: '3',
-    title: 'Campus Jacket',
-    price: 400,
-    condition: 'New',
-    category: 'Clothing',
-    imageUrl: null,
-  },
-];
-
-export default function SellerProfilePage() {
-  const initials = MOCK_SELLER.name
-    .split(' ')
+  return name
+    .split(" ")
     .map((part) => part[0])
-    .join('')
+    .join("")
     .slice(0, 2)
     .toUpperCase();
+}
+
+export default function SellerProfilePage() {
+  const { sellerId } = useParams();
+  const [user, setUser] = useState(null);
+  const [seller, setSeller] = useState(null);
+  const [listings, setListings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const getUser = async () => {
+      const { data } = await supabase.auth.getSession();
+      const authUser = data.session?.user;
+
+      if (!authUser) {
+        setUser(null);
+        return;
+      }
+
+      setUser({
+        name:
+          authUser.user_metadata?.full_name ||
+          authUser.user_metadata?.name ||
+          authUser.email?.split("@")[0] ||
+          "Student",
+        avatarUrl:
+          authUser.user_metadata?.avatar_url ||
+          authUser.user_metadata?.picture ||
+          null,
+      });
+    };
+
+    getUser();
+  }, []);
+
+  useEffect(() => {
+    const fetchSellerProfile = async () => {
+      if (!sellerId) {
+        setError("Seller profile could not be found.");
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+
+      try {
+        const response = await fetch(
+          `${API_BASE_URL}/api/listings/seller/${sellerId}`,
+        );
+
+        if (!response.ok) {
+          const payload = await response.json().catch(() => null);
+          throw new Error(payload?.message || "Failed to fetch seller profile");
+        }
+
+        const payload = await response.json();
+        setSeller(payload.seller || null);
+        setListings(payload.listings || []);
+        setError("");
+      } catch (fetchError) {
+        console.error("Failed to fetch seller profile:", fetchError);
+        setSeller(null);
+        setListings([]);
+        setError(fetchError.message || "Failed to fetch seller profile");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSellerProfile();
+  }, [sellerId]);
+
+  const initials = useMemo(
+    () => getInitials(seller?.full_name),
+    [seller?.full_name],
+  );
 
   return (
-    <div
-      className="min-h-screen flex flex-col bg-gray-50"
-      style={{ fontFamily: 'Inter, sans-serif' }}
+    <main
+      className="min-h-screen bg-gray-50"
+      style={{ fontFamily: "Inter, sans-serif" }}
     >
-      <Navbar user={MOCK_USER} />
+      <Navbar user={user} />
 
-      <main className="flex-1 px-8 py-6 flex flex-col gap-6">
-        <section className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-            <div className="flex items-center gap-4">
-              {MOCK_SELLER.avatarUrl ? (
-                <img
-                  src={MOCK_SELLER.avatarUrl}
-                  alt={MOCK_SELLER.name}
-                  className="w-20 h-20 rounded-full object-cover"
-                />
-              ) : (
-                <div className="w-20 h-20 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-2xl font-bold">
-                  {initials}
-                </div>
-              )}
+      <article className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
+        <nav aria-label="Breadcrumb">
+          <p className="text-sm text-gray-500">
+            <Link
+              to="/student-dashboard"
+              className="font-medium text-blue-700 underline-offset-4 hover:underline"
+            >
+              Marketplace
+            </Link>{" "}
+            / Seller profile
+          </p>
+        </nav>
 
-              <div>
-                <h1 className="text-2xl font-bold text-gray-800">
-                  {MOCK_SELLER.name}
+        {error ? (
+          <aside className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+            {error}
+          </aside>
+        ) : null}
+
+        <article className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+          <header className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+            <section className="flex items-center gap-4">
+              <figure className="flex h-20 w-20 items-center justify-center rounded-full bg-blue-100 text-2xl font-bold text-blue-700">
+                <figcaption aria-label="Seller initials">{initials}</figcaption>
+              </figure>
+
+              <section>
+                <h1 className="text-2xl font-bold text-gray-900">
+                  {seller?.full_name || "Seller profile"}
                 </h1>
-                <p className="text-sm text-gray-500 mt-2">
-                    {MOCK_SELLER.email}
+                <p className="mt-2 text-sm font-medium text-yellow-600">
+                  Rating {seller?.average_rating?.toFixed(1) || "0.0"} (
+                  {seller?.total_ratings || 0} reviews)
                 </p>
-                <p className="text-sm text-yellow-600 font-medium mt-1">
-                    {MOCK_SELLER.rating} ({MOCK_SELLER.totalReviews} reviews)
+                <p className="mt-1 text-sm text-gray-500">
+                  {loading
+                    ? "Loading active seller profile..."
+                    : `${listings.length} active listing${
+                        listings.length === 1 ? "" : "s"
+                      }`}
                 </p>
+              </section>
+            </section>
+          </header>
+        </article>
 
-
-              </div>
-            </div>
-
-            <button className="px-5 py-2.5 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition">
-              Message Seller
-            </button>
-          </div>
-
-          
-        </section>
-
-        <section>
-          <div className="mb-4">
-            <h2 className="text-xl font-bold text-gray-800">Active Listings</h2>
-            <p className="text-sm text-gray-500 mt-1">
+        <section aria-labelledby="seller-active-listings-heading">
+          <header className="mb-4">
+            <h2
+              id="seller-active-listings-heading"
+              className="text-xl font-bold text-gray-900"
+            >
+              Active listings
+            </h2>
+            <p className="mt-1 text-sm text-gray-500">
               Browse items currently being sold by this seller.
             </p>
-          </div>
+          </header>
 
-          <ListingsGrid listings={MOCK_SELLER_LISTINGS} loading={false} />
+          <ListingsGrid listings={listings} loading={loading} />
         </section>
-      </main>
-    </div>
+      </article>
+    </main>
   );
 }

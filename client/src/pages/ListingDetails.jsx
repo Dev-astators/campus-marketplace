@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import ListingEditForm from "../components/listingDetails/ListingEditForm";
 import ListingReadOnlyDetails from "../components/listingDetails/ListingReadOnlyDetails";
 import ListingActions from "../components/listingDetails/ListingActions";
@@ -38,7 +38,7 @@ export default function ListingDetails() {
     try {
       sessionStorage.setItem("chatBackTarget", `/listing/${listing.id}`);
     } catch {
-    // sessionStorage may not be available in some test/runtime environments
+      // sessionStorage may not be available in some test/runtime environments
     }
 
     navigate(`/chat/${listing.id}?seller=${listing.seller.id}`);
@@ -54,107 +54,83 @@ export default function ListingDetails() {
 
   return (
     <article
-      className="max-w-7xl mx-auto px-6 py-6"
+      className="mx-auto max-w-7xl px-6 py-6"
       aria-label="Listing details"
     >
-      <main className="grid grid-cols-[110px_1fr] gap-6 items-start">
-        {/* Back Button */}
-        <section className="-ml-12 pt-1">
+      <main className="grid items-start gap-6 lg:grid-cols-[110px_1fr]">
+        <section className="pt-1">
           <button
+            type="button"
             onClick={() => navigate(-1)}
-            className="
-              px-4
-              py-2
-              border
-              border-gray-200
-              rounded-xl
-              shadow-sm
-              hover:bg-gray-50
-              transition
-            "
+            className="rounded-xl border border-gray-200 px-4 py-2 shadow-sm transition hover:bg-gray-50"
           >
-            ← Back
+            Back
           </button>
         </section>
 
-        {/* Main Layout */}
-        <section className="grid grid-cols-1 lg:grid-cols-[1.25fr_1fr] gap-8 items-start mt-16">
-          {/* Left Side */}
+        <section className="mt-4 grid grid-cols-1 items-start gap-8 lg:mt-16 lg:grid-cols-[1.25fr_1fr]">
           <section aria-label="Listing image and description">
-            {/* Image */}
             <figure aria-label="Listing image">
-              {imageUrl && (
+              {imageUrl ? (
                 <img
                   src={imageUrl}
                   alt="listing"
-                  className="
-                    w-full
-                    max-h-[520px]
-                    object-contain
-                    rounded-xl
-                  "
+                  className="max-h-[520px] w-full rounded-xl object-contain"
                 />
-              )}
+              ) : null}
             </figure>
 
-            {/* Description */}
-            {!editing && listing.description && (
+            {!editing && listing.description ? (
               <section className="mt-4" aria-label="Description">
-                <h2 className="text-lg font-bold mb-2">
-                  Description
-                </h2>
-
-                <p className="text-gray-700 text-base leading-7">
+                <h2 className="mb-2 text-lg font-bold">Description</h2>
+                <p className="text-base leading-7 text-gray-700">
                   {listing.description}
                 </p>
               </section>
-            )}
+            ) : null}
           </section>
 
-          {/* Right Side */}
-          <section
-            aria-label="Listing information"
-            className="pt-1"
-          >
-            {/* Title */}
-            {!editing && (
+          <section aria-label="Listing information" className="pt-1">
+            {!editing ? (
               <header>
                 <h1 className="text-2xl font-bold leading-tight text-black">
                   {listing.title}
                 </h1>
               </header>
-            )}
+            ) : null}
 
-            {/* Seller */}
-            <section
-              className="mt-3"
-              aria-label="Seller information"
-            >
-              <p className="text-gray-700 text-base">
-                Sold by:{" "}
-                {listing.seller?.full_name || "Unknown"}{" "}
+            <section className="mt-3" aria-label="Seller information">
+              <p className="text-base text-gray-700">
+                Sold by{" "}
+                {listing.seller?.id ? (
+                  <Link
+                    to={`/seller-profile/${listing.seller.id}`}
+                    className="font-semibold text-blue-700 underline-offset-4 hover:underline focus:outline-none focus-visible:underline"
+                  >
+                    {listing.seller?.full_name || "Unknown"}
+                  </Link>
+                ) : (
+                  <strong className="font-semibold text-gray-900">
+                    {listing.seller?.full_name || "Unknown"}
+                  </strong>
+                )}{" "}
                 <strong className="font-normal text-yellow-500">
-                  ⭐{" "}
-                  {listing.seller?.average_rating?.toFixed(1) ||
-                    "0.0"}{" "}
-                  (
+                  {listing.seller?.average_rating?.toFixed(1) || "0.0"} (
                   {listing.seller?.total_ratings || 0} reviews)
                 </strong>
               </p>
             </section>
 
-            {/* Price */}
-            {!editing && (
+            {!editing ? (
               <section className="mt-4" aria-label="Price">
                 <p className="text-3xl font-bold">
                   R{Number(listing.price).toFixed(2)}
                 </p>
               </section>
-            )}
+            ) : null}
 
             <hr className="my-4 border-gray-200" />
 
-            {/* Metadata */}
             <section aria-label="Listing details">
               {editing ? (
                 <ListingEditForm
@@ -172,7 +148,6 @@ export default function ListingDetails() {
 
             <hr className="my-4 border-gray-200" />
 
-            {/* Actions */}
             <footer aria-label="Listing actions">
               <ListingActions
                 listing={listing}

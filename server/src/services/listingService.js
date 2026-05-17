@@ -60,6 +60,34 @@ const getListingsBySellerId = async (sellerId) => {
   return { data, error };
 };
 
+const getPublicSellerProfile = async (sellerId) => {
+  const { data: seller, error: sellerError } = await supabase
+    .from("profiles")
+    .select("id, full_name, average_rating, total_ratings")
+    .eq("id", sellerId)
+    .single();
+
+  if (sellerError) {
+    return { data: null, error: sellerError };
+  }
+
+  const { data: listings, error: listingsError } = await getListingsBySellerId(
+    sellerId,
+  );
+
+  if (listingsError) {
+    return { data: null, error: listingsError };
+  }
+
+  return {
+    data: {
+      seller,
+      listings: listings || [],
+    },
+    error: null,
+  };
+};
+
 /**
  * Creates a new listing in the database.
  * Returns: { data: Listing, error }
@@ -110,4 +138,9 @@ const createListing = async ({
   return { data: listing, error: null };
 };
 
-module.exports = { getActiveListings, getListingsBySellerId, createListing };
+module.exports = {
+  getActiveListings,
+  getListingsBySellerId,
+  getPublicSellerProfile,
+  createListing,
+};

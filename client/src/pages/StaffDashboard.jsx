@@ -1,7 +1,8 @@
+import { useState } from "react";
 import Sidebar from "../components/staff-dashboard/Sidebar";
 import Topbar from "../components/staff-dashboard/Topbar";
 import HeroBanner from "../components/staff-dashboard/HeroBanner";
-import HelpDesk from "../components/staff-dashboard/HelpDesk";
+
 import FacilityOverview from "../components/staff-dashboard/FacilityOverview";
 import BookingScheduleBoard from "../components/staff-dashboard/BookingScheduleBoard";
 import TransactionFlowPanel from "../components/staff-dashboard/TransactionFlowPanel";
@@ -10,6 +11,8 @@ import StaffProfileSettings from "../components/staff-dashboard/StaffProfileSett
 import useStaffDashboard from "../hooks/useStaffDashboard";
 
 export default function StaffDashboard() {
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const {
     activeNav,
     setActiveNav,
@@ -45,18 +48,48 @@ export default function StaffDashboard() {
   const visibleTransactions = showingConfirmedTransactions
     ? confirmedTransactionQueue
     : transactionQueue;
+  const sidebarOffsetClass = isSidebarCollapsed
+    ? "lg:ml-[5.5rem]"
+    : "lg:ml-[16rem]";
+
+  const toggleSidebar = () => {
+    setIsSidebarCollapsed((previous) => !previous);
+  };
+
+  const handleNavChange = (nextNav) => {
+    setActiveNav(nextNav);
+    setIsMobileSidebarOpen(false);
+  };
 
   return (
-    <section className="flex min-h-screen overflow-hidden bg-slate-50  text-slate-900">
+    <section className="flex min-h-screen overflow-x-hidden bg-slate-50 text-slate-900">
       <Sidebar
         activeNav={activeNav}
-        onNavChange={setActiveNav}
+        onNavChange={handleNavChange}
+        isCollapsed={isSidebarCollapsed}
+        onToggleCollapse={toggleSidebar}
+        isMobileOpen={isMobileSidebarOpen}
       />
+      {isMobileSidebarOpen ? (
+        <button
+          type="button"
+          aria-label="Close sidebar overlay"
+          onClick={() => setIsMobileSidebarOpen(false)}
+          className="fixed inset-0 z-40 bg-slate-900/30 backdrop-blur-[1px] lg:hidden"
+        />
+      ) : null}
 
-      <section className="ml-55 flex flex-1 flex-col">
-        <Topbar staffProfile={staffProfile} />
+      <section
+        className={`flex min-w-0 flex-1 flex-col transition-[margin] duration-300 ${sidebarOffsetClass}`}
+      >
+        <Topbar
+          staffProfile={staffProfile}
+          onMenuToggle={() => setIsMobileSidebarOpen(true)}
+          onSidebarToggle={toggleSidebar}
+          isSidebarCollapsed={isSidebarCollapsed}
+        />
 
-        <main className="flex-1 px-6 py-8 md:px-8 xl:px-10">
+        <main className="flex-1 px-4 py-6 sm:px-6 md:px-8 xl:px-10">
           {error ? (
             <aside className="mb-6 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
               {error}
@@ -64,8 +97,8 @@ export default function StaffDashboard() {
           ) : null}
 
           {!isProfileView ? (
-            <section className="grid items-start gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-              <section className="space-y-6">
+            <section className="grid items-start gap-4 lg:gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+              <section className="min-w-0 space-y-4 lg:space-y-6">
                 <HeroBanner
                   eyebrow={viewContent.eyebrow}
                   title={viewContent.title}
@@ -130,9 +163,9 @@ export default function StaffDashboard() {
                 ) : null}
               </section>
 
-              <aside className="space-y-6">
+              <aside className="min-w-0 h- space-y-2 lg:space-y-6">
                 <ActivityFeed activityLog={activityLog} />
-                <HelpDesk />
+
               </aside>
             </section>
           ) : (
