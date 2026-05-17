@@ -5,6 +5,7 @@ export const NAV_ITEMS = [
   { id: "verification",label: "Verification",icon: "shield" },
   { id: "confirmed",   label: "Confirmed Transactions", icon: "check" },
   { id: "bookings",    label: "Bookings",    icon: "calendar" },
+  { id: "profile",     label: "Profile",              icon: "user" },
 ];
 
 export const STAFF_VIEW_CONTENT = {
