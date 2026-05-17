@@ -28,7 +28,7 @@ export default function StaffProfileSettings({ user }) {
   return (
     <section className="bg-white border border-gray-200 rounded-xl p-6 max-w-2xl">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-4">
+        <section className="flex items-center gap-4">
           <figure className="w-16 h-16 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
             {user?.avatarUrl ? (
               <img
@@ -42,11 +42,11 @@ export default function StaffProfileSettings({ user }) {
             <figcaption className="sr-only">Profile picture</figcaption>
 
           </figure>
-          <div>
+          <section>
             <h2 className="text-lg font-semibold text-gray-800">{fullName}</h2>
             <p className="text-sm text-gray-500">{email}</p>
-          </div>
-        </div>
+          </section>
+        </section>
         <button
           type="button"
           onClick={handleSignOut}
@@ -57,26 +57,26 @@ export default function StaffProfileSettings({ user }) {
       </header>
 
       <dl className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 text-sm">
-        <div>
+        <section>
           <dt className="text-gray-500">Full name</dt>
           <dd className="font-medium text-gray-800">{fullName}</dd>
-        </div>
-        <div>
+        </section>
+        <section>
           <dt className="text-gray-500">Email</dt>
           <dd className="font-medium text-gray-800">{email}</dd>
-        </div>
-        <div>
+        </section>
+        <section>
           <dt className="text-gray-500">Role</dt>
           <dd className="font-medium text-gray-800">{roleLabel}</dd>
-        </div>
-        <div>
+        </section>
+        <section>
           <dt className="text-gray-500">Member since</dt>
           <dd className="font-medium text-gray-800">{formatDate(user?.createdAt)}</dd>
-        </div>
-        <div>
+        </section>
+        <section>
           <dt className="text-gray-500">Last sign-in</dt>
           <dd className="font-medium text-gray-800">{formatDateTime(user?.lastSignInAt)}</dd>
-        </div>
+        </section>
       </dl>
     </section>
   );

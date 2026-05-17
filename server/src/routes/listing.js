@@ -6,6 +6,7 @@ const { supabase } = require("../config/supabaseClient");
 const {
   getActiveListings,
   getListingsBySellerId,
+  getPublicSellerProfile,
   createListing,
 } = require("../services/listingService");
 const { getSuggestedPriceRange } = require("../services/cpiService");
@@ -63,6 +64,29 @@ router.get("/my/:sellerId", verifySession, async (req, res) => {
   }
 
   return res.status(200).json({ listings: data || [] });
+});
+
+router.get("/seller/:sellerId", async (req, res) => {
+  const { sellerId } = req.params;
+
+  if (!sellerId) {
+    return res.status(400).json({ message: "sellerId is required" });
+  }
+
+  const { data, error } = await getPublicSellerProfile(sellerId);
+
+  if (error) {
+    if (error.code === "PGRST116") {
+      return res.status(404).json({ message: "Seller not found" });
+    }
+
+    return res.status(500).json({
+      message: "Failed to fetch seller profile",
+      error: error.message,
+    });
+  }
+
+  return res.status(200).json(data);
 });
 
 /**

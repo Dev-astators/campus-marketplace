@@ -7,19 +7,17 @@ export default function HeroBanner({
   stats = HERO_STATS,
 }) {
   return (
-    <article className="relative overflow-hidden rounded-[30px] bg-linear-to-r from-[#1d4ed8] via-[#2563eb] to-[#3b82f6] px-10 py-9 shadow-lg">
-      {/* Background Shapes */}
+    <article className="relative overflow-hidden rounded-[30px] bg-linear-to-r from-[#1d4ed8] via-[#2563eb] to-[#3b82f6] px-5 py-6 shadow-lg sm:px-8 sm:py-8 lg:px-10 lg:py-9">
       <aside className="absolute top-0 right-0 h-80 w-80 rounded-full bg-white/10 blur-3xl" />
       <aside className="absolute bottom-0 left-20 h-52 w-52 rounded-full bg-sky-300/10 blur-2xl" />
 
-      <section className="relative z-10 flex items-center justify-between gap-10">
-        {/* Left */}
+      <section className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between lg:gap-10">
         <header>
           <p className="mb-2 text-[13px] font-medium text-blue-100">
             {eyebrow}
           </p>
 
-          <h1 className="mb-3 text-[34px] font-extrabold leading-tight tracking-tight text-white">
+          <h1 className="mb-3 text-[28px] font-extrabold leading-tight tracking-tight text-white sm:text-[32px] lg:text-[34px]">
             {title}
           </h1>
 
@@ -28,8 +26,10 @@ export default function HeroBanner({
           </p>
         </header>
 
-        {/* Stats */}
-        <section className="flex gap-4" aria-label="Staff dashboard summary">
+        <section
+          className="grid w-full gap-3 sm:grid-cols-2 lg:w-auto lg:min-w-[18rem] lg:gap-4"
+          aria-label="Staff dashboard summary"
+        >
           {stats.map((stat) => (
             <StatCard key={stat.label} {...stat} />
           ))}
@@ -41,7 +41,7 @@ export default function HeroBanner({
 
 function StatCard({ label, value, sub }) {
   return (
-    <article className="min-w-33.75 rounded-2xl border border-white/15 bg-white/10 px-5 py-5 text-center backdrop-blur-md">
+    <article className="rounded-2xl border border-white/15 bg-white/10 px-4 py-4 text-center backdrop-blur-md sm:px-5 sm:py-5 lg:min-w-[13.5rem]">
       <h2 className="text-[32px] font-extrabold text-white leading-none">
         {value}
       </h2>

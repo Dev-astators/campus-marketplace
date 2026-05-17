@@ -25,14 +25,6 @@ const formatSelectedDate = (selectedDate) => {
 const formatBookingType = (bookingType) =>
   bookingType === "dropoff" ? "Drop-off" : "Collection";
 
-const getBarWidth = (count, capacity) => {
-  if (!capacity || capacity <= 0) {
-    return "0%";
-  }
-
-  return `${Math.min((count / capacity) * 100, 100)}%`;
-};
-
 export default function BookingScheduleBoard({
   slots,
   selectedDate = "",
@@ -42,7 +34,7 @@ export default function BookingScheduleBoard({
 
   return (
     <article className="rounded-3xl border border-slate-200 bg-white shadow-sm">
-      <header className="border-b border-slate-100 px-6 py-5">
+      <header className="border-b border-slate-100 px-4 py-5 sm:px-6">
         <p className="text-xs font-semibold uppercase tracking-[0.22em] text-blue-600">
           Booking schedule
         </p>
@@ -53,7 +45,7 @@ export default function BookingScheduleBoard({
           Full windows stop accepting more bookings automatically, helping the
           facility enforce slot capacity throughout the day.
         </p>
-        <div className="mt-4 flex flex-col gap-2 sm:max-w-xs">
+        <form className="mt-4 flex flex-col gap-2 sm:max-w-xs">
           <label
             htmlFor="booking-date-filter"
             className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500"
@@ -67,7 +59,7 @@ export default function BookingScheduleBoard({
             onChange={(event) => onDateChange?.(event.target.value)}
             className="rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
           />
-        </div>
+        </form>
         {displayDate ? (
           <p className="mt-3 text-xs font-medium uppercase tracking-[0.18em] text-slate-400">
             Showing bookings for {displayDate}
@@ -75,9 +67,9 @@ export default function BookingScheduleBoard({
         ) : null}
       </header>
 
-      <section className="overflow-x-auto px-6 py-5">
+      <section className="overflow-x-auto px-4 py-5 sm:px-6">
         {slots.length > 0 ? (
-          <table className="min-w-full border-separate border-spacing-y-3 text-left">
+          <table className="min-w-[760px] border-separate border-spacing-y-3 text-left">
             <caption className="sr-only">
               Today&apos;s staff booking schedule with slot capacity status
             </caption>
@@ -105,7 +97,10 @@ export default function BookingScheduleBoard({
             </thead>
             <tbody>
               {slots.map((slot) => (
-                <tr key={slot.id} className="overflow-hidden rounded-2xl bg-slate-50">
+                <tr
+                  key={slot.id}
+                  className="overflow-hidden rounded-2xl bg-slate-50 align-top"
+                >
                   <th
                     scope="row"
                     className="rounded-l-2xl px-4 py-4 text-sm font-semibold text-slate-900"
@@ -125,43 +120,42 @@ export default function BookingScheduleBoard({
                     <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
                       {slot.booked} active of {slot.capacity} capacity
                     </p>
-                    <div className="mt-3 space-y-3">
-                      <div>
-                        <div className="flex items-center justify-between text-xs font-medium text-slate-600">
-                          <span>Drop-off</span>
-                          <span>
+                    <ul className="mt-3 space-y-3">
+                      <li>
+                        <header className="flex items-center justify-between text-xs font-medium text-slate-600">
+                          <p>Drop-off</p>
+                          <output>
                             {slot.dropOffCount}/{slot.capacity}
-                          </span>
-                        </div>
-                        <div className="mt-1 h-2.5 overflow-hidden rounded-2 bg-slate-200">
-                          <div
-                            className="h-full rounded-1 bg-green-500"
-                            style={{
-                              width: getBarWidth(slot.dropOffCount, slot.capacity),
-                            }}
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <div className="flex items-center justify-between text-xs font-medium text-slate-600">
-                          <span>Collection</span>
-                          <span>
+                          </output>
+                        </header>
+                        <meter
+                          className="mt-1 h-2.5 w-full"
+                          min="0"
+                          max={slot.capacity}
+                          value={slot.dropOffCount}
+                          aria-label={`Drop-off capacity for ${slot.time}`}
+                        >
+                          {slot.dropOffCount} of {slot.capacity}
+                        </meter>
+                      </li>
+                      <li>
+                        <header className="flex items-center justify-between text-xs font-medium text-slate-600">
+                          <p>Collection</p>
+                          <output>
                             {slot.collectionCount}/{slot.capacity}
-                          </span>
-                        </div>
-                        <div className="mt-1 h-2.5 overflow-hidden rounded- bg-slate-200">
-                          <div
-                            className="h-full rounded-1 bg-blue-500"
-                            style={{
-                              width: getBarWidth(
-                                slot.collectionCount,
-                                slot.capacity,
-                              ),
-                            }}
-                          />
-                        </div>
-                      </div>
-                    </div>
+                          </output>
+                        </header>
+                        <meter
+                          className="mt-1 h-2.5 w-full"
+                          min="0"
+                          max={slot.capacity}
+                          value={slot.collectionCount}
+                          aria-label={`Collection capacity for ${slot.time}`}
+                        >
+                          {slot.collectionCount} of {slot.capacity}
+                        </meter>
+                      </li>
+                    </ul>
                     <p className="mt-3 text-xs text-slate-500">
                       {slot.availabilityLabel}
                     </p>
@@ -170,13 +164,16 @@ export default function BookingScheduleBoard({
                     {slot.linkedTransactions?.length ? (
                       <ul className="space-y-2">
                         {slot.linkedTransactions.map((transaction) => (
-                          <li key={`${slot.id}-${transaction.id}`} className="bg-blue-50 flex-wrap">
-
-                            <p className="mt-1 p-1  text-center text-wrap"><strong>{transaction.itemTitle}</strong></p>
-                            <p className="mt-1 p-1 text-xs text-center text-wrap">
+                          <li
+                            key={`${slot.id}-${transaction.id}`}
+                            className="rounded-xl bg-blue-50 px-2 py-1.5"
+                          >
+                            <p className="text-center text-sm font-semibold break-words text-slate-900">
+                              {transaction.itemTitle}
+                            </p>
+                            <p className="mt-1 text-center text-xs break-words text-slate-600">
                               {formatBookingType(transaction.bookingType)}
                             </p>
-                            
                           </li>
                         ))}
                       </ul>

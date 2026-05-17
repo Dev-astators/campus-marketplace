@@ -18,9 +18,9 @@ export default function ScheduleItem({
   const [checked, setChecked] = useState(false);
 
   return (
-    <div className="flex items-center gap-5 px-6 py-5 hover:bg-slate-50 transition-all duration-200">
+    <section className="flex items-center gap-5 px-6 py-5 hover:bg-slate-50 transition-all duration-200">
       {/* Time */}
-      <div className="w-16 shrink-0 text-center">
+      <section className="w-16 shrink-0 text-center">
         <p className="text-[16px] font-bold text-slate-800">
           {time}
         </p>
@@ -28,25 +28,25 @@ export default function ScheduleItem({
         <p className="text-[10px] uppercase tracking-widest text-slate-400 font-semibold mt-1">
           {period}
         </p>
-      </div>
+      </section>
 
       {/* Divider */}
-      <div className="w-px h-12 bg-slate-200" />
+      <section className="w-px h-12 bg-slate-200" />
 
       {/* Content */}
-      <div className="flex-1">
+      <section className="flex-1">
         <h3 className="text-[14px] font-semibold text-slate-800 mb-2">
           {item}
         </h3>
 
-        <div className="flex flex-wrap gap-4">
+        <section className="flex flex-wrap gap-4">
           <PersonTag icon="user">{seller}</PersonTag>
           <PersonTag icon="bag">{buyer}</PersonTag>
-        </div>
-      </div>
+        </section>
+      </section>
 
       {/* Right */}
-      <div className="flex items-center gap-3">
+      <section className="flex items-center gap-3">
         <span
           className={`px-3 py-1.5 rounded-full text-[11px] font-semibold ${boothStyles[boothVariant]}`}
         >
@@ -69,14 +69,14 @@ export default function ScheduleItem({
             className={checked ? "text-white" : "text-slate-500"}
           />
         </button>
-      </div>
-    </div>
+      </section>
+    </section>
   );
 }
 
 function PersonTag({ icon, children }) {
   return (
-    <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-xl">
+    <section className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-xl">
       <Icon
         name={icon}
         size={13}
@@ -86,6 +86,6 @@ function PersonTag({ icon, children }) {
       <span className="text-[11.5px] text-slate-600 font-medium">
         {children}
       </span>
-    </div>
+    </section>
   );
 }

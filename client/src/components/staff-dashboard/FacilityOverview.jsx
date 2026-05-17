@@ -11,7 +11,7 @@ export default function FacilityOverview({
 }) {
   if (!facility) {
     return (
-      <article className="rounded-3xl border border-dashed border-slate-300 bg-white p-6 shadow-sm">
+      <article className="rounded-3xl border border-dashed border-slate-300 bg-white p-5 shadow-sm sm:p-6">
         <header>
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-blue-600">
             Facility management
@@ -31,7 +31,7 @@ export default function FacilityOverview({
   }
 
   return (
-    <article className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+    <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
       <header className="border-b border-slate-100 pb-5">
         <p className="text-xs font-semibold uppercase tracking-[0.22em] text-blue-600">
           Facility management
@@ -49,56 +49,56 @@ export default function FacilityOverview({
         <h3 className="text-sm font-semibold text-slate-900">
           Facility summary
         </h3>
-        <dl className="mt-3 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          <section className="rounded-2xl bg-slate-50 p-4">
-            <dt className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+        <ul className="mt-3 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <li className="rounded-2xl bg-slate-50 p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
               Location
-            </dt>
-            <dd className="mt-2 text-sm font-medium text-slate-800">
+            </p>
+            <p className="mt-2 text-sm font-medium text-slate-800">
               {facility.location}
-            </dd>
-          </section>
-          <section className="rounded-2xl bg-slate-50 p-4">
-            <dt className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+            </p>
+          </li>
+          <li className="rounded-2xl bg-slate-50 p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
               Drop-off capacity
-            </dt>
-            <dd className="mt-2 text-sm font-medium text-slate-800">
+            </p>
+            <p className="mt-2 text-sm font-medium text-slate-800">
               {facility.slotCapacity} bookings per window
-            </dd>
-          </section>
-          <section className="rounded-2xl bg-slate-50 p-4">
-            <dt className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+            </p>
+          </li>
+          <li className="rounded-2xl bg-slate-50 p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
               Collection capacity
-            </dt>
-            <dd className="mt-2 text-sm font-medium text-slate-800">
+            </p>
+            <p className="mt-2 text-sm font-medium text-slate-800">
               {facility.collectionCapacity} bookings per window
-            </dd>
-          </section>
-          <section className="rounded-2xl bg-slate-50 p-4">
-            <dt className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+            </p>
+          </li>
+          <li className="rounded-2xl bg-slate-50 p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
               Booked today
-            </dt>
-            <dd className="mt-2 text-sm font-medium text-slate-800">
+            </p>
+            <p className="mt-2 text-sm font-medium text-slate-800">
               {totalBookedSlots}/{totalCapacity} reserved
-            </dd>
-          </section>
-          <section className="rounded-2xl bg-slate-50 p-4">
-            <dt className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+            </p>
+          </li>
+          <li className="rounded-2xl bg-slate-50 p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
               Full windows
-            </dt>
-            <dd className="mt-2 text-sm font-medium text-slate-800">
+            </p>
+            <p className="mt-2 text-sm font-medium text-slate-800">
               {fullSlots} capacity-locked slots
-            </dd>
-          </section>
-          <section className="rounded-2xl bg-slate-50 p-4">
-            <dt className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+            </p>
+          </li>
+          <li className="rounded-2xl bg-slate-50 p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
               Pending handoffs
-            </dt>
-            <dd className="mt-2 text-sm font-medium text-slate-800">
+            </p>
+            <p className="mt-2 text-sm font-medium text-slate-800">
               {pendingTransactions} active transactions
-            </dd>
-          </section>
-        </dl>
+            </p>
+          </li>
+        </ul>
       </section>
 
       <section className="mt-6 grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">

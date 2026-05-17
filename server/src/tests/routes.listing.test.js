@@ -9,6 +9,7 @@ const express = require('express');
 jest.mock("../services/listingService", () => ({
   getActiveListings: jest.fn(),
   getListingsBySellerId: jest.fn(),
+  getPublicSellerProfile: jest.fn(),
   createListing: jest.fn(),
 }));
 
@@ -141,6 +142,71 @@ describe("listing routes", () => {
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         listings: [{ id: "listing-2" }],
+      });
+    });
+  });
+
+  describe("GET /seller/:sellerId", () => {
+    test("returns 400 when sellerId is missing", async () => {
+      const handler = getHandler("get", "/seller/:sellerId");
+      const res = mockRes();
+
+      await handler({ params: {} }, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+    });
+
+    test("returns 404 when the seller does not exist", async () => {
+      listingService.getPublicSellerProfile.mockResolvedValue({
+        data: null,
+        error: { code: "PGRST116", message: "No rows found" },
+      });
+
+      const handler = getHandler("get", "/seller/:sellerId");
+      const res = mockRes();
+
+      await handler({ params: { sellerId: "missing-seller" } }, res);
+
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({ message: "Seller not found" });
+    });
+
+    test("returns 500 when the seller lookup fails", async () => {
+      listingService.getPublicSellerProfile.mockResolvedValue({
+        data: null,
+        error: { code: "DB500", message: "DB error" },
+      });
+
+      const handler = getHandler("get", "/seller/:sellerId");
+      const res = mockRes();
+
+      await handler({ params: { sellerId: "seller-1" } }, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        message: "Failed to fetch seller profile",
+        error: "DB error",
+      });
+    });
+
+    test("returns the seller profile with listings on success", async () => {
+      listingService.getPublicSellerProfile.mockResolvedValue({
+        data: {
+          seller: { id: "seller-1", full_name: "Alex Chen" },
+          listings: [{ id: "listing-1" }],
+        },
+        error: null,
+      });
+
+      const handler = getHandler("get", "/seller/:sellerId");
+      const res = mockRes();
+
+      await handler({ params: { sellerId: "seller-1" } }, res);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        seller: { id: "seller-1", full_name: "Alex Chen" },
+        listings: [{ id: "listing-1" }],
       });
     });
   });

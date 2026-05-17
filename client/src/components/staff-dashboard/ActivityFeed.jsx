@@ -1,6 +1,6 @@
 export default function ActivityFeed({ activityLog }) {
   return (
-    <article className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+    <article className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm sm:p-4">
       <header className="border-b border-slate-100 pb-5">
         <p className="text-xs font-semibold uppercase tracking-[0.22em] text-blue-600">
           Activity feed

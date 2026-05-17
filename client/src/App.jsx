@@ -123,6 +123,7 @@ function AppShell() {
       <Route path="/create-listing" element={<CreateListing />} />
       <Route path="/chat/:id" element={<ChatPage />} />
       <Route path="/seller-profile" element={<SellerProfilePage />} />
+      <Route path="/seller-profile/:sellerId" element={<SellerProfilePage />} />
       <Route path="/messages" element={<MessagesPage />} />
       <Route path="/notifications" element={<NotificationsPage />} />
       <Route path="/admin-dashboard" element={<AdminDashboard />} />
