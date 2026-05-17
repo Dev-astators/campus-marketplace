@@ -67,7 +67,16 @@ export default function UserManagement({ users, facilities=[], togglingRole, onR
 
   const confirmRoleChange = () => {
     if (!confirmChange) return;
-    onRoleChange(confirmChange.userId, confirmChange.newRole, selectedFacility);
+    if (confirmChange.newRole === "facility_staff") {
+      onRoleChange(
+        confirmChange.userId,
+        confirmChange.newRole,
+        selectedFacility
+      );
+    } else {
+      onRoleChange(confirmChange.userId, confirmChange.newRole);
+    }
+
     setConfirmChange(null);
     setSelectedFacility("");
   };
