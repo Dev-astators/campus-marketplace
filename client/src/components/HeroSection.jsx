@@ -1,4 +1,4 @@
-import greatHall from "../assets/GreatHall.png";
+import greatHall from "../assets/GreatHall.webp";
 
 import blackGirlCoffee from "../assets/blackgirlcoffee.png";
 import whiteGirlCoffee from "../assets/whitegirlcoffee.png";
