@@ -227,6 +227,7 @@ export default function AdminDashboard() {
               ) : (
                 <UserManagement
                   users={users}
+                  facilities={facilities}
                   togglingRole={togglingRole}
                   onRoleChange={updateUserRole}
                 />

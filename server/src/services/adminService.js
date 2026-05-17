@@ -209,27 +209,50 @@ const VALID_ROLES = ["student", "facility_staff", "admin"];
 const getAllUsers = async () => {
   const { data, error } = await supabase
     .from("profiles")
-    .select(
-      "id, full_name, email, student_number, university, role, average_rating, total_ratings, created_at",
-    )
+    .select(`
+      id, full_name, email, student_number, university, role, facility_id, average_rating, total_ratings, created_at, trade_facilities(id,name,location)
+    `)
     .order("created_at", { ascending: false });
+
+  if (error) {
+    // Fall back to a simpler query if the joined facility relation is unavailable.
+    const { data: fallbackData, error: fallbackError } = await supabase
+      .from("profiles")
+      .select(
+        "id, full_name, email, student_number, university, role, facility_id, average_rating, total_ratings, created_at",
+      )
+      .order("created_at", { ascending: false });
+
+    return {
+      data: fallbackData,
+      error: fallbackError || error,
+    };
+  }
 
   return { data, error };
 };
 
-const updateUserRole = async (userId, newRole) => {
+const updateUserRole = async (userId, newRole, facilityId) => {
   if (!VALID_ROLES.includes(newRole)) {
     return {
       data: null,
       error: new Error(`Invalid role. Must be one of: ${VALID_ROLES.join(", ")}`),
     };
   }
+  const payload = {
+    role: newRole,
+  };
 
+  if (newRole === "facility_staff") {
+    payload.facility_id = facilityId;
+  } else {
+    payload.facility_id = null;
+  }
   const { data, error } = await supabase
     .from("profiles")
-    .update({ role: newRole })
+    .update(payload)
     .eq("id", userId)
-    .select("id, full_name, email, role")
+    .select("id, full_name, email, role, facility_id")
     .single();
 
   return { data, error };

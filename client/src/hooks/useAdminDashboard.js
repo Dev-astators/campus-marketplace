@@ -592,12 +592,12 @@ export default function useAdminDashboard() {
     [fetchModeration, fetchSummary],
   );
 
-  const updateUserRole = useCallback(async (userId, newRole) => {
+  const updateUserRole = useCallback(async (userId, newRole, facilityId=null) => {
     dispatch({ type: "TOGGLING_ROLE", userId });
     try {
       const data = await apiFetch(`/admin/users/${userId}/role`, {
         method: "PATCH",
-        body: JSON.stringify({ role: newRole }),
+        body: JSON.stringify({ role: newRole, facilityId }),
       });
       dispatch({ type: "ROLE_UPDATED", payload: data });
     } catch (err) {
