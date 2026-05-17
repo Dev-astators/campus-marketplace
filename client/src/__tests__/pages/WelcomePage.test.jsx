@@ -13,11 +13,11 @@ describe("WelcomePage", () => {
     );
 
     expect(
-      screen.getByText(
-        (_, node) => node?.textContent?.replace(/\s+/g, "") === "UniSquare",
-      ),
+      screen.getByText(/browse the essentials students/i)
     ).toBeInTheDocument();
     expect(screen.getByText(/discover, buy, sell/i)).toBeInTheDocument();
-    expect(screen.getByText(/curated categories/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/browse the essentials students/i)
+    ).toBeInTheDocument();
   });
 });
