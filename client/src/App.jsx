@@ -21,6 +21,7 @@ import MessagesPage from "./pages/MessagesPage";
 import NotificationsPage from "./pages/NotificationsPage";
 import AdminDashboard from "./pages/AdminDashboard";
 import PaymentPage from "./pages/PaymentPage";
+import CampusPreview from "./pages/CampusPreview";
 import {
   isDashboardPath,
   resolveUserDashboardPath,
@@ -127,6 +128,7 @@ function AppShell() {
       <Route path="/admin-dashboard" element={<AdminDashboard />} />
       <Route path="/payment/success" element={<PaymentPage result="success" />} />
       <Route path="/payment/cancel" element={<PaymentPage result="cancel" />} />
+      <Route path="/campus-preview" element={<CampusPreview />} />
     </Routes>
   );
 }

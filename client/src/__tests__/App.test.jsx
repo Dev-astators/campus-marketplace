@@ -21,7 +21,9 @@ describe("App routing", () => {
 
   it("renders the welcome page for signed-out users", async () => {
     render(<App />);
-    expect(await screen.findByText(/curated categories/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/browse the essentials students/i)
+    ).toBeInTheDocument();
     expect(screen.getByText(/exclusive to wits students/i)).toBeInTheDocument();
   });
 });
