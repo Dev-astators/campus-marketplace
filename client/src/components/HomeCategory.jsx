@@ -1,96 +1,111 @@
+import textbooksImage from "../assets/Textbooks.png";
+import techImage from "../assets/tech.png";
+import appliancesImage from "../assets/appliances.png";
+import clothesImage from "../assets/clothes.png";
+import studyImage from "../assets/study.png";
+import homeCookImage from "../assets/homecook.png";
+
 const CATEGORIES = [
   {
     id: "textbooks",
     title: "Academic Textbooks",
-    description: "Save up to 70% on this semester's required reading from students who just finished.",
-    // Bento layout: top-left large card
-    gridClass: "col-span-2 row-span-1",
-    imageUrl: "https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=900&q=80",
-    imagePosition: "object-center",
-    overlayClass: "bg-gradient-to-r from-[#1a3a3a]/90 via-[#1a3a3a]/60 to-transparent",
+    description: "Save on required readings from students who just finished.",
+    image: textbooksImage,
+    alt: "Academic textbooks and bookshelves",
   },
   {
     id: "tech",
     title: "Tech & Electronics",
-    description: "Certified gear for your digital workflow.",
-    // Bento layout: top-right card
-    gridClass: "col-span-1 row-span-1",
-    imageUrl: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=700&q=80",
-    imagePosition: "object-center",
-    overlayClass: "bg-gradient-to-br from-[#0d1f2d]/80 via-[#0d1f2d]/60 to-transparent",
+    description: "Laptops, chargers, calculators, and study gear.",
+    image: techImage,
+    alt: "Laptop and electronic study equipment",
   },
   {
     id: "dorm",
-    title: "Clothing & Dorm Essentials",
-    description: null,
-    // Bento layout: bottom-left small card
-    gridClass: "col-span-1 row-span-1",
-    imageUrl: "https://tse4.mm.bing.net/th/id/OIP.VHU4Gq5KHcx4OBY49_SExQHaLG?rs=1&pid=ImgDetMain&o=7&rm=3",
-    imagePosition: "object-top",
-    overlayClass: "bg-gradient-to-t from-[#0d1f2d]/90 via-[#0d1f2d]/40 to-transparent",
+    title: "Dorm & Apartment",
+    description: "Furniture, storage, appliances, and room essentials.",
+    image: appliancesImage,
+    alt: "Student apartment appliances and room essentials",
   },
   {
-    id: "furniture",
-    title: "Premium Furniture",
-    description: null,
-    // Bento layout: bottom-right large card
-    gridClass: "col-span-2 row-span-1",
-    imageUrl: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=900&q=80",
-    imagePosition: "object-center",
-    overlayClass: "bg-gradient-to-r from-[#1a3a3a]/80 via-[#1a3a3a]/50 to-transparent",
+    id: "fashion",
+    title: "Fashion & Everyday",
+    description: "Clothing, bags, shoes, and daily campus items.",
+    image: clothesImage,
+    alt: "Clothing and everyday fashion items",
+  },
+  {
+    id: "study",
+    title: "Study Essentials",
+    description: "Notes, stationery, printers, and learning tools.",
+    image: studyImage,
+    alt: "Study supplies and stationery",
+  },
+  {
+    id: "kitchen",
+    title: "Home & Kitchen",
+    description: "Cookware, utensils, appliances, and home must-haves.",
+    image: homeCookImage,
+    alt: "Kitchen and cooking essentials",
   },
 ];
 
-function CategoryCard({ title, description, imageUrl, imagePosition, overlayClass, gridClass }) {
+function CategoryCard({ title, description, image, alt }) {
   return (
-    <div
-      className={`relative rounded-2xl overflow-hidden cursor-pointer group ${gridClass}`}
-      style={{ minHeight: "260px" }}
-    >
-      {/* Background image */}
-      <img
-        src={imageUrl}
-        alt={title}
-        className={`absolute inset-0 w-full h-full object-cover ${imagePosition} transition-transform duration-500 group-hover:scale-105`}
-      />
+    <article className="overflow-hidden rounded-[22px] bg-white shadow-[0_16px_36px_rgba(15,23,42,0.08)] ring-1 ring-slate-200/70 transition duration-300 hover:-translate-y-1 hover:shadow-[0_22px_48px_rgba(15,23,42,0.12)]">
+      <figure>
+        <img src={image} alt={alt} className="h-28 w-full object-cover" />
 
-      {/* Dark overlay */}
-      <div className={`absolute inset-0 ${overlayClass}`} />
+        <figcaption className="p-5">
+          <h3 className="text-base font-bold text-slate-950">{title}</h3>
 
-      {/* Content */}
-      <div className="relative z-10 flex flex-col justify-end h-full p-7">
-        <h3 className="text-white font-['inter',sans-serif] font-bold text-2xl leading-tight mb-1">{title}</h3>
-        {description && (
-          <p className="text-white/70 font-['inter',sans-serif] text-sm leading-relaxed mb-4 max-w-xs">{description}</p>
-        )}
-        {!description && <div className="mb-4" />}
-
-      </div>
-    </div>
+          <p className="mt-1.5 text-sm leading-6 text-slate-600">
+            {description}
+          </p>
+        </figcaption>
+      </figure>
+    </article>
   );
 }
 
 export default function CuratedCategories() {
   return (
-    <section className="bg-blue-500 px-10 py-16 min-h-screen">
-      {/* Header */}
-      <div className="flex items-start justify-between mb-8">
-        <div>
-          <h2 className="text-4xl font-['inter',sans-serif] font-bold text-white">
-            Curated Categories
+    <section
+      className="bg-gradient-to-b from-white via-slate-50 to-blue-50/40 px-8 py-20"
+      aria-labelledby="marketplace-categories-heading"
+    >
+      <section className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-10 lg:grid-cols-[0.85fr_1.4fr]">
+        <header className="pt-4">
+          <h2
+            id="marketplace-categories-heading"
+            className="max-w-xl text-5xl font-semibold leading-[1.05] tracking-[-1.8px] text-slate-950"
+          >
+            Browse the essentials students{" "}
+            <em className="not-italic text-blue-600">actually</em> trade.
           </h2>
-          <p className="text-white font-['inter',sans-serif] text-sm mt-1">
-            Quality items, hand-picked for the academic lifestyle.
-          </p>
-        </div>
-      </div>
 
-      {/* Bento Grid: 3 columns, 2 rows */}
-      <div className="grid grid-cols-3 grid-rows-2 gap-4">
-        {CATEGORIES.map((cat) => (
-          <CategoryCard key={cat.id} {...cat} />
-        ))}
-      </div>
+          <p className="mt-7 max-w-md text-lg leading-8 text-slate-600">
+            From textbooks and electronics to room items and everyday finds,
+            UniSquare keeps campus trading simple, verified, and
+            student-focused.
+          </p>
+
+          <p className="mt-8 max-w-md text-base font-semibold leading-7 text-slate-500">
+            Built for verified Wits students who want a safer, cleaner way to
+            buy, sell, and connect on campus.
+          </p>
+        </header>
+
+        <section
+          id="categories"
+          className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3"
+          aria-label="Marketplace categories"
+        >
+          {CATEGORIES.map((category) => (
+            <CategoryCard key={category.id} {...category} />
+          ))}
+        </section>
+      </section>
     </section>
   );
 }
