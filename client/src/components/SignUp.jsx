@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../config/supabaseClient";
-import bgImage from "../assets/wits_great_hall.jpg"
+import bgImage from "../assets/wits_great_hall.jpg";
 import { useState } from "react";
 
 export default function SignUp() {
@@ -22,36 +22,39 @@ export default function SignUp() {
   };
 
   return (
-    <main className="flex h-screen font-['inter',sans-serif]">
-
-      {/* ── Left Panel — hidden on mobile, visible md+ ── */}
+    <main className="flex min-h-screen flex-col font-['inter',sans-serif] lg:flex-row">
       <aside
-        className="hidden md:flex flex-1 flex-col justify-between p-10 text-white"
+        className="hidden flex-1 flex-col justify-between p-8 text-white lg:flex lg:p-10"
         style={{
           background: `linear-gradient(rgba(10,40,150,0.78), rgba(10,40,150,0.88)),
             url('${bgImage}') center/cover no-repeat`,
         }}
       >
-        <p className="text-xs tracking-widest opacity-70 uppercase">Uni Square</p>
+        <p className="text-xs uppercase tracking-widest opacity-70">
+          Uni Square
+        </p>
 
         <section>
-          <h1 className="text-5xl font-extrabold leading-tight mb-5">
-            Elevate your<br />
+          <h1 className="mb-5 text-4xl font-extrabold leading-tight xl:text-5xl">
+            Elevate your
+            <br />
             <mark className="bg-transparent text-orange-300">
-              Campus<br />Experience.
+              Campus
+              <br />
+              Experience.
             </mark>
           </h1>
 
-          <em className="not-italic inline-block border border-white/50 rounded-full px-4 py-1 text-[11px] tracking-widest uppercase mb-6">
+          <p className="mb-6 inline-block rounded-full border border-white/50 px-4 py-1 text-[11px] uppercase tracking-widest">
             Exclusive Access
-          </em>
+          </p>
 
-          <p className="text-sm leading-relaxed opacity-85 max-w-xs mb-8">
+          <p className="mb-8 max-w-xs text-sm leading-relaxed opacity-85">
             Join a curated marketplace designed specifically for your university
             community. Secure, verified, and strictly academic.
           </p>
 
-          <ul className="flex gap-8 list-none p-0 m-0">
+          <ul className="m-0 flex list-none flex-col gap-4 p-0 sm:flex-row sm:gap-8">
             {[
               {
                 title: ".students.wits.ac.za Verification",
@@ -61,11 +64,13 @@ export default function SignUp() {
                 title: "Peer-to-Peer",
                 desc: "Buy, sell, and trade directly with your colleagues and students on campus.",
               },
-            ].map((f) => (
-              <li key={f.title} className="flex gap-3 max-w-40">
+            ].map((feature) => (
+              <li key={feature.title} className="max-w-48">
                 <article>
-                  <p className="text-[13px] font-bold m-0">{f.title}</p>
-                  <p className="text-[12px] opacity-75 leading-snug mt-1 m-0">{f.desc}</p>
+                  <h2 className="m-0 text-[13px] font-bold">{feature.title}</h2>
+                  <p className="m-0 mt-1 text-[12px] leading-snug opacity-75">
+                    {feature.desc}
+                  </p>
                 </article>
               </li>
             ))}
@@ -73,57 +78,59 @@ export default function SignUp() {
         </section>
 
         <footer>
-          <small className="text-[11px] tracking-widest opacity-60 uppercase">
+          <small className="text-[11px] uppercase tracking-widest opacity-60">
             Uni Square © 2026
           </small>
         </footer>
       </aside>
 
-      {/* ── Right Panel — full width on mobile, fixed width on md+ ── */}
-      <section className="flex-1 md:flex-none md:w-105 bg-white flex flex-col justify-between p-8 md:p-10 md:shadow-[-4px_0_20px_rgba(0,0,0,0.08)]">
-
-        {/* Logo */}
+      <section className="flex min-h-screen flex-1 flex-col justify-between bg-white p-6 sm:p-8 lg:min-h-0 lg:max-w-[28rem] lg:p-10 lg:shadow-[-4px_0_20px_rgba(0,0,0,0.08)] xl:max-w-[32rem]">
         <header>
-          <a href="/" className="text-[15px] font-bold text-blue-600 no-underline hover:opacity-80 transition-opacity">
+          <a
+            href="/"
+            className="text-[15px] font-bold text-blue-600 no-underline transition-opacity hover:opacity-80"
+          >
             UniSquare
           </a>
         </header>
 
-        {/* Form area */}
         <form
-          onSubmit={(e) => { e.preventDefault(); handleGoogle(); }}
+          onSubmit={(event) => {
+            event.preventDefault();
+            handleGoogle();
+          }}
           noValidate
-          className="flex flex-col gap-5"
+          className="flex flex-col gap-5 py-10 lg:py-0"
         >
           <hgroup>
-            <h2 className="text-3xl md:text-[1.8rem] font-extrabold text-gray-900 m-0">
+            <h2 className="m-0 text-3xl font-extrabold text-gray-900">
               Create Account
             </h2>
-            <p className="text-sm text-gray-500 mt-1 m-0">
+            <p className="m-0 mt-1 text-sm text-gray-500">
               Join your campus community today.
             </p>
           </hgroup>
 
-          <p className="text-[13px] text-gray-500 m-0">
+          <p className="m-0 text-[13px] text-gray-500">
             Already have an account?{" "}
-            <a
+            <button
+              type="button"
               onClick={() => navigate("/signin")}
-              className="text-blue-600 font-semibold cursor-pointer hover:underline"
+              className="font-semibold text-blue-600 hover:underline"
             >
               Sign In
-            </a>
+            </button>
           </p>
 
           <button
             type="submit"
             disabled={loading}
-            className="flex items-center gap-3 border-[1.5px] border-gray-200 rounded-full px-6 py-2.5 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 active:scale-[.98] transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer w-full md:w-fit justify-center md:justify-start mb-60"
+            className="flex w-full items-center justify-center gap-3 rounded-full border-[1.5px] border-gray-200 bg-white px-6 py-2.5 text-sm font-medium text-gray-700 transition-all duration-150 hover:bg-gray-50 active:scale-[.98] disabled:cursor-not-allowed disabled:opacity-60 sm:w-fit sm:justify-start"
           >
             <GoogleIcon />
             {loading ? "Redirecting..." : "Sign up with Google"}
           </button>
         </form>
-
       </section>
     </main>
   );

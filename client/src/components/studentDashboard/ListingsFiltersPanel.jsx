@@ -1,8 +1,5 @@
 import { CONDITIONS, SORT_OPTIONS } from "./listingFiltersConfig";
 
-// Stateless/controlled filter panel.
-// All values and handlers are provided by the parent hook/page, which keeps
-// business logic in one place and UI rendering in this component.
 export default function ListingsFiltersPanel({
   selectedCondition,
   onConditionChange,
@@ -15,18 +12,18 @@ export default function ListingsFiltersPanel({
   onClearFilters,
 }) {
   return (
-    <section className="bg-white border border-gray-200 rounded-xl p-4">
+    <section className="rounded-xl border border-gray-200 bg-white p-4">
       <form
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 items-end"
+        className="grid grid-cols-1 items-end gap-3 md:grid-cols-2 lg:grid-cols-5"
         aria-label="Listings filters"
-        onSubmit={(e) => e.preventDefault()}
+        onSubmit={(event) => event.preventDefault()}
       >
         <label className="flex flex-col gap-1 text-sm text-gray-700">
-          <span>Condition</span>
+          <p>Condition</p>
           <select
             value={selectedCondition}
-            onChange={(e) => onConditionChange(e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-2"
+            onChange={(event) => onConditionChange(event.target.value)}
+            className="rounded-lg border border-gray-300 px-3 py-2"
           >
             {CONDITIONS.map((option) => (
               <option key={option.value} value={option.value}>
@@ -37,35 +34,35 @@ export default function ListingsFiltersPanel({
         </label>
 
         <label className="flex flex-col gap-1 text-sm text-gray-700">
-          <span>Min Price (R)</span>
+          <p>Min Price (R)</p>
           <input
             type="number"
             min="0"
             value={minPrice}
-            onChange={(e) => onMinPriceChange(e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-2"
+            onChange={(event) => onMinPriceChange(event.target.value)}
+            className="rounded-lg border border-gray-300 px-3 py-2"
             placeholder="0"
           />
         </label>
 
         <label className="flex flex-col gap-1 text-sm text-gray-700">
-          <span>Max Price (R)</span>
+          <p>Max Price (R)</p>
           <input
             type="number"
             min="0"
             value={maxPrice}
-            onChange={(e) => onMaxPriceChange(e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-2"
+            onChange={(event) => onMaxPriceChange(event.target.value)}
+            className="rounded-lg border border-gray-300 px-3 py-2"
             placeholder="10000"
           />
         </label>
 
         <label className="flex flex-col gap-1 text-sm text-gray-700">
-          <span>Sort By</span>
+          <p>Sort By</p>
           <select
             value={sortBy}
-            onChange={(e) => onSortByChange(e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-2"
+            onChange={(event) => onSortByChange(event.target.value)}
+            className="rounded-lg border border-gray-300 px-3 py-2"
           >
             {SORT_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
@@ -78,7 +75,7 @@ export default function ListingsFiltersPanel({
         <button
           type="button"
           onClick={onClearFilters}
-          className="border border-gray-300 hover:border-gray-400 rounded-lg px-4 py-2 text-sm text-gray-700"
+          className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:border-gray-400"
         >
           Clear Filters
         </button>

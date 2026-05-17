@@ -1,18 +1,3 @@
-// src/components/dashboard/ListingCard.jsx
-
-/**
- * ListingCard component
- * Displays a single marketplace listing.
- * Props:
- *  - listing: {
- *      id: string,
- *      title: string,
- *      price: number,
- *      condition: string,
- *      imageUrl: string | null,
- *      category: string,
- *    }
- */
 import { Link } from "react-router-dom";
 
 const formatLabel = (value) => {
@@ -32,19 +17,18 @@ export default function ListingCard({ listing }) {
   const { title, price, condition } = listing;
 
   return (
-    <article className="bg-white rounded-2xl overflow-hidden border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all">
+    <article className="overflow-hidden rounded-2xl border border-gray-200 bg-white transition-all hover:border-blue-300 hover:shadow-md">
       <Link
         to={`/listing/${listing.id}`}
-        className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-300 cursor-pointer"
+        className="block cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-300"
         aria-label={`View details for ${title}`}
       >
-        {/* Image */}
-        <figure className="bg-gray-100 h-44 flex items-center justify-center overflow-hidden">
+        <figure className="flex h-44 items-center justify-center overflow-hidden bg-gray-100">
           {imageUrl ? (
             <img
               src={imageUrl}
               alt={title}
-              className="w-full h-full object-cover"
+              className="h-full w-full object-cover"
             />
           ) : (
             <figcaption className="text-sm text-gray-400">
@@ -53,16 +37,15 @@ export default function ListingCard({ listing }) {
           )}
         </figure>
 
-        {/* Details */}
-        <section className="p-3 flex flex-col gap-1">
-          <h3 className="text-sm font-semibold text-gray-900 truncate">
+        <section className="flex flex-col gap-1 p-3">
+          <h3 className="truncate text-sm font-semibold text-gray-900">
             {title}
           </h3>
           <p className="text-sm font-bold text-gray-900">R{price}</p>
           <footer>
-            <span className="inline-block text-xs text-gray-600 border border-gray-300 rounded-full px-3 py-0.5">
+            <mark className="inline-block bg-blue-600 rounded-full border border-gray-300 px-3 py-0.5 text-xs text-white">
               {formatLabel(condition)}
-            </span>
+            </mark>
           </footer>
         </section>
       </Link>

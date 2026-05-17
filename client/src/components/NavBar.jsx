@@ -2,14 +2,14 @@ import { Link } from "react-router-dom";
 
 export default function Navbar() {
   return (
-    <header className="absolute left-0 top-0 z-50 w-full px-8 pt-5">
+    <header className="absolute left-0 top-0 z-50 w-full px-4 pt-4 sm:px-6 sm:pt-5 lg:px-8">
       <nav
-        className="mx-auto flex max-w-7xl items-center justify-between rounded-[22px] border border-white/60 bg-white/70 px-7 py-3 shadow-[0_14px_40px_rgba(15,23,42,0.12)] backdrop-blur-xl"
+        className="mx-auto flex max-w-7xl items-center justify-between rounded-[22px] border border-white/60 bg-white/70 px-4 py-3 shadow-[0_14px_40px_rgba(15,23,42,0.12)] backdrop-blur-xl sm:px-6 lg:px-7"
         aria-label="Main navigation"
       >
         <Link
           to="/"
-          className="text-xl font-black tracking-tight text-slate-950"
+          className="text-lg font-black tracking-tight text-slate-950 sm:text-xl"
           aria-label="UniSquare home"
         >
           Uni
@@ -37,7 +37,7 @@ export default function Navbar() {
           <li>
             <Link
               to="/signin"
-              className="hidden rounded-full border border-slate-200 bg-white/70 px-5 py-2 text-sm font-bold text-slate-800 transition hover:bg-white md:inline-flex"
+              className="inline-flex rounded-full border border-slate-200 bg-white/70 px-4 py-2 text-sm font-bold text-slate-800 transition hover:bg-white sm:px-5"
             >
               Sign In
             </Link>
@@ -46,7 +46,7 @@ export default function Navbar() {
           <li>
             <Link
               to="/signup"
-              className="rounded-full bg-blue-600 px-6 py-2 text-sm font-bold text-white shadow-[0_10px_24px_rgba(21,93,252,0.25)] transition hover:bg-blue-700"
+              className="rounded-full bg-blue-600 px-4 py-2 text-sm font-bold text-white shadow-[0_10px_24px_rgba(21,93,252,0.25)] transition hover:bg-blue-700 sm:px-6"
             >
               Get Started
             </Link>

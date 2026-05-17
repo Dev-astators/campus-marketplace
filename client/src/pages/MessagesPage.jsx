@@ -4,12 +4,10 @@ import { supabase } from "../config/supabaseClient";
 
 export default function MessagesPage() {
   const navigate = useNavigate();
-
   const [user, setUser] = useState(null);
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Get logged-in user
   useEffect(() => {
     const getUser = async () => {
       const { data } = await supabase.auth.getSession();
@@ -26,7 +24,6 @@ export default function MessagesPage() {
     getUser();
   }, []);
 
-  // Stable fetch function
   const fetchConversations = useCallback(async (currentUser) => {
     try {
       const { data, error } = await supabase
@@ -46,40 +43,34 @@ export default function MessagesPage() {
 
       const grouped = {};
 
-      (data || []).forEach((msg) => {
-        const isSender = msg.sender_id === currentUser.id;
-
-        const otherUserId = isSender
-          ? msg.receiver_id
-          : msg.sender_id;
-
+      (data || []).forEach((message) => {
+        const isSender = message.sender_id === currentUser.id;
+        const otherUserId = isSender ? message.receiver_id : message.sender_id;
         const otherUserName = isSender
-          ? msg.receiver?.full_name
-          : msg.sender?.full_name;
-
-        const key = `${msg.listing_id}-${otherUserId}`;
+          ? message.receiver?.full_name
+          : message.sender?.full_name;
+        const key = `${message.listing_id}-${otherUserId}`;
 
         if (!grouped[key]) {
           grouped[key] = {
-            listing_id: msg.listing_id,
-            listing_title: msg.listing?.title || "Untitled listing",
+            listing_id: message.listing_id,
+            listing_title: message.listing?.title || "Untitled listing",
             otherUserId,
             otherUserName: otherUserName || "Unknown user",
-            lastMessage: msg.content,
-            sent_at: msg.sent_at,
+            lastMessage: message.content,
+            sent_at: message.sent_at,
           };
         }
       });
 
       setConversations(Object.values(grouped));
-    } catch (err) {
-      console.error("Error fetching conversations:", err);
+    } catch (error) {
+      console.error("Error fetching conversations:", error);
     } finally {
       setLoading(false);
     }
   }, []);
 
-  // Initial load
   useEffect(() => {
     if (!user) return;
 
@@ -90,13 +81,11 @@ export default function MessagesPage() {
     loadConversations();
   }, [user, fetchConversations]);
 
-  // Realtime updates
   useEffect(() => {
     if (!user) return;
 
     const channel = supabase
       .channel("messages-page-realtime")
-
       .on(
         "postgres_changes",
         {
@@ -105,18 +94,15 @@ export default function MessagesPage() {
           table: "messages",
         },
         async (payload) => {
-          const msg = payload.new;
-
+          const message = payload.new;
           const belongsToUser =
-            msg.sender_id === user.id ||
-            msg.receiver_id === user.id;
+            message.sender_id === user.id || message.receiver_id === user.id;
 
           if (!belongsToUser) return;
 
           await fetchConversations(user);
         },
       )
-
       .on(
         "postgres_changes",
         {
@@ -125,18 +111,15 @@ export default function MessagesPage() {
           table: "messages",
         },
         async (payload) => {
-          const msg = payload.new;
-
+          const message = payload.new;
           const belongsToUser =
-            msg.sender_id === user.id ||
-            msg.receiver_id === user.id;
+            message.sender_id === user.id || message.receiver_id === user.id;
 
           if (!belongsToUser) return;
 
           await fetchConversations(user);
         },
       )
-
       .subscribe();
 
     return () => {
@@ -144,15 +127,14 @@ export default function MessagesPage() {
     };
   }, [user, fetchConversations]);
 
-  const openChat = (conv) => {
+  const openChat = (conversation) => {
     try {
       sessionStorage.removeItem("chatBackTarget");
     } catch {
-      // sessionStorage may not be available in some test/runtime environments
     }
 
-  navigate(`/chat/${conv.listing_id}?seller=${conv.otherUserId}`);
-};
+    navigate(`/chat/${conversation.listing_id}?seller=${conversation.otherUserId}`);
+  };
 
   const formatTime = (dateString) => {
     if (!dateString) return "";
@@ -167,130 +149,115 @@ export default function MessagesPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-white flex items-center justify-center px-6">
-        <section className="bg-white border border-gray-200 rounded-3xl shadow-sm px-8 py-7 text-center">
-          <p className="mx-auto w-14 h-14 rounded-2xl bg-blue-50 flex items-center justify-center mb-4 text-2xl">
-            💬
+      <main className="flex min-h-screen items-center justify-center bg-white px-4 sm:px-6">
+        <article className="rounded-3xl border border-gray-200 bg-white px-6 py-7 text-center shadow-sm sm:px-8">
+          <p className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-sm font-semibold text-blue-700">
+            Chats
           </p>
-
           <p className="text-base font-semibold text-gray-800">
             Loading messages...
           </p>
-
-          <p className="text-sm text-gray-400 mt-1">
+          <p className="mt-1 text-sm text-gray-400">
             Please wait while we get your conversations.
           </p>
-        </section>
+        </article>
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-white px-6 py-6">
-      <section className="max-w-7xl mx-auto grid grid-cols-[110px_1fr] gap-6 items-start">
-        {/* Back Button */}
-        <section className="-ml-12 pt-1">
-          <button
-            type="button"
-            onClick={() => navigate("/student-dashboard")}
-            className="px-4 py-2 border border-gray-200 rounded-xl shadow-sm hover:bg-gray-50 transition bg-white"
-          >
-            ← Back
-          </button>
-        </section>
+    <main className="min-h-screen bg-white px-4 py-6 sm:px-6 sm:py-8">
+      <article className="mx-auto max-w-6xl">
+        <header className="mb-8">
+          <p>
+            <button
+              type="button"
+              onClick={() => navigate("/student-dashboard")}
+              className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition hover:bg-gray-50"
+            >
+              Back
+            </button>
+          </p>
+          <h1 className="mt-4 text-2xl font-bold text-gray-900 sm:text-3xl">
+            Messages
+          </h1>
+          <p className="mt-2 text-sm text-gray-500">
+            View your conversations about marketplace listings.
+          </p>
+        </header>
 
-        {/* Messages Content */}
-        <section className="mt-6">
-          <header className="mb-10">
-            <h1 className="text-3xl font-bold text-gray-900">
-              Messages
-            </h1>
-
-            <p className="text-sm text-gray-500 mt-2">
-              View your conversations about marketplace listings.
-            </p>
-          </header>
-
-          <section className="max-w-5xl">
-            {conversations.length === 0 ? (
-              <article className="bg-white border border-gray-200 rounded-3xl shadow-sm px-6 py-20 text-center">
-                <p className="mx-auto w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center mb-4 text-3xl">
-                  💬
+        <section className="max-w-5xl">
+          {conversations.length === 0 ? (
+            <article className="rounded-3xl border border-gray-200 bg-white px-6 py-16 text-center shadow-sm sm:px-8 sm:py-20">
+              <p className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-50 text-sm font-semibold text-blue-700">
+                Chats
+              </p>
+              <h2 className="text-xl font-bold text-gray-800">
+                No conversations yet
+              </h2>
+              <p className="mt-2 text-sm text-gray-500">
+                When you contact a seller, your chats will appear here.
+              </p>
+              {!user ? (
+                <p className="mt-3 text-xs text-gray-400">
+                  You are currently not signed in, so no real conversations can
+                  be loaded yet.
                 </p>
-
-                <h2 className="text-xl font-bold text-gray-800">
-                  No conversations yet
-                </h2>
-
-                <p className="text-sm text-gray-500 mt-2">
-                  When you contact a seller, your chats will appear here.
-                </p>
-
-                {!user && (
-                  <p className="text-xs text-gray-400 mt-3">
-                    You are currently not signed in, so no real conversations
-                    can be loaded yet.
-                  </p>
-                )}
-              </article>
-            ) : (
-              <section
-                className="space-y-4"
-                aria-label="Message conversations"
-              >
-                {conversations.map((conv, i) => (
-                  <article
-                    key={`${conv.listing_id}-${conv.otherUserId}-${i}`}
-                    className="bg-white border border-gray-200 rounded-3xl shadow-sm overflow-hidden hover:shadow-md transition"
+              ) : null}
+            </article>
+          ) : (
+            <section className="space-y-4" aria-label="Message conversations">
+              {conversations.map((conversation, index) => (
+                <article
+                  key={`${conversation.listing_id}-${conversation.otherUserId}-${index}`}
+                  className="overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm transition hover:shadow-md"
+                >
+                  <button
+                    type="button"
+                    onClick={() => openChat(conversation)}
+                    className="w-full px-4 py-5 text-left transition hover:bg-gray-50 sm:px-6"
                   >
-                    <button
-                      type="button"
-                      onClick={() => openChat(conv)}
-                      className="w-full text-left px-6 py-5 hover:bg-gray-50 transition"
-                    >
-                      <section className="flex items-center gap-5">
-                        <p className="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center text-green-700 text-lg font-bold shrink-0">
-                          {conv.otherUserName?.charAt(0)?.toUpperCase() ||
-                            "U"}
-                        </p>
+                    <section className="flex items-start gap-4 sm:gap-5">
+                      <p className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-green-100 text-base font-bold text-green-700 sm:h-14 sm:w-14 sm:text-lg">
+                        {conversation.otherUserName?.charAt(0)?.toUpperCase() || "U"}
+                      </p>
 
-                        <section className="min-w-0 flex-1">
-                          <header className="flex items-start justify-between gap-4">
-                            <section className="min-w-0">
-                              <h2 className="text-lg font-bold text-gray-900 truncate">
-                                {conv.otherUserName}
-                              </h2>
+                      <section className="min-w-0 flex-1">
+                        <header className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                          <section className="min-w-0">
+                            <h2 className="truncate text-base font-bold text-gray-900 sm:text-lg">
+                              {conversation.otherUserName}
+                            </h2>
+                            <p className="mt-1 truncate text-sm font-semibold text-blue-700">
+                              {conversation.listing_title}
+                            </p>
+                          </section>
 
-                              <p className="text-sm text-blue-700 font-semibold truncate mt-1">
-                                {conv.listing_title}
-                              </p>
-                            </section>
+                          <time
+                            dateTime={conversation.sent_at || undefined}
+                            className="shrink-0 pt-0.5 text-xs text-gray-400"
+                          >
+                            {formatTime(conversation.sent_at)}
+                          </time>
+                        </header>
 
-                            <time
-                              dateTime={conv.sent_at || undefined}
-                              className="text-xs text-gray-400 shrink-0 pt-1"
-                            >
-                              {formatTime(conv.sent_at)}
-                            </time>
-                          </header>
-
-                          <p className="text-sm text-gray-600 truncate mt-3">
-                            {conv.lastMessage}
+                        <footer className="mt-3 flex items-center justify-between gap-3">
+                          <p className="truncate text-sm text-gray-600">
+                            {conversation.lastMessage}
                           </p>
-                        </section>
-
-                        <p className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 shrink-0">
-                          →
-                        </p>
+                          <p className="shrink-0 rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-500">
+                            Open
+                          </p>
+                        </footer>
                       </section>
-                    </button>
-                  </article>
-                ))}
-              </section>
-            )}
-          </section>
+                    </section>
+                  </button>
+                </article>
+              ))}
+            </section>
+          )}
         </section>
-      </section>
+      </article>
     </main>
   );
 }
