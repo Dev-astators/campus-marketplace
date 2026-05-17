@@ -38,10 +38,11 @@ function StarRating({ value }) {
   );
 }
 
-export default function UserManagement({ users, togglingRole, onRoleChange }) {
+export default function UserManagement({ users, facilities=[], togglingRole, onRoleChange }) {
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
   const [confirmChange, setConfirmChange] = useState(null);
+  const [selectedFacility, setSelectedFacility] = useState(""); // For assigning facility staff
   // confirmChange = { userId, userName, newRole }
 
   const filtered = useMemo(() => {
@@ -60,13 +61,24 @@ export default function UserManagement({ users, togglingRole, onRoleChange }) {
 
   const handleRoleSelect = (user, newRole) => {
     if (newRole === user.role) return;
+    setSelectedFacility("");
     setConfirmChange({ userId: user.id, userName: user.full_name, newRole });
   };
 
   const confirmRoleChange = () => {
     if (!confirmChange) return;
-    onRoleChange(confirmChange.userId, confirmChange.newRole);
+    if (confirmChange.newRole === "facility_staff") {
+      onRoleChange(
+        confirmChange.userId,
+        confirmChange.newRole,
+        selectedFacility
+      );
+    } else {
+      onRoleChange(confirmChange.userId, confirmChange.newRole);
+    }
+
     setConfirmChange(null);
+    setSelectedFacility("");
   };
 
   return (
@@ -259,6 +271,51 @@ export default function UserManagement({ users, togglingRole, onRoleChange }) {
               </span>
               ? This affects what they can access on the platform.
             </p>
+
+            {confirmChange.newRole==="facility_staff" && (
+            <div className="mt-4">
+
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+
+            Assign Trade Facility
+
+            </label>
+
+            <select
+            value={selectedFacility}
+            onChange={(e)=>
+            setSelectedFacility(
+            e.target.value
+            )}
+            className="
+            w-full
+            rounded-lg
+            border
+            border-gray-200
+            px-3
+            py-2
+            text-sm"
+            >
+
+            <option value="">
+            Select location
+            </option>
+
+            {facilities.map((f)=>(
+            <option
+            key={f.id}
+            value={f.id}
+            >
+            {f.name}
+            — {f.location}
+            </option>
+            ))}
+
+            </select>
+
+            </div>
+            )}
+
             <div className="mt-5 flex justify-end gap-3">
               <button
                 type="button"
@@ -269,8 +326,13 @@ export default function UserManagement({ users, togglingRole, onRoleChange }) {
               </button>
               <button
                 type="button"
+                disabled={
+                  confirmChange.newRole ===
+                    "facility_staff" &&
+                  !selectedFacility
+                }
                 onClick={confirmRoleChange}
-                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
+                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Confirm
               </button>
