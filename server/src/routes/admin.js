@@ -94,6 +94,7 @@ router.patch(
 router.get("/users", ...adminOnly, async (req, res) => {
   const { data, error } = await getAllUsers();
   if (error) {
+    console.error("GET USERS ERROR:", error);
     return res
       .status(500)
       .json({ message: "Failed to fetch users", error: error.message });
@@ -102,12 +103,12 @@ router.get("/users", ...adminOnly, async (req, res) => {
 });
 
 router.patch("/users/:userId/role", ...adminOnly, async (req, res) => {
-  const { role } = req.body;
+  const { role, facilityId } = req.body;
   if (!role) {
     return res.status(400).json({ message: "role field is required" });
   }
 
-  const { data, error } = await updateUserRole(req.params.userId, role);
+  const { data, error } = await updateUserRole(req.params.userId, role, facilityId);
   if (error) {
     return res
       .status(400)
