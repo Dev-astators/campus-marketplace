@@ -15,7 +15,7 @@ function getFirstName(authUser) {
 }
 
 export default function useDashboardListings(activeNav) {
-  const [user, setUser]       = useState(null);
+  const [user, setUser] = useState(null);
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -36,21 +36,21 @@ export default function useDashboardListings(activeNav) {
       const { data: profile } = await supabase
         .from("profiles")
         .select("id, role")
-        .eq("id", authUser.id)   // profiles.id = auth.users.id in your schema
+        .eq("id", authUser.id) // profiles.id = auth.users.id in your schema
         .single();
 
       setUser({
-        name:          getFirstName(authUser),
+        name: getFirstName(authUser),
         fullName,
-        id:            authUser.id,         // auth user id
-        profileId:     profile?.id || authUser.id, // profile table id
-        email:         authUser.email,
+        id: authUser.id, // auth user id
+        profileId: profile?.id || authUser.id, // profile table id
+        email: authUser.email,
         studentNumber: authUser.email?.split("@")[0] || null,
-        role:          profile?.role || metadata.role || "student",
-        provider:      authUser.app_metadata?.provider || "google",
-        createdAt:     authUser.created_at,
-        lastSignInAt:  authUser.last_sign_in_at,
-        avatarUrl:     metadata.avatar_url || metadata.picture || null,
+        role: profile?.role || metadata.role || "student",
+        provider: authUser.app_metadata?.provider || "google",
+        createdAt: authUser.created_at,
+        lastSignInAt: authUser.last_sign_in_at,
+        avatarUrl: metadata.avatar_url || metadata.picture || null,
       });
     };
 
@@ -59,7 +59,7 @@ export default function useDashboardListings(activeNav) {
 
   const fetchListings = useCallback(async (navItem, currentUserId) => {
     // These tabs don't use the listings fetch at all
-    if (["my-purchases", "my-sales", "notifications", "profile"].includes(navItem)) {
+    if (["my-purchases", "my-sales", "profile"].includes(navItem)) {
       setLoading(false);
       return;
     }
@@ -83,8 +83,11 @@ export default function useDashboardListings(activeNav) {
       if (navItem === "my-listings") {
         const { data } = await supabase.auth.getSession();
         const accessToken = data.session?.access_token;
-        if (!accessToken) throw new Error("Missing access token for My Listings");
-        requestOptions = { headers: { Authorization: `Bearer ${accessToken}` } };
+        if (!accessToken)
+          throw new Error("Missing access token for My Listings");
+        requestOptions = {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        };
       }
 
       const res = await fetch(endpoint, requestOptions);

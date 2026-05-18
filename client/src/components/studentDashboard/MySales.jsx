@@ -1,6 +1,5 @@
 // src/components/studentDashboard/MySales.jsx
-// Seller sees all their completed sales and can book a drop-off slot
-// at the same facility the buyer chose for collection.
+// Seller sees all their completed sales and can book a drop-off slot.
 import { useEffect, useState } from "react";
 import { API_BASE_URL } from "../../config/apiBaseUrl";
 
@@ -18,6 +17,10 @@ export default function MySales({ profileId }) {
 
   // Drop-off booking modal state
   const [bookingTx, setBookingTx] = useState(null); // transaction being booked
+  const [facilities, setFacilities] = useState([]);
+  const [selectedFacility, setSelectedFacility] = useState("");
+  const [loadingFacilities, setLoadingFacilities] = useState(false);
+  const [facilityLock, setFacilityLock] = useState(null);
   const [slots, setSlots] = useState([]);
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [loadingSlots, setLoadingSlots] = useState(false);
@@ -66,30 +69,12 @@ export default function MySales({ profileId }) {
     };
   }, [profileId]);
 
-  // Opens the drop-off booking modal for a given transaction.
-  // Loads slots for the SAME facility the buyer chose for collection.
-  const openDropoffBooking = async (tx) => {
-    setBookingTx(tx);
-    setSelectedSlot(null);
-    setBookingError(null);
-    setSlots([]);
+  const loadSlots = async (facilityId) => {
+    if (!facilityId) return;
     setLoadingSlots(true);
-
+    setSlots([]);
+    setSelectedSlot(null);
     try {
-      // Find the buyer's collection booking to get the facility
-      const collectionBooking = tx.facility_bookings?.find(
-        (b) => b.booking_type === "collection",
-      );
-      const facilityId = collectionBooking?.facility_slots?.facility_id;
-
-      if (!facilityId) {
-        setBookingError(
-          "Could not determine the facility. The buyer may not have booked a collection slot yet.",
-        );
-        setLoadingSlots(false);
-        return;
-      }
-
       const res = await fetch(
         `${API_BASE_URL}/api/payments/slots/${facilityId}?type=drop_off`,
       );
@@ -99,6 +84,63 @@ export default function MySales({ profileId }) {
       setBookingError("Could not load available slots.");
     } finally {
       setLoadingSlots(false);
+    }
+  };
+
+  // Opens the drop-off booking modal for a given transaction.
+  const openDropoffBooking = async (tx) => {
+    setBookingTx(tx);
+    setSelectedSlot(null);
+    setBookingError(null);
+    setSlots([]);
+    setFacilities([]);
+    setSelectedFacility("");
+    setFacilityLock(null);
+    setLoadingFacilities(true);
+
+    const collectionBooking = tx.facility_bookings?.find(
+      (b) => b.booking_type === "collection",
+    );
+    const lockedFacilityId = collectionBooking?.facility_slots?.facility_id;
+
+    if (lockedFacilityId) {
+      setFacilityLock({
+        id: lockedFacilityId,
+        name: collectionBooking?.facility_slots?.trade_facilities?.name,
+        location: collectionBooking?.facility_slots?.trade_facilities?.location,
+      });
+      setSelectedFacility(lockedFacilityId);
+      await loadSlots(lockedFacilityId);
+      setLoadingFacilities(false);
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/payments/facilities`);
+      const data = await res.json();
+      const list = Array.isArray(data) ? data : [];
+      setFacilities(list);
+
+      if (list.length === 1) {
+        setSelectedFacility(list[0].id);
+        await loadSlots(list[0].id);
+      }
+    } catch {
+      setBookingError("Could not load trade facilities.");
+    } finally {
+      setLoadingFacilities(false);
+    }
+  };
+
+  const handleFacilityChange = async (event) => {
+    const facilityId = event.target.value;
+    setSelectedFacility(facilityId);
+    setBookingError(null);
+    if (facilityId) {
+      await loadSlots(facilityId);
+    } else {
+      setSlots([]);
+      setSelectedSlot(null);
     }
   };
 
@@ -157,7 +199,8 @@ export default function MySales({ profileId }) {
           );
           const collSlot = collection?.facility_slots;
           const dropSlot = dropoff?.facility_slots;
-          const facility = collSlot?.trade_facilities;
+          const facility =
+            dropSlot?.trade_facilities || collSlot?.trade_facilities;
 
           return (
             <li
@@ -241,10 +284,52 @@ export default function MySales({ profileId }) {
               </h2>
               <p className="text-sm text-slate-500 mt-1">
                 Choose a slot to drop off{" "}
-                <strong>{bookingTx.listings?.title}</strong>. Must be before the
-                buyer's collection time.
+                <strong>{bookingTx.listings?.title}</strong>. It must be at
+                least 1 hour from now and before the buyer's collection time.
               </p>
             </header>
+
+            {loadingFacilities ? (
+              <p className="text-sm text-slate-400 text-center py-2">
+                Loading facilities…
+              </p>
+            ) : facilityLock ? (
+              <section className="mb-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                <p className="text-xs font-semibold text-slate-500">
+                  Facility locked to buyer collection
+                </p>
+                <p className="text-sm font-semibold text-slate-700">
+                  {facilityLock.name || "Selected facility"}
+                </p>
+                {facilityLock.location ? (
+                  <p className="text-xs text-slate-400">
+                    {facilityLock.location}
+                  </p>
+                ) : null}
+              </section>
+            ) : (
+              <section className="mb-4">
+                <label
+                  htmlFor="dropoff-facility"
+                  className="block text-sm font-semibold text-[#0D1B4B] mb-2"
+                >
+                  Choose a facility
+                </label>
+                <select
+                  id="dropoff-facility"
+                  value={selectedFacility}
+                  onChange={handleFacilityChange}
+                  className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
+                >
+                  <option value="">Select a facility</option>
+                  {facilities.map((facility) => (
+                    <option key={facility.id} value={facility.id}>
+                      {facility.name} · {facility.location}
+                    </option>
+                  ))}
+                </select>
+              </section>
+            )}
 
             {bookingError && (
               <output role="alert" className="block text-sm text-red-600 mb-3">
@@ -256,7 +341,7 @@ export default function MySales({ profileId }) {
               <p className="text-sm text-slate-400 text-center py-4">
                 Loading slots…
               </p>
-            ) : (
+            ) : selectedFacility || facilityLock ? (
               <fieldset className="border-0 p-0 m-0">
                 <legend className="text-sm font-semibold text-[#0D1B4B] mb-2">
                   Available Slots
@@ -293,6 +378,10 @@ export default function MySales({ profileId }) {
                   ))}
                 </ul>
               </fieldset>
+            ) : (
+              <p className="text-sm text-slate-400 text-center py-4">
+                Select a facility to see available slots.
+              </p>
             )}
 
             <footer className="flex gap-3 mt-5">

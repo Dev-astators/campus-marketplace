@@ -63,6 +63,12 @@ const createUpdateEqBuilder = (result) => {
   return builder;
 };
 
+const createInsertBuilder = (result) => {
+  const builder = {};
+  builder.insert = jest.fn().mockResolvedValue(result);
+  return builder;
+};
+
 const queueFromBuilders = (buildersByTable) => {
   const queues = Object.fromEntries(
     Object.entries(buildersByTable).map(([table, builders]) => [
@@ -716,6 +722,10 @@ describe("facilityDashboardService", () => {
             error: null,
           }),
         ],
+        notifications: [
+          createInsertBuilder({ error: null }),
+          createInsertBuilder({ error: null }),
+        ],
         transactions: [
           transactionLookupBuilder,
           transactionUpdateBuilder,
@@ -865,6 +875,10 @@ describe("facilityDashboardService", () => {
             error: null,
           }),
         ],
+        notifications: [
+          createInsertBuilder({ error: null }),
+          createInsertBuilder({ error: null }),
+        ],
         transactions: [
           transactionLookupBuilder,
           transactionUpdateBuilder,
@@ -1007,6 +1021,10 @@ describe("facilityDashboardService", () => {
             error: null,
           }),
         ],
+        notifications: [
+          createInsertBuilder({ error: null }),
+          createInsertBuilder({ error: null }),
+        ],
         transactions: [
           transactionLookupBuilder,
           transactionUpdateBuilder,
@@ -1146,11 +1164,17 @@ describe("facilityDashboardService", () => {
             error: null,
           }),
         ],
+        notifications: [
+          createInsertBuilder({ error: null }),
+          createInsertBuilder({ error: null }),
+        ],
         transactions: [
           transactionLookupBuilder,
           transactionUpdateBuilder,
           createInBuilder({
-            data: [dashboardTransaction({ status: "complete", cash_settled: true })],
+            data: [
+              dashboardTransaction({ status: "complete", cash_settled: true }),
+            ],
             error: null,
           }),
         ],
