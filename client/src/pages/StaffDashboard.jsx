@@ -97,7 +97,7 @@ export default function StaffDashboard() {
           ) : null}
 
           {!isProfileView ? (
-            <section className="grid items-start gap-4 lg:gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+            <section className="grid items-start gap-4 lg:gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(18rem,0.65fr)]">
               <section className="min-w-0 space-y-4 lg:space-y-6">
                 <HeroBanner
                   eyebrow={viewContent.eyebrow}
@@ -163,7 +163,7 @@ export default function StaffDashboard() {
                 ) : null}
               </section>
 
-              <aside className="min-w-0 h- space-y-2 lg:space-y-6">
+              <aside className="min-w-0 space-y-2 xl:max-w-[22rem] xl:justify-self-end lg:space-y-6">
                 <ActivityFeed activityLog={activityLog} />
 
               </aside>

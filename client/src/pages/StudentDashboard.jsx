@@ -1,4 +1,3 @@
-// src/pages/StudentDashboard.jsx
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import Navbar from "../components/studentDashboard/Navbar";
@@ -15,7 +14,6 @@ import MySales from "../components/studentDashboard/MySales";
 import InAppNotifications from "../components/studentDashboard/InAppNotifications";
 import { API_BASE_URL } from "../config/apiBaseUrl";
 
-// Tabs that don't use the marketplace listings feed at all
 const NON_LISTING_TABS = [
   "my-purchases",
   "my-sales",
@@ -27,12 +25,9 @@ const NON_LISTING_TABS = [
 export default function StudentDashboard() {
   const navigate = useNavigate();
   const location = useLocation();
-
-  // Support navigating directly to a tab via router state (e.g. from notifications click)
-  const [activeNav, setActiveNav] = useState(
-    location.state?.tab || "marketplace",
-  );
+  const [activeNav, setActiveNav] = useState(location.state?.tab || "marketplace");
   const [showFilters, setShowFilters] = useState(false);
+  const [isSidebarVisible, setIsSidebarVisible] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
   const { user, listings, loading } = useDashboardListings(activeNav);
@@ -55,7 +50,6 @@ export default function StudentDashboard() {
     listingsHeading,
   } = useListingFilters({ listings, activeNav });
 
-  // Fetch unread notification count for the sidebar badge
   useEffect(() => {
     if (!user?.profileId) return;
 
@@ -66,19 +60,20 @@ export default function StudentDashboard() {
         );
         const data = await res.json();
         const count = Array.isArray(data)
-          ? data.filter((n) => !n.is_read).length
+          ? data.filter((notification) => !notification.is_read).length
           : 0;
         setUnreadCount(count);
       } catch {
-        // silently fail — badge just won't show
+        // unread badge is optional, so fail silently if this request errors
       }
     };
 
     fetchUnread();
-  }, [user?.profileId, activeNav]); // re-fetch when switching tabs
+  }, [user?.profileId, activeNav]);
 
   const handleNavigate = (item) => {
     setActiveNav(item);
+    setIsSidebarVisible(false);
     if (item === "messages") navigate("/messages");
   };
 
@@ -114,178 +109,168 @@ export default function StudentDashboard() {
   ].filter(Boolean).length;
 
   return (
-    <section
-      className="h-screen flex flex-col bg-gray-50 overflow-hidden"
-      aria-label="Student dashboard"
-    >
+    <main className="flex min-h-screen flex-col overflow-hidden bg-gray-50" aria-label="Student dashboard">
       <Navbar user={user} searchValue={search} onSearch={setSearch} />
 
-      <section
-        className="flex flex-1 overflow-hidden"
-        aria-label="Dashboard workspace"
-      >
-        <Sidebar
-          activeItem={activeNav}
-          onNavigate={handleNavigate}
-          unreadCount={unreadCount}
-        />
+      <section className="flex flex-1 overflow-hidden" aria-label="Dashboard workspace">
+        <button
+          type="button"
+          onClick={() => setIsSidebarVisible((current) => !current)}
+          className="fixed bottom-4 right-4 z-30 rounded-full bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-lg md:hidden"
+        >
+          {isSidebarVisible ? "Close menu" : "Open menu"}
+        </button>
 
-        <main className="flex-1 overflow-y-auto px-8 py-6 flex flex-col gap-6">
-          <header>
-            <h1 className="text-2xl font-bold text-gray-800">
-              Hello, {firstName}!
-            </h1>
-            <p className="text-sm text-gray-400">Welcome Back!</p>
-          </header>
+        {isSidebarVisible ? (
+          <button
+            type="button"
+            aria-label="Close student navigation"
+            onClick={() => setIsSidebarVisible(false)}
+            className="fixed inset-0 z-20 bg-slate-900/30 md:hidden"
+          />
+        ) : null}
 
-          {/* ── Marketplace + My Listings ── */}
-          {isListingView && (
-            <>
-              <button
-                onClick={() => navigate("/create-listing")}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg w-fit cursor-pointer"
-              >
-                + Create Listing
-              </button>
+        <aside
+          className={`fixed inset-y-0 left-0 z-30 w-44 bg-white transition-transform md:static md:translate-x-0 ${
+            isSidebarVisible ? "translate-x-0" : "-translate-x-full"
+          }`}
+        >
+          <Sidebar
+            activeItem={activeNav}
+            onNavigate={handleNavigate}
+            unreadCount={unreadCount}
+          />
+        </aside>
 
-              <section className="flex flex-col gap-4">
-                <section className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setShowFilters((c) => !c)}
-                    aria-expanded={showFilters}
-                    aria-controls="listings-filter-controls"
-                    className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:border-gray-400 hover:text-gray-900 cursor-pointer"
-                  >
-                    {showFilters ? "Hide Filters" : "Show Filters"}
-                  </button>
+        <section className="flex-1 overflow-y-auto px-4 py-6 sm:px-6 lg:px-8">
+          <article className="flex flex-col gap-6">
+            <header>
+              <h1 className="text-2xl font-bold text-gray-800">
+                Hello, {firstName}!
+              </h1>
+              <p className="text-sm text-gray-400">Welcome Back!</p>
+            </header>
 
-                  {activeFilterCount > 0 && (
-                    <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
-                      {activeFilterCount} active
-                    </span>
-                  )}
+            {isListingView ? (
+              <>
+                <button
+                  onClick={() => navigate("/create-listing")}
+                  className="w-fit rounded-lg bg-blue-600 px-4 py-2 text-white"
+                >
+                  + Create Listing
+                </button>
+
+                <section className="flex flex-col gap-4">
+                  <section className="flex flex-wrap items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setShowFilters((current) => !current)}
+                      aria-expanded={showFilters}
+                      aria-controls="listings-filter-controls"
+                      className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:border-gray-400 hover:text-gray-900"
+                    >
+                      {showFilters ? "Hide Filters" : "Show Filters"}
+                    </button>
+
+                    {activeFilterCount > 0 ? (
+                      <mark className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
+                        {activeFilterCount} active
+                      </mark>
+                    ) : null}
+                  </section>
+
+                  {showFilters ? (
+                    <section id="listings-filter-controls" className="flex flex-col gap-4">
+                      <CategoryFilter
+                        categories={CATEGORIES}
+                        selected={selectedCategory}
+                        onSelect={setSelectedCategory}
+                      />
+                      <ListingsFiltersPanel
+                        selectedCondition={selectedCondition}
+                        onConditionChange={setSelectedCondition}
+                        minPrice={minPrice}
+                        onMinPriceChange={setMinPrice}
+                        maxPrice={maxPrice}
+                        onMaxPriceChange={setMaxPrice}
+                        sortBy={sortBy}
+                        onSortByChange={setSortBy}
+                        onClearFilters={clearFilters}
+                      />
+                    </section>
+                  ) : null}
                 </section>
 
-                {showFilters && (
-                  <section
-                    id="listings-filter-controls"
-                    className="flex flex-col gap-4"
-                  >
-                    <CategoryFilter
-                      categories={CATEGORIES}
-                      selected={selectedCategory}
-                      onSelect={setSelectedCategory}
-                    />
-                    <ListingsFiltersPanel
-                      selectedCondition={selectedCondition}
-                      onConditionChange={setSelectedCondition}
-                      minPrice={minPrice}
-                      onMinPriceChange={setMinPrice}
-                      maxPrice={maxPrice}
-                      onMaxPriceChange={setMaxPrice}
-                      sortBy={sortBy}
-                      onSortByChange={setSortBy}
-                      onClearFilters={clearFilters}
-                    />
-                  </section>
-                )}
-              </section>
+                <h2 className="text-lg font-semibold text-gray-700">
+                  {listingsHeading}
+                </h2>
 
-              <h2 className="text-lg font-semibold text-gray-700">
-                {listingsHeading}
-              </h2>
-              {isMyListingsView ? (
-                loading ? (
-                  <ListingsGrid listings={[]} loading />
-                ) : (
-                  <section
-                    className="flex flex-col gap-6"
-                    aria-label="My listings sections"
-                  >
-                    <section className="flex flex-col gap-3">
-                      <header className="flex items-center justify-between">
-                        <h3 className="text-sm font-semibold text-gray-600">
-                          Active
-                        </h3>
-                        <span className="text-xs text-gray-400">
-                          {activeListings.length}
-                        </span>
-                      </header>
-                      {activeListings.length > 0 ? (
-                        <ListingsGrid
-                          listings={activeListings}
-                          loading={false}
-                        />
-                      ) : (
-                        <p className="text-sm text-gray-400">
-                          No active listings yet.
-                        </p>
-                      )}
-                    </section>
-
-                    <section className="flex flex-col gap-3">
-                      <header className="flex items-center justify-between">
-                        <h3 className="text-sm font-semibold text-gray-600">
-                          Reserved
-                        </h3>
-                        <span className="text-xs text-gray-400">
-                          {reservedListings.length}
-                        </span>
-                      </header>
-                      {reservedListings.length > 0 ? (
-                        <ListingsGrid
-                          listings={reservedListings}
-                          loading={false}
-                        />
-                      ) : (
-                        <p className="text-sm text-gray-400">
-                          No reserved listings yet.
-                        </p>
-                      )}
-                    </section>
-
-                    {otherListings.length > 0 && (
+                {isMyListingsView ? (
+                  loading ? (
+                    <ListingsGrid listings={[]} loading />
+                  ) : (
+                    <section className="flex flex-col gap-6" aria-label="My listings sections">
                       <section className="flex flex-col gap-3">
                         <header className="flex items-center justify-between">
-                          <h3 className="text-sm font-semibold text-gray-600">
-                            Other
-                          </h3>
-                          <span className="text-xs text-gray-400">
-                            {otherListings.length}
-                          </span>
+                          <h3 className="text-sm font-semibold text-gray-600">Active</h3>
+                          <small className="text-xs text-gray-400">
+                            {activeListings.length}
+                          </small>
                         </header>
-                        <ListingsGrid
-                          listings={otherListings}
-                          loading={false}
-                        />
+                        {activeListings.length > 0 ? (
+                          <ListingsGrid listings={activeListings} loading={false} />
+                        ) : (
+                          <p className="text-sm text-gray-400">No active listings yet.</p>
+                        )}
                       </section>
-                    )}
-                  </section>
-                )
-              ) : (
-                <ListingsGrid listings={filteredListings} loading={loading} />
-              )}
-            </>
-          )}
 
-          {/* ── My Purchases ── */}
-          {activeNav === "my-purchases" && (
-            <MyPurchases profileId={user?.profileId} />
-          )}
+                      <section className="flex flex-col gap-3">
+                        <header className="flex items-center justify-between">
+                          <h3 className="text-sm font-semibold text-gray-600">Reserved</h3>
+                          <small className="text-xs text-gray-400">
+                            {reservedListings.length}
+                          </small>
+                        </header>
+                        {reservedListings.length > 0 ? (
+                          <ListingsGrid listings={reservedListings} loading={false} />
+                        ) : (
+                          <p className="text-sm text-gray-400">No reserved listings yet.</p>
+                        )}
+                      </section>
 
-          {/* ── My Sales ── */}
-          {activeNav === "my-sales" && <MySales profileId={user?.profileId} />}
+                      {otherListings.length > 0 ? (
+                        <section className="flex flex-col gap-3">
+                          <header className="flex items-center justify-between">
+                            <h3 className="text-sm font-semibold text-gray-600">Other</h3>
+                            <small className="text-xs text-gray-400">
+                              {otherListings.length}
+                            </small>
+                          </header>
+                          <ListingsGrid listings={otherListings} loading={false} />
+                        </section>
+                      ) : null}
+                    </section>
+                  )
+                ) : (
+                  <ListingsGrid listings={filteredListings} loading={loading} />
+                )}
+              </>
+            ) : null}
 
-          {/* ── Notifications ── */}
-          {activeNav === "notifications" && (
-            <InAppNotifications profileId={user?.profileId} />
-          )}
+            {activeNav === "my-purchases" ? (
+              <MyPurchases profileId={user?.profileId} />
+            ) : null}
 
-          {/* ── Profile ── */}
-          {isProfileView && <ProfileSettings user={user} />}
-        </main>
+            {activeNav === "my-sales" ? <MySales profileId={user?.profileId} /> : null}
+
+            {activeNav === "notifications" ? (
+              <InAppNotifications profileId={user?.profileId} />
+            ) : null}
+
+            {isProfileView ? <ProfileSettings user={user} /> : null}
+          </article>
+        </section>
       </section>
-    </section>
+    </main>
   );
 }
