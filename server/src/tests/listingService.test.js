@@ -95,7 +95,7 @@ describe("getActiveListings", () => {
     const { data, error } = await getActiveListings();
 
     expect(error).toBeNull();
-    expect(data).toEqual(null);
+    expect(data).toEqual([]);  // Change from null to []
   });
 });
 
@@ -108,10 +108,9 @@ describe("getListingsBySellerId", () => {
 
     const { data, error } = await getListingsBySellerId("seller-1");
 
-    // expect(error).toBeNull();
-    expect(LISTING_A).toHaveLength(1);
-    expect(LISTING_A.seller_id).toBe("seller-1");
-    // Verify seller filter was applied
+    expect(error).toBeNull();
+    expect(data).toHaveLength(1);  // Check data, not LISTING_A
+    expect(data[0].seller_id).toBe("seller-1");
     expect(mockEq).toHaveBeenCalledWith("seller_id", "seller-1");
   });
 
@@ -179,7 +178,7 @@ describe("getPublicSellerProfile", () => {
 
     const { data, error } = await getPublicSellerProfile("seller-1");
 
-    // expect(data).toBeNull();
+    expect(data).toBeNull();
     expect(error).toBe(listingError);
   });
 });

@@ -302,11 +302,14 @@ describe("GET /payments/facilities", () => {
   });
 
   it("returns 500 on DB error", async () => {
-    mockOrder.mockResolvedValueOnce({ data: null, error: { message: "DB error" } });
+    mockOrder.mockResolvedValueOnce({ 
+      data: null, 
+      error: new Error("DB error")  // Change from { message: "DB error" }
+    });
 
     const res = await request(app).get("/payments/facilities");
 
-    // expect(res.status).toBe(500);
+    expect(res.status).toBe(500);  // Also uncomment this
     expect(res.body.error).toBe("DB error");
   });
 });
