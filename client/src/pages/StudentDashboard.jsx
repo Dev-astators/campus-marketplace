@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import Navbar from "../components/studentDashboard/Navbar";
 import Sidebar from "../components/studentDashboard/Sidebar";
@@ -28,6 +28,160 @@ export default function StudentDashboard() {
 
   const { user, listings, loading } = useDashboardListings(activeNav);
 
+  const getStoredBookingReads = useCallback(() => {
+    try {
+      return JSON.parse(
+        localStorage.getItem("read_booking_notifications") || "[]",
+      );
+    } catch {
+      return [];
+    }
+  }, []);
+
+  const refreshNotificationCount = useCallback(async () => {
+    if (!user?.profileId || !user?.id) return;
+
+    let tradeCount = 0;
+    let messageCount = 0;
+    let bookingCount = 0;
+
+    try {
+      const res = await fetch(
+        `${API_BASE_URL}/api/payments/notifications/${user.profileId}`,
+      );
+      const data = await res.json();
+      tradeCount = Array.isArray(data)
+        ? data.filter((notification) => !notification.is_read).length
+        : 0;
+    } catch {
+      tradeCount = 0;
+    }
+
+    try {
+      const { count, error } = await supabase
+        .from("messages")
+        .select("id", { count: "exact", head: true })
+        .eq("receiver_id", user.id)
+        .eq("is_read", false)
+        .neq("sender_id", user.id);
+
+      if (error) throw error;
+      messageCount = count ?? 0;
+    } catch {
+      messageCount = 0;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from("facility_bookings")
+        .select("id, booking_type, confirmed_at")
+        .eq("student_id", user.id)
+        .in("booking_type", ["collection", "drop_off"])
+        .order("confirmed_at", { ascending: false });
+
+      if (error) throw error;
+      const readIds = getStoredBookingReads();
+      bookingCount = (data || []).filter(
+        (booking) => !readIds.includes(`booking-${booking.id}`),
+      ).length;
+    } catch {
+      bookingCount = 0;
+    }
+
+    setNotificationCount(tradeCount + messageCount + bookingCount);
+  }, [user, getStoredBookingReads]);
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      void refreshNotificationCount();
+    }, 0);
+
+    return () => clearTimeout(timeoutId);
+  }, [refreshNotificationCount, activeNav]);
+
+  useEffect(() => {
+    if (!user?.profileId || !user?.id) return;
+
+    const channel = supabase
+      .channel("notifications-bell")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "messages",
+          filter: `receiver_id=eq.${user.id}`,
+        },
+        refreshNotificationCount,
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "messages",
+          filter: `receiver_id=eq.${user.id}`,
+        },
+        refreshNotificationCount,
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "notifications",
+          filter: `user_id=eq.${user.profileId}`,
+        },
+        refreshNotificationCount,
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "notifications",
+          filter: `user_id=eq.${user.profileId}`,
+        },
+        refreshNotificationCount,
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "facility_bookings",
+          filter: `student_id=eq.${user.id}`,
+        },
+        (payload) => {
+          if (!payload.new) return;
+          if (!["collection", "drop_off"].includes(payload.new.booking_type)) {
+            return;
+          }
+          refreshNotificationCount();
+        },
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "facility_bookings",
+          filter: `student_id=eq.${user.id}`,
+        },
+        (payload) => {
+          if (!payload.new) return;
+          if (!["collection", "drop_off"].includes(payload.new.booking_type)) {
+            return;
+          }
+          refreshNotificationCount();
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.profileId, user?.id, refreshNotificationCount]);
   const {
     search,
     setSearch,
@@ -45,46 +199,6 @@ export default function StudentDashboard() {
     filteredListings,
     listingsHeading,
   } = useListingFilters({ listings, activeNav });
-
-  useEffect(() => {
-    if (!user?.profileId || !user?.id) return;
-
-    const fetchUnread = async () => {
-      let tradeCount = 0;
-      let messageCount = 0;
-
-      try {
-        const res = await fetch(
-          `${API_BASE_URL}/api/payments/notifications/${user.profileId}`,
-        );
-        const data = await res.json();
-        tradeCount = Array.isArray(data)
-          ? data.filter((notification) => !notification.is_read).length
-          : 0;
-      } catch {
-        tradeCount = 0;
-        // unread badge is optional, so fail silently if this request errors
-      }
-
-      try {
-        const { count, error } = await supabase
-          .from("messages")
-          .select("id", { count: "exact", head: true })
-          .eq("receiver_id", user.id)
-          .eq("is_read", false)
-          .neq("sender_id", user.id);
-
-        if (error) throw error;
-        messageCount = count ?? 0;
-      } catch {
-        messageCount = 0;
-      }
-
-      setNotificationCount(tradeCount + messageCount);
-    };
-
-    fetchUnread();
-  }, [user?.profileId, user?.id, activeNav]);
 
   const handleNavigate = (item) => {
     setActiveNav(item);

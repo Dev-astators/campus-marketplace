@@ -213,25 +213,13 @@ async function confirmPayment(transactionId, gatewayRef) {
     .update({ status: "reserved" })
     .eq("id", tx.listing_id);
 
-  // 5. Fetch the buyer's collection booking for the notification message
-  const { data: booking } = await supabase
-    .from("facility_bookings")
-    .select("slot_id, facility_slots ( slot_date, slot_time )")
-    .eq("transaction_id", transactionId)
-    .eq("booking_type", "collection")
-    .single();
-
-  const collectionDate = booking?.facility_slots?.slot_date
-    ? new Date(booking.facility_slots.slot_date).toDateString()
-    : "TBD";
-  const collectionTime =
-    booking?.facility_slots?.slot_time?.slice(0, 5) || "TBD";
-
-  // 6. Create in-app notification for the seller
+  // 5. Create in-app notification for the seller
+  const buyerName = tx.buyer?.full_name || "A buyer";
+  const listingTitle = tx.listings?.title || "your item";
   await supabase.from("notifications").insert({
     user_id: tx.seller.id,
-    title: "Your item was sold!",
-    message: `${tx.buyer.full_name} bought "${tx.listings.title}". Book your drop-off slot before ${collectionDate} at ${collectionTime}.`,
+    title: "Payment confirmed",
+    message: `${buyerName} paid for "${listingTitle}". Please book a drop-off slot so the buyer can schedule collection.`,
     type: "sale",
     related_transaction_id: transactionId,
     is_read: false,

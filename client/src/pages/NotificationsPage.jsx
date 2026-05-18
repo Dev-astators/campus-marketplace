@@ -11,6 +11,7 @@ const getNotificationIcon = (type) => {
   if (type === "rating") return "Rating";
   if (type === "sale") return "Sale";
   if (type === "purchase") return "Purchase";
+  if (type === "drop_off") return "Drop-off";
   if (type === "dropoff") return "Drop-off";
   if (type === "collection") return "Collection";
 
@@ -156,18 +157,23 @@ export default function NotificationsPage() {
         const data = await res.json();
         const list = Array.isArray(data) ? data : [];
 
-        return list.map((notification) => ({
-          id: `trade-${notification.id}`,
-          type: notification.type || "system",
-          category: "trade",
-          title: notification.title || "Marketplace update",
-          description: notification.message || "",
-          time: formatTime(notification.created_at),
-          rawTime: notification.created_at,
-          is_read: notification.is_read ?? false,
-          notificationId: notification.id,
-          relatedTransactionId: notification.related_transaction_id,
-        }));
+        return list.map((notification) => {
+          const normalizedType =
+            notification.type === "drop_off" ? "dropoff" : notification.type;
+
+          return {
+            id: `trade-${notification.id}`,
+            type: normalizedType || "system",
+            category: "trade",
+            title: notification.title || "Marketplace update",
+            description: notification.message || "",
+            time: formatTime(notification.created_at),
+            rawTime: notification.created_at,
+            is_read: notification.is_read ?? false,
+            notificationId: notification.id,
+            relatedTransactionId: notification.related_transaction_id,
+          };
+        });
       } catch (error) {
         console.error("Error fetching trade notifications:", error);
         return [];
