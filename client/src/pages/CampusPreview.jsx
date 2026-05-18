@@ -47,7 +47,7 @@ function CampusPreview() {
               </li>
 
               <li>
-                <Link to="/about" className="transition hover:text-blue-600">
+                <Link to="/" className="transition hover:text-blue-600">
                   About
                 </Link>
               </li>
