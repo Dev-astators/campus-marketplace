@@ -19,7 +19,7 @@ const chainable = () => {
     eq:     (...args) => { mockEq(...args);     return obj; },
     order:  (...args) => { mockOrder(...args);  return obj; },
     insert: (...args) => { mockInsert(...args); return obj; },
-    single: mockSingle,
+    single: () => mockSingle(),
   };
   return obj;
 };
@@ -246,7 +246,7 @@ describe("createListing", () => {
       images: ["bucket/a.jpg"],
     });
 
-    // expect(data).toBeNull();
+    expect(data).toBeNull();
     expect(error).toBe(imageError);
   });
 
