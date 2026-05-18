@@ -25,6 +25,7 @@ describe("StudentDashboard", () => {
     fullName: "Ada Lovelace",
     name: "Ada",
     email: "ada@uni.edu",
+    profileId: "profile-1",
   };
 
   const baseFilters = {
@@ -47,6 +48,9 @@ describe("StudentDashboard", () => {
 
   beforeEach(() => {
     mockNavigate.mockReset();
+    global.fetch = jest.fn().mockResolvedValue({
+      json: async () => [{ id: "notification-1", is_read: false }],
+    });
     useDashboardListings.mockReturnValue({
       user: baseUser,
       listings: [],
@@ -101,5 +105,56 @@ describe("StudentDashboard", () => {
     expect(
       screen.queryByRole("button", { name: /create listing/i }),
     ).not.toBeInTheDocument();
+  });
+
+  it("toggles filters and shows the active filter count", async () => {
+    const userDriver = userEvent.setup();
+
+    useListingFilters.mockReturnValue({
+      ...baseFilters,
+      selectedCategory: "Textbooks",
+      maxPrice: "500",
+    });
+
+    render(
+      <MemoryRouter>
+        <StudentDashboard />
+      </MemoryRouter>,
+    );
+
+    await userDriver.click(screen.getByRole("button", { name: /show filters/i }));
+
+    expect(screen.getByText(/2 active/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /hide filters/i })).toBeInTheDocument();
+  });
+
+  it("groups my listings into active, reserved, and other sections", async () => {
+    const userDriver = userEvent.setup();
+
+    useDashboardListings.mockReturnValue({
+      user: baseUser,
+      listings: [],
+      loading: false,
+    });
+    useListingFilters.mockReturnValue({
+      ...baseFilters,
+      filteredListings: [
+        { id: "listing-1", title: "Desk", status: "active" },
+        { id: "listing-2", title: "Chair", status: "reserved" },
+        { id: "listing-3", title: "Lamp", status: "sold" },
+      ],
+    });
+
+    render(
+      <MemoryRouter>
+        <StudentDashboard />
+      </MemoryRouter>,
+    );
+
+    await userDriver.click(screen.getByRole("button", { name: /my listings/i }));
+
+    expect(screen.getByText(/^active$/i)).toBeInTheDocument();
+    expect(screen.getByText(/^reserved$/i)).toBeInTheDocument();
+    expect(screen.getByText(/^other$/i)).toBeInTheDocument();
   });
 });

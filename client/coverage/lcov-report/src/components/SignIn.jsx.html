@@ -147,7 +147,12 @@
 <a name='L82'></a><a href='#L82'>82</a>
 <a name='L83'></a><a href='#L83'>83</a>
 <a name='L84'></a><a href='#L84'>84</a>
-<a name='L85'></a><a href='#L85'>85</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L85'></a><a href='#L85'>85</a>
+<a name='L86'></a><a href='#L86'>86</a>
+<a name='L87'></a><a href='#L87'>87</a>
+<a name='L88'></a><a href='#L88'>88</a>
+<a name='L89'></a><a href='#L89'>89</a>
+<a name='L90'></a><a href='#L90'>90</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -173,6 +178,11 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -234,7 +244,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { useNavigate } from "react-router-dom";
 import { supabase } from "../config/supabaseClient";
 import { useState } from "react";
-import "../App.css"; // import the CSS below
+import "../App.css";
 &nbsp;
 export default function SignIn() {
   const navigate = useNavigate();
@@ -257,42 +267,47 @@ export default function SignIn() {
   };
 &nbsp;
   return (
-    &lt;div className="min-h-screen flex items-center justify-center bg-[#F4F6FB] px-4 py-10"&gt;
-      &lt;div className="w-full max-w-md bg-white rounded-2xl border border-slate-200 shadow-[0_4px_24px_rgba(28,63,170,0.07)] p-8"&gt;
-        {/* ── Brand ── */}
-        &lt;p className="text-[15px] font-['inter',sans-serif] font-bold text-[#1C3FAA] mb-7"&gt;Uni-Square&lt;/p&gt;
+    &lt;main className="min-h-screen bg-[#F4F6FB] px-4 py-8 sm:px-6 sm:py-10"&gt;
+      &lt;article className="mx-auto w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-[0_4px_24px_rgba(28,63,170,0.07)] sm:p-8"&gt;
+        &lt;header&gt;
+          &lt;p className="mb-7 text-[15px] font-bold text-[#1C3FAA]"&gt;
+            Uni-Square
+          &lt;/p&gt;
+          &lt;h1 className="mb-2 text-2xl font-extrabold text-[#0D1B4B]"&gt;
+            Sign In
+          &lt;/h1&gt;
+          &lt;p className="mb-6 text-sm text-slate-500"&gt;Welcome back.&lt;/p&gt;
+        &lt;/header&gt;
 &nbsp;
-        {/* ── Heading ── */}
-        &lt;h1 className="text-2xl font-['inter',sans-serif] font-extrabold text-[#0D1B4B] mb-2"&gt;Sign In&lt;/h1&gt;
-        &lt;p className="text-sm font-['inter',sans-serif] text-slate-500 mb-6"&gt;Welcome back.&lt;/p&gt;
-&nbsp;
-        {/* ── Google Button ── */}
-        &lt;button
-          type="button"
-          onClick={handleGoogle}
-          disabled={loading}
-          className="w-full flex items-center justify-center gap-2.5 py-2.75 bg-white border-[1.5px] border-slate-200 font-['inter',sans-serif] rounded-xl text-sm font-semibold text-[#0D1B4B] hover:bg-slate-50 active:scale-[.98] transition-all duration-150 mb-5 cursor-pointer"
-        &gt;
-          &lt;GoogleIcon /&gt;
-          {loading ? "Redirecting..." : "Sign-in with Google"}
-        &lt;/button&gt;
-&nbsp;
-        {/* ── Sign In Link ── */}
-        &lt;p className="text-center mt-5 font-['inter',sans-serif] text-sm text-slate-500"&gt;
-          Don't have an account?{" "}
-          &lt;a
-            onClick={() =&gt; navigate("/signup")}
-            className="text-[#2350D4] font-['inter',sans-serif] font-bold hover:underline cursor-pointer"
+        &lt;section aria-label="Sign-in actions"&gt;
+          &lt;button
+            type="button"
+            onClick={handleGoogle}
+            disabled={loading}
+            className="mb-5 flex w-full items-center justify-center gap-2.5 rounded-xl border-[1.5px] border-slate-200 bg-white py-2.5 text-sm font-semibold text-[#0D1B4B] transition-all duration-150 hover:bg-slate-50 active:scale-[.98]"
           &gt;
-            Sign Up
-          &lt;/a&gt;
-        &lt;/p&gt;
-      &lt;/div&gt;
-    &lt;/div&gt;
+            &lt;GoogleIcon /&gt;
+            {loading ? "Redirecting..." : "Sign-in with Google"}
+          &lt;/button&gt;
+        &lt;/section&gt;
+&nbsp;
+        &lt;footer&gt;
+          &lt;p className="mt-5 text-center text-sm text-slate-500"&gt;
+            Don't have an account?{" "}
+            &lt;button
+              type="button"
+              onClick={() =&gt; navigate("/signup")}
+              className="font-bold text-[#2350D4] hover:underline"
+            &gt;
+              Sign Up
+            &lt;/button&gt;
+          &lt;/p&gt;
+        &lt;/footer&gt;
+      &lt;/article&gt;
+    &lt;/main&gt;
   );
 }
 &nbsp;
-/* ── Google SVG Icon ── */
 function GoogleIcon() {
   return (
     &lt;svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"&gt;
@@ -322,7 +337,7 @@ function GoogleIcon() {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-05-11T05:01:06.573Z
+                at 2026-05-18T01:25:33.133Z
             </div>
         <script src="../../prettify.js"></script>
         <script>
