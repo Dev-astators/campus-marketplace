@@ -1,3 +1,5 @@
+// server/src/tests/routes.payments.test.js
+
 const mockSupabase = {
   from: jest.fn(),
 };
@@ -149,7 +151,11 @@ describe("payments routes", () => {
 
     await handler(
       {
-        body: { listingId: "listing-1", buyerId: "buyer-1", onlineAmount: 100 },
+        body: {
+          listingId: "listing-1",
+          buyerId: "buyer-1",
+          onlineAmount: 100,
+        },
       },
       res,
     );
@@ -162,10 +168,14 @@ describe("payments routes", () => {
       buyerLastName: "Lovelace",
       buyerEmail: "ada@example.com",
     });
+
     expect(res.json).toHaveBeenCalledWith({
       transactionId: "tx-1",
       cashShortfall: 50,
-      payfast: { url: "https://payfast.test", fields: { signature: "sig" } },
+      payfast: {
+        url: "https://payfast.test",
+        fields: { signature: "sig" },
+      },
     });
   });
 
@@ -176,14 +186,14 @@ describe("payments routes", () => {
           data: [
             {
               id: "slot-a",
-              slot_date: "2026-05-11",
+              slot_date: "2099-05-11",
               slot_time: "09:00:00",
               capacity: 1,
               booked_count: 0,
             },
             {
               id: "slot-b",
-              slot_date: "2026-05-11",
+              slot_date: "2099-05-11",
               slot_time: "10:00:00",
               capacity: 2,
               booked_count: 2,
@@ -192,6 +202,9 @@ describe("payments routes", () => {
           error: null,
         }),
       ],
+
+      // slot-a has 1 booking => full
+      // slot-b has 0 bookings => available
       facility_bookings: [
         createInBuilder({
           data: [{ slot_id: "slot-a" }],
@@ -203,7 +216,13 @@ describe("payments routes", () => {
     const handler = getHandler("get", "/slots/:facilityId");
     const res = mockRes();
 
-    await handler({ params: { facilityId: "facility-1" }, query: {} }, res);
+    await handler(
+      {
+        params: { facilityId: "facility-1" },
+        query: {},
+      },
+      res,
+    );
 
     expect(res.json).toHaveBeenCalledWith([
       expect.objectContaining({
@@ -218,18 +237,54 @@ describe("payments routes", () => {
     queueFromBuilders({
       transactions: [
         createSingleBuilder({
-          data: { status: "confirmed", buyer_id: "buyer-1" },
+          data: {
+            status: "confirmed",
+            buyer_id: "buyer-1",
+          },
           error: null,
         }),
       ],
+
       facility_bookings: [
-        createMaybeSingleBuilder({ data: null, error: null }),
-        createCountBuilder({ count: 0, error: null }),
-        createInsertSingleBuilder({ data: { id: "booking-1" }, error: null }),
+        // existing collection booking
+        createMaybeSingleBuilder({
+          data: null,
+          error: null,
+        }),
+
+        // existing dropoff booking
+        createMaybeSingleBuilder({
+          data: {
+            slot: {
+              slot_date: "2099-05-12",
+              slot_time: "09:00:00",
+              facility_id: "facility-1",
+            },
+          },
+          error: null,
+        }),
+
+        // slot booking count
+        createCountBuilder({
+          count: 0,
+          error: null,
+        }),
+
+        // insert booking
+        createInsertSingleBuilder({
+          data: { id: "booking-1" },
+          error: null,
+        }),
       ],
+
       facility_slots: [
         createSingleBuilder({
-          data: { capacity: 2, facility_id: "facility-1" },
+          data: {
+            capacity: 2,
+            facility_id: "facility-1",
+            slot_date: "2099-05-12",
+            slot_time: "10:00:00",
+          },
           error: null,
         }),
       ],
@@ -250,27 +305,58 @@ describe("payments routes", () => {
       res,
     );
 
-    expect(res.json).toHaveBeenCalledWith({ bookingId: "booking-1" });
+    expect(res.json).toHaveBeenCalledWith({
+      bookingId: "booking-1",
+    });
   });
 
   test("POST /book-dropoff rejects mismatched facilities", async () => {
     queueFromBuilders({
       transactions: [
         createSingleBuilder({
-          data: { id: "tx-1", status: "confirmed", seller_id: "seller-1" },
+          data: {
+            id: "tx-1",
+            status: "confirmed",
+            seller_id: "seller-1",
+          },
           error: null,
         }),
       ],
+
       facility_bookings: [
-        createMaybeSingleBuilder({ data: null, error: null }),
+        // existing dropoff booking check
         createMaybeSingleBuilder({
-          data: { facility_slots: { facility_id: "facility-1" } },
+          data: null,
+          error: null,
+        }),
+
+        // slot capacity count
+        createCountBuilder({
+          count: 0,
+          error: null,
+        }),
+
+        // existing collection booking
+        createMaybeSingleBuilder({
+          data: {
+            slot: {
+              slot_date: "2099-05-12",
+              slot_time: "11:00:00",
+              facility_id: "facility-1",
+            },
+          },
           error: null,
         }),
       ],
+
       facility_slots: [
         createSingleBuilder({
-          data: { capacity: 2, facility_id: "facility-2" },
+          data: {
+            capacity: 2,
+            facility_id: "facility-2",
+            slot_date: "2099-05-12",
+            slot_time: "10:00:00",
+          },
           error: null,
         }),
       ],
@@ -291,6 +377,7 @@ describe("payments routes", () => {
     );
 
     expect(res.status).toHaveBeenCalledWith(400);
+
     expect(res.json).toHaveBeenCalledWith({
       error: "Drop-off must be at the same facility as the buyer's collection.",
     });

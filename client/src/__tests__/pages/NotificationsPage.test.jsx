@@ -6,6 +6,12 @@ import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import NotificationsPage from "../../pages/NotificationsPage";
 import { supabase } from "../../config/supabaseClient";
 
+const createFetchResponse = (data, ok = true) =>
+  Promise.resolve({
+    ok,
+    json: async () => data,
+  });
+
 const ChatRoute = () => {
   const location = useLocation();
   return <p data-testid="chat-route">{location.search}</p>;
@@ -17,6 +23,7 @@ describe("NotificationsPage", () => {
     global.Notification = function NotificationMock() {};
     global.Notification.permission = "granted";
     global.Notification.requestPermission = jest.fn();
+    global.fetch = jest.fn().mockResolvedValue(createFetchResponse([]));
     localStorage.clear();
 
     supabase.auth.getSession.mockResolvedValue({
@@ -87,6 +94,7 @@ describe("NotificationsPage", () => {
     };
 
     supabase.channel.mockReturnValue(channelBuilder);
+    supabase.removeChannel.mockImplementation(() => {});
   });
 
   it("renders notifications and opens a chat", async () => {
@@ -119,6 +127,22 @@ describe("NotificationsPage", () => {
   it("marks all notifications as read", async () => {
     const user = userEvent.setup();
 
+    global.fetch
+      .mockResolvedValueOnce(
+        createFetchResponse([
+          {
+            id: "notif-1",
+            title: "Payment confirmed",
+            message: "Seller should book drop-off",
+            type: "sale",
+            is_read: false,
+            created_at: "2026-05-12T10:00:00.000Z",
+            related_transaction_id: "tx-1",
+          },
+        ]),
+      )
+      .mockResolvedValueOnce(createFetchResponse({ ok: true }));
+
     render(
       <MemoryRouter initialEntries={["/notifications"]}>
         <Routes>
@@ -135,6 +159,61 @@ describe("NotificationsPage", () => {
         "booking-1",
       );
     });
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.stringContaining("/api/payments/notifications/notif-1/read"),
+      expect.objectContaining({ method: "PATCH" }),
+    );
+  });
+
+  it("opens trade notifications and routes to my sales", async () => {
+    const user = userEvent.setup();
+
+    global.fetch
+      .mockResolvedValueOnce(
+        createFetchResponse([
+          {
+            id: "notif-2",
+            title: "Payment confirmed",
+            message: "Please book a drop-off",
+            type: "sale",
+            is_read: false,
+            created_at: "2026-05-12T12:00:00.000Z",
+            related_transaction_id: "tx-2",
+          },
+        ]),
+      )
+      .mockResolvedValueOnce(createFetchResponse({ ok: true }));
+
+    const DashboardRoute = () => {
+      const location = useLocation();
+      return (
+        <p data-testid="dashboard-route">{location.state?.tab || ""}</p>
+      );
+    };
+
+    render(
+      <MemoryRouter initialEntries={["/notifications"]}>
+        <Routes>
+          <Route path="/notifications" element={<NotificationsPage />} />
+          <Route path="/student-dashboard" element={<DashboardRoute />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    const tradeButton = await screen.findByRole("button", {
+      name: /payment confirmed/i,
+    });
+
+    await user.click(tradeButton);
+
+    expect(await screen.findByTestId("dashboard-route")).toHaveTextContent(
+      "my-sales",
+    );
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.stringContaining("/api/payments/notifications/notif-2/read"),
+      expect.objectContaining({ method: "PATCH" }),
+    );
   });
 
   it("opens booking notifications without leaving the page", async () => {

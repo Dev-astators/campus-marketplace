@@ -496,6 +496,30 @@ describe('GET /api/listings/suggested-price', () => {
     expect(res.body.suggestion.cpiIndex).toBe(101.6);
   });
 
+  test('Given category Home & Kitchenware and a valid price, when fetched, then 200 is returned', async () => {
+    const res = await request(app)
+      .get('/api/listings/suggested-price?category=Home%20%26%20Kitchenware&askingPrice=2500');
+
+    expect(res.status).toBe(200);
+    expect(res.body.suggestion).toHaveProperty('cpiIndex');
+  });
+
+  test('Given category Sports Equipment and a valid price, when fetched, then 200 is returned', async () => {
+    const res = await request(app)
+      .get('/api/listings/suggested-price?category=Sports%20Equipment&askingPrice=1200');
+
+    expect(res.status).toBe(200);
+    expect(res.body.suggestion).toHaveProperty('annualChangePercent');
+  });
+
+  test('Given category Stationery and a valid price, when fetched, then 200 is returned', async () => {
+    const res = await request(app)
+      .get('/api/listings/suggested-price?category=Stationery&askingPrice=180');
+
+    expect(res.status).toBe(200);
+    expect(res.body.suggestion).toHaveProperty('source');
+  });
+
   test('Given category Other and a valid price, when fetched, then 200 is returned', async () => {
     const res = await request(app)
       .get('/api/listings/suggested-price?category=Other&askingPrice=200');

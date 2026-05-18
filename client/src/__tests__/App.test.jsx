@@ -9,6 +9,7 @@ import { supabase } from "../config/supabaseClient";
 
 describe("App routing", () => {
   beforeEach(() => {
+    window.history.pushState({}, "", "/");
     supabase.auth.onAuthStateChange.mockImplementation((callback) => {
       callback("INITIAL_SESSION", null);
       return {
@@ -25,5 +26,27 @@ describe("App routing", () => {
       await screen.findByText(/browse the essentials students/i)
     ).toBeInTheDocument();
     expect(screen.getByText(/exclusive to wits students/i)).toBeInTheDocument();
+  });
+
+  it("renders the payment cancel route", async () => {
+    window.history.pushState({}, "", "/payment/cancel");
+
+    render(<App />);
+
+    expect(await screen.findByText(/payment cancelled/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /back to listing/i }),
+    ).toBeInTheDocument();
+  });
+
+  it("renders the notifications route when signed out", async () => {
+    window.history.pushState({}, "", "/notifications");
+    supabase.auth.getSession.mockResolvedValue({
+      data: { session: null },
+    });
+
+    render(<App />);
+
+    expect(await screen.findByText(/notifications/i)).toBeInTheDocument();
   });
 });

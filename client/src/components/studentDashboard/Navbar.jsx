@@ -1,6 +1,10 @@
-export default function Navbar({ user, searchValue = "", onSearch }) {
+export default function Navbar({
+  user,
+  searchValue = "",
+  onSearch,
+  notificationCount = 0,
+}) {
   const displayName = user?.fullName || user?.name || "Student";
-  const notificationCount = 0;
 
   return (
     <header className="w-full border-b border-gray-200 bg-gray-100 px-4 py-3 sm:px-6">
@@ -14,7 +18,7 @@ export default function Navbar({ user, searchValue = "", onSearch }) {
         </a>
 
         <form
-          className="order-3 w-full md:order-none md:max-w-xl md:flex-1"
+          className="order-3 w-full md:order-0 md:max-w-xl md:flex-1"
           role="search"
           onSubmit={(event) => event.preventDefault()}
         >
@@ -48,7 +52,10 @@ export default function Navbar({ user, searchValue = "", onSearch }) {
           </fieldset>
         </form>
 
-        <nav aria-label="User menu" className="ml-auto flex shrink-0 items-center gap-3">
+        <nav
+          aria-label="User menu"
+          className="ml-auto flex shrink-0 items-center gap-3"
+        >
           <a
             href="/notifications"
             className="relative flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600 transition hover:bg-blue-50 hover:text-blue-600"
@@ -68,7 +75,6 @@ export default function Navbar({ user, searchValue = "", onSearch }) {
               <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
               <path d="M13.73 21a2 2 0 0 1-3.46 0" />
             </svg>
-
             {notificationCount > 0 ? (
               <strong className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-blue-600 px-1 text-[10px] font-bold text-white">
                 {notificationCount}

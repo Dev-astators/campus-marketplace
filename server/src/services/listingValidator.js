@@ -1,7 +1,16 @@
 // server/services/listingValidator.js
 
 // Keep category validation aligned with client listing form/filter options.
-const VALID_CATEGORIES = ["Textbooks", "Electronics", "Furniture", "Clothing"];
+const VALID_CATEGORIES = [
+  "Textbooks",
+  "Electronics",
+  "Furniture",
+  "Clothing",
+  "Home & Kitchenware",
+  "Sports Equipment",
+  "Stationery",
+  "Other",
+];
 const VALID_CONDITIONS = ["new", "like_new", "good", "fair", "poor"];
 const VALID_LISTING_TYPES = ["sale", "trade", "both"];
 
