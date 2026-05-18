@@ -31,7 +31,7 @@ export default function PaymentPage({ result }) {
       let viteSandbox = false;
       try {
         viteSandbox = import.meta?.env?.VITE_PAYFAST_SANDBOX === 'true';
-      } catch (e) {
+      } catch {
         viteSandbox = false;
       }
 
