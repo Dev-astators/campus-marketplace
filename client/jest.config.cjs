@@ -12,7 +12,7 @@ module.exports = {
     "\\.(css|less|scss|sass)$": "identity-obj-proxy",
 
     // Mock static assets
-    "\\.(jpg|jpeg|png|gif|svg|ttf|woff|woff2)$":
+    "\\.(jpg|jpeg|png|gif|svg|webp|ttf|woff|woff2)$":
       "<rootDir>/src/__mocks__/fileMock.cjs",
 
     // Mock supabase client so Jest never hits import.meta.env
