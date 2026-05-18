@@ -79,6 +79,9 @@ const queueFromBuilders = (buildersByTable) => {
 
   supabase.from.mockImplementation((table) => {
     if (!queues[table] || queues[table].length === 0) {
+      if (table === "notifications") {
+        return createInsertBuilder({ error: null });
+      }
       throw new Error(`Unexpected supabase.from(${table})`);
     }
 
