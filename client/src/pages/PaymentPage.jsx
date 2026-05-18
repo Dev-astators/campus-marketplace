@@ -3,10 +3,8 @@ import { useEffect, useState, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../config/apiBaseUrl";
 
-// FIX: support both Vite runtime and Jest tests
-const isSandbox =
-  import.meta.env.VITE_PAYFAST_SANDBOX === "true" ||
-  globalThis.process?.env?.VITE_PAYFAST_SANDBOX === "true";
+// Note: determine sandbox mode at runtime inside the effect so tests
+// that set `process.env.VITE_PAYFAST_SANDBOX` in `beforeEach` are respected.
 
 export default function PaymentPage({ result }) {
   const [searchParams] = useSearchParams();
@@ -29,6 +27,17 @@ export default function PaymentPage({ result }) {
     confirmedRef.current = true;
 
     const run = async () => {
+      // determine sandbox mode at runtime (supports tests setting process.env in beforeEach)
+      let viteSandbox = false;
+      try {
+        viteSandbox = import.meta?.env?.VITE_PAYFAST_SANDBOX === 'true';
+      } catch {
+        viteSandbox = false;
+      }
+
+      const isSandbox =
+        viteSandbox || globalThis.process?.env?.VITE_PAYFAST_SANDBOX === 'true';
+
       try {
         // ─────────────────────────────────────────────
         // SANDBOX MODE
