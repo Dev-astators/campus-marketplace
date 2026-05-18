@@ -13,8 +13,6 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY,
 );
 
-const IS_SANDBOX = process.env.PAYFAST_SANDBOX === "true";
-
 // ─────────────────────────────────────────────────────────────────────────────
 // POST /api/payments/initiate
 // Creates a pending transaction — listing stays "active" until payment confirms
@@ -152,7 +150,8 @@ router.post(
 // Remove or disable this before going live
 // ─────────────────────────────────────────────────────────────────────────────
 router.post("/confirm-dev", async (req, res) => {
-  if (!IS_SANDBOX) {
+  const isSandbox = process.env.PAYFAST_SANDBOX === "true";
+  if (!isSandbox) {
     return res.status(403).json({ error: "Not available in production." });
   }
 
