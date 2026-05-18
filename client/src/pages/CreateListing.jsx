@@ -102,8 +102,8 @@ export default function CreateListing() {
     listingType: "sale",
   });
 
-  const selectedCategory =
-    CATEGORY_OPTIONS.find((option) => option.value === form.category) || null;
+  //const selectedCategory =
+  //  CATEGORY_OPTIONS.find((option) => option.value === form.category) || null;
 
   const handleChange = (event) => {
     setForm({ ...form, [event.target.name]: event.target.value });
