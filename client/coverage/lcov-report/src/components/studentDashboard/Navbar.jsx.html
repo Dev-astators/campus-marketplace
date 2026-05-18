@@ -23,16 +23,16 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">80% </span>
+                <span class="strong">75% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>4/5</span>
+                <span class='fraction'>3/4</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">75% </span>
+                <span class="strong">77.77% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>6/8</span>
+                <span class='fraction'>7/9</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">80% </span>
+                <span class="strong">75% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>4/5</span>
+                <span class='fraction'>3/4</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line high'></div>
+    <div class='status-line medium'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -177,11 +177,21 @@
 <a name='L112'></a><a href='#L112'>112</a>
 <a name='L113'></a><a href='#L113'>113</a>
 <a name='L114'></a><a href='#L114'>114</a>
-<a name='L115'></a><a href='#L115'>115</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">15x</span>
-<span class="cline-any cline-yes">15x</span>
+<a name='L115'></a><a href='#L115'>115</a>
+<a name='L116'></a><a href='#L116'>116</a>
+<a name='L117'></a><a href='#L117'>117</a>
+<a name='L118'></a><a href='#L118'>118</a>
+<a name='L119'></a><a href='#L119'>119</a>
+<a name='L120'></a><a href='#L120'>120</a>
+<a name='L121'></a><a href='#L121'>121</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">15x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">11x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">11x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -291,9 +301,15 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">export default function Navbar({ user, searchValue = <span class="branch-0 cbranch-no" title="branch not covered" >"",</span> onSearch }) {
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">export default function Navbar({
+  user,
+  searchValue = <span class="branch-0 cbranch-no" title="branch not covered" >"",</span>
+  onSearch,
+  notificationCount = 0,
+}) {
   const displayName = user?.fullName || user?.name || "Student";
-  const notificationCount = 0;
 &nbsp;
   return (
     &lt;header className="w-full border-b border-gray-200 bg-gray-100 px-4 py-3 sm:px-6"&gt;
@@ -307,7 +323,7 @@
         &lt;/a&gt;
 &nbsp;
         &lt;form
-          className="order-3 w-full md:order-none md:max-w-xl md:flex-1"
+          className="order-3 w-full md:order-0 md:max-w-xl md:flex-1"
           role="search"
           onSubmit={<span class="fstat-no" title="function not covered" >(e</span>vent) =&gt; <span class="cstat-no" title="statement not covered" >event.preventDefault()}</span>
         &gt;
@@ -341,7 +357,10 @@
           &lt;/fieldset&gt;
         &lt;/form&gt;
 &nbsp;
-        &lt;nav aria-label="User menu" className="ml-auto flex shrink-0 items-center gap-3"&gt;
+        &lt;nav
+          aria-label="User menu"
+          className="ml-auto flex shrink-0 items-center gap-3"
+        &gt;
           &lt;a
             href="/notifications"
             className="relative flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600 transition hover:bg-blue-50 hover:text-blue-600"
@@ -361,7 +380,6 @@
               &lt;path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" /&gt;
               &lt;path d="M13.73 21a2 2 0 0 1-3.46 0" /&gt;
             &lt;/svg&gt;
-&nbsp;
             {notificationCount &gt; 0 ? (
 <span class="branch-0 cbranch-no" title="branch not covered" >              &lt;strong className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-blue-600 px-1 text-[10px] font-bold text-white"&gt;</span>
                 {notificationCount}
@@ -412,7 +430,7 @@
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-05-18T01:25:33.133Z
+                at 2026-05-18T13:59:22.279Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

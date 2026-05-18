@@ -9,7 +9,7 @@ import {
   it,
   jest,
 } from "@jest/globals";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import InAppNotifications from "../../components/studentDashboard/InAppNotifications";
 
 const createFetchResponse = (data, ok = true) =>
@@ -17,6 +17,11 @@ const createFetchResponse = (data, ok = true) =>
     ok,
     json: async () => data,
   });
+
+const DashboardRoute = () => {
+  const location = useLocation();
+  return <p data-testid="dashboard-tab">{location.state?.tab || ""}</p>;
+};
 
 describe("InAppNotifications", () => {
   beforeEach(() => {
@@ -82,6 +87,63 @@ describe("InAppNotifications", () => {
 
     expect(global.fetch).toHaveBeenCalledWith(
       expect.stringContaining("/api/payments/notifications/notif-1/read"),
+      expect.objectContaining({ method: "PATCH" }),
+    );
+  });
+
+  it("shows the empty state without a profile id", async () => {
+    render(
+      <MemoryRouter>
+        <InAppNotifications />
+      </MemoryRouter>,
+    );
+
+    expect(
+      await screen.findByText(/no notifications yet/i),
+    ).toBeInTheDocument();
+    expect(global.fetch).not.toHaveBeenCalled();
+  });
+
+  it("marks clicked purchase notifications and routes to purchases", async () => {
+    const user = userEvent.setup();
+
+    global.fetch
+      .mockResolvedValueOnce(
+        createFetchResponse([
+          {
+            id: "notif-3",
+            type: "purchase",
+            title: "Collection ready",
+            message: "Choose a collection slot.",
+            created_at: "2026-05-11T11:00:00.000Z",
+            is_read: false,
+            related_transaction_id: "tx-3",
+          },
+        ]),
+      )
+      .mockResolvedValue(createFetchResponse({ ok: true }));
+
+    render(
+      <MemoryRouter initialEntries={["/"]}>
+        <Routes>
+          <Route
+            path="/"
+            element={<InAppNotifications profileId="user-1" />}
+          />
+          <Route path="/student-dashboard" element={<DashboardRoute />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    await user.click(
+      await screen.findByRole("button", { name: /collection ready/i }),
+    );
+
+    expect(await screen.findByTestId("dashboard-tab")).toHaveTextContent(
+      "my-purchases",
+    );
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.stringContaining("/api/payments/notifications/notif-3/read"),
       expect.objectContaining({ method: "PATCH" }),
     );
   });

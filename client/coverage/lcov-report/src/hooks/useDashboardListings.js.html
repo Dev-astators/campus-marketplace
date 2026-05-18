@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">91.83% </span>
+                <span class="strong">92% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>45/49</span>
+                <span class='fraction'>46/50</span>
             </div>
         
             
@@ -173,7 +173,10 @@
 <a name='L108'></a><a href='#L108'>108</a>
 <a name='L109'></a><a href='#L109'>109</a>
 <a name='L110'></a><a href='#L110'>110</a>
-<a name='L111'></a><a href='#L111'>111</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L111'></a><a href='#L111'>111</a>
+<a name='L112'></a><a href='#L112'>112</a>
+<a name='L113'></a><a href='#L113'>113</a>
+<a name='L114'></a><a href='#L114'>114</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -259,7 +262,10 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">2x</span>
@@ -300,7 +306,7 @@ function getFirstName(authUser) {
 }
 &nbsp;
 export default function useDashboardListings(activeNav) {
-  const [user, setUser]       = useState(null);
+  const [user, setUser] = useState(null);
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
 &nbsp;
@@ -321,21 +327,21 @@ export default function useDashboardListings(activeNav) {
       const { data: profile } = await supabase
         .from("profiles")
         .select("id, role")
-        .eq("id", authUser.id)   // profiles.id = auth.users.id in your schema
+        .eq("id", authUser.id) // profiles.id = auth.users.id in your schema
         .single();
 &nbsp;
       setUser({
-        name:          getFirstName(authUser),
+        name: getFirstName(authUser),
         fullName,
-        id:            authUser.id,         // auth user id
-        profileId:     profile?.id || authUser.id, // profile table id
-        email:         authUser.email,
+        id: authUser.id, // auth user id
+        profileId: profile?.id || authUser.id, // profile table id
+        email: authUser.email,
         studentNumber: authUser.email?.split("@")[0] || <span class="branch-1 cbranch-no" title="branch not covered" >null,</span>
-        role:          profile?.role || metadata.role || "student",
-        provider:      authUser.app_metadata?.provider || "google",
-        createdAt:     authUser.created_at,
-        lastSignInAt:  authUser.last_sign_in_at,
-        avatarUrl:     metadata.avatar_url || metadata.picture || null,
+        role: profile?.role || metadata.role || "student",
+        provider: authUser.app_metadata?.provider || "google",
+        createdAt: authUser.created_at,
+        lastSignInAt: authUser.last_sign_in_at,
+        avatarUrl: metadata.avatar_url || metadata.picture || null,
       });
     };
 &nbsp;
@@ -344,7 +350,7 @@ export default function useDashboardListings(activeNav) {
 &nbsp;
   const fetchListings = useCallback(async (navItem, currentUserId) =&gt; {
     // These tabs don't use the listings fetch at all
-    <span class="missing-if-branch" title="if path not taken" >I</span>if (["my-purchases", "my-sales", "notifications", "profile"].includes(navItem)) {
+    <span class="missing-if-branch" title="if path not taken" >I</span>if (["my-purchases", "my-sales", "profile"].includes(navItem)) {
 <span class="cstat-no" title="statement not covered" >      setLoading(false);</span>
 <span class="cstat-no" title="statement not covered" >      return;</span>
     }
@@ -368,8 +374,11 @@ export default function useDashboardListings(activeNav) {
       if (navItem === "my-listings") {
         const { data } = await supabase.auth.getSession();
         const accessToken = data.session?.access_token;
-        <span class="missing-if-branch" title="else path not taken" >E</span>if (!accessToken) throw new Error("Missing access token for My Listings");
-<span class="cstat-no" title="statement not covered" >        requestOptions = { headers: { Authorization: `Bearer ${accessToken}` } };</span>
+        <span class="missing-if-branch" title="else path not taken" >E</span>if (!accessToken)
+          throw new Error("Missing access token for My Listings");
+<span class="cstat-no" title="statement not covered" >        requestOptions = {</span>
+          headers: { Authorization: `Bearer ${accessToken}` },
+        };
       }
 &nbsp;
       const res = await fetch(endpoint, requestOptions);
@@ -400,7 +409,7 @@ export default function useDashboardListings(activeNav) {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-05-18T01:25:33.133Z
+                at 2026-05-18T13:59:22.279Z
             </div>
         <script src="../../prettify.js"></script>
         <script>
