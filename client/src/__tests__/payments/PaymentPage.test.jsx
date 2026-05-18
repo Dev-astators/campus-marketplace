@@ -45,15 +45,17 @@ describe("PaymentPage", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     global.fetch = jest.fn();
+    process.env.VITE_PAYFAST_SANDBOX = "true";
   });
 
   afterEach(() => {
     global.fetch.mockReset();
+    delete process.env.VITE_PAYFAST_SANDBOX;
   });
 
   it("confirms payment and asks the buyer to wait for drop-off", async () => {
     global.fetch.mockResolvedValueOnce(
-      createFetchResponse({ status: "confirmed" }),
+      createFetchResponse({ ok: true }, true),  // confirm-dev succeeds
     );
 
     renderPaymentPage();
@@ -71,5 +73,16 @@ describe("PaymentPage", () => {
     expect(
       screen.getByRole("button", { name: /back to listing/i }),
     ).toBeInTheDocument();
+  });
+
+  it("renders the failed state when confirmation fails", async () => {
+    global.fetch.mockResolvedValueOnce(
+      createFetchResponse({ error: "Bad gateway" }, false),
+    );
+
+    renderPaymentPage();
+
+    expect(await screen.findByText(/payment issue/i)).toBeInTheDocument();
+    expect(screen.getByText(/bad gateway/i)).toBeInTheDocument();
   });
 });
