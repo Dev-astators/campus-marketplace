@@ -3,7 +3,48 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "../config/supabaseClient";
 import { API_BASE_URL } from "../config/apiBaseUrl";
 
-const CATEGORY_OPTIONS = ["Textbooks", "Electronics", "Furniture", "Clothing"];
+const CATEGORY_OPTIONS = [
+  {
+    value: "Textbooks",
+    label: "Textbooks",
+    description: "Study materials, textbooks and tertiary education supplies.",
+  },
+  {
+    value: "Electronics",
+    label: "Electronics",
+    description: "Consumer electronics, devices and ICT equipment.",
+  },
+  {
+    value: "Furniture",
+    label: "Furniture",
+    description: "Furniture, home furnishings and household items.",
+  },
+  {
+    value: "Clothing",
+    label: "Clothing",
+    description: "Apparel, footwear and wearable accessories.",
+  },
+  {
+    value: "Home & Kitchenware",
+    label: "Home & Kitchenware",
+    description: "Home goods, kitchenware and household essentials.",
+  },
+  {
+    value: "Sports Equipment",
+    label: "Sports Equipment",
+    description: "Fitness, recreational and sporting gear.",
+  },
+  {
+    value: "Stationery",
+    label: "Stationery",
+    description: "Notebooks, stationery, printers and study supplies.",
+  },
+  {
+    value: "Other",
+    label: "Other",
+    description: "Items that don't fit a specific category.",
+  },
+];
 
 const CONDITION_OPTIONS = [
   { value: "new", label: "New" },
@@ -60,6 +101,9 @@ export default function CreateListing() {
     askingPrice: "",
     listingType: "sale",
   });
+
+  const selectedCategory =
+    CATEGORY_OPTIONS.find((option) => option.value === form.category) || null;
 
   const handleChange = (event) => {
     setForm({ ...form, [event.target.name]: event.target.value });
@@ -451,12 +495,18 @@ export default function CreateListing() {
                     onChange={handleChange}
                     className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                   >
-                    {CATEGORY_OPTIONS.map((category) => (
-                      <option key={category} value={category}>
-                        {category}
+                    {CATEGORY_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
                       </option>
                     ))}
                   </select>
+
+                  {selectedCategory?.description ? (
+                    <p className="mt-2 text-sm text-gray-500">
+                      {selectedCategory.description}
+                    </p>
+                  ) : null}
                 </label>
 
                 <label htmlFor="askingPrice" className="space-y-2">

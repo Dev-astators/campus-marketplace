@@ -31,6 +31,27 @@
       "annual_change_percent": -5.0,
       "description": "Household furniture and furnishings."
     },
+    "Home & Kitchenware": {
+      "statssa_category": "Furniture, furnishings and loose carpets",
+      "cpi_index": 95.9,
+      "monthly_change_percent": -1.1,
+      "annual_change_percent": -5.0,
+      "description": "Home and kitchenware goods, matched to household furniture CPI guidance."
+    },
+    "Sports Equipment": {
+      "statssa_category": "Recreational and sporting goods",
+      "cpi_index": 100.5,
+      "monthly_change_percent": 0.1,
+      "annual_change_percent": 1.8,
+      "description": "Sporting goods and equipment guidance."
+    },
+    "Stationery": {
+      "statssa_category": "Education services — Tertiary",
+      "cpi_index": 108.1,
+      "monthly_change_percent": 4.2,
+      "annual_change_percent": 4.2,
+      "description": "Stationery and study materials, aligned with tertiary education CPI."
+    },
     "Clothing": {
       "statssa_category": "Clothing and footwear",
       "cpi_index": 101.6,

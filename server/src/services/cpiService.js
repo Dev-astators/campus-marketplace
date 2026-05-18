@@ -1,6 +1,14 @@
 // server/src/services/cpiService.js
 const cpiData = require('../utils/cpiData.json');
 
+const normalizedCategoryLookup = Object.keys(cpiData.categories).reduce(
+  (lookup, categoryKey) => {
+    lookup[categoryKey.trim().toLowerCase()] = categoryKey;
+    return lookup;
+  },
+  {},
+);
+
 /**
  * Returns the CPI data for a given listing category.
  * Returns: { data: CategoryCPI, error } 
@@ -10,7 +18,11 @@ const getCPIByCategory = (category) => {
     return { data: null, error: 'category is required' };
   }
 
-  const categoryData = cpiData.categories[category];
+  const normalizedKey = category.trim().toLowerCase();
+  const matchedCategoryKey = normalizedCategoryLookup[normalizedKey];
+  const categoryData = matchedCategoryKey
+    ? cpiData.categories[matchedCategoryKey]
+    : null;
 
   if (!categoryData) {
     return { data: null, error: `No CPI data found for category: ${category}` };
@@ -18,7 +30,7 @@ const getCPIByCategory = (category) => {
 
   return {
     data: {
-      category,
+      category: matchedCategoryKey,
       statssaCategory: categoryData.statssa_category,
       cpiIndex: categoryData.cpi_index,
       annualChangePercent: categoryData.annual_change_percent,
