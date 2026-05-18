@@ -11,7 +11,7 @@ import {
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import PaymentPage from "../../pages/PaymentPage";
 
-const _createFetchResponse = (data, ok = true) =>
+const createFetchResponse = (data, ok = true) =>
   Promise.resolve({
     ok,
     json: async () => data,
@@ -54,10 +54,9 @@ describe("PaymentPage", () => {
   });
 
   it("confirms payment and asks the buyer to wait for drop-off", async () => {
-    global.fetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ success: true }), // Component expects this structure
-    });
+    global.fetch.mockResolvedValueOnce(
+      createFetchResponse({ ok: true }, true),  // confirm-dev succeeds
+    );
 
     renderPaymentPage();
 
@@ -77,10 +76,9 @@ describe("PaymentPage", () => {
   });
 
   it("renders the failed state when confirmation fails", async () => {
-    global.fetch.mockResolvedValueOnce({
-      ok: false,
-      json: async () => ({ error: "Bad gateway" }),
-    });
+    global.fetch.mockResolvedValueOnce(
+      createFetchResponse({ error: "Bad gateway" }, false),
+    );
 
     renderPaymentPage();
 
