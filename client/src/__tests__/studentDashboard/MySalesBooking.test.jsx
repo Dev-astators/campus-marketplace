@@ -36,18 +36,7 @@ describe("MySales booking", () => {
       online_amount: 250,
       listings: { title: "Scientific Calculator" },
       buyer: { full_name: "Buyer One" },
-      facility_bookings: [
-        {
-          id: "booking-1",
-          booking_type: "collection",
-          facility_slots: {
-            facility_id: "fac-1",
-            slot_date: "2026-05-12",
-            slot_time: "12:00:00",
-            trade_facilities: { name: "Main Campus", location: "Braamfontein" },
-          },
-        },
-      ],
+      facility_bookings: [],
     };
 
     const saleWithDropoff = {
@@ -69,6 +58,11 @@ describe("MySales booking", () => {
 
     global.fetch
       .mockResolvedValueOnce(createFetchResponse([sale]))
+      .mockResolvedValueOnce(
+        createFetchResponse([
+          { id: "fac-1", name: "Main Campus", location: "Braamfontein" },
+        ]),
+      )
       .mockResolvedValueOnce(
         createFetchResponse([
           {

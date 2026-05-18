@@ -11,24 +11,20 @@ import useListingFilters from "../hooks/useListingFilters";
 import ProfileSettings from "../components/studentDashboard/ProfileSettings";
 import MyPurchases from "../components/studentDashboard/MyPurchases";
 import MySales from "../components/studentDashboard/MySales";
-import InAppNotifications from "../components/studentDashboard/InAppNotifications";
 import { API_BASE_URL } from "../config/apiBaseUrl";
+import { supabase } from "../config/supabaseClient";
 
-const NON_LISTING_TABS = [
-  "my-purchases",
-  "my-sales",
-  "notifications",
-  "profile",
-  "messages",
-];
+const NON_LISTING_TABS = ["my-purchases", "my-sales", "profile", "messages"];
 
 export default function StudentDashboard() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [activeNav, setActiveNav] = useState(location.state?.tab || "marketplace");
+  const [activeNav, setActiveNav] = useState(
+    location.state?.tab || "marketplace",
+  );
   const [showFilters, setShowFilters] = useState(false);
   const [isSidebarVisible, setIsSidebarVisible] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
+  const [notificationCount, setNotificationCount] = useState(0);
 
   const { user, listings, loading } = useDashboardListings(activeNav);
 
@@ -51,24 +47,43 @@ export default function StudentDashboard() {
   } = useListingFilters({ listings, activeNav });
 
   useEffect(() => {
-    if (!user?.profileId) return;
+    if (!user?.profileId || !user?.id) return;
 
     const fetchUnread = async () => {
+      let tradeCount = 0;
+      let messageCount = 0;
+
       try {
         const res = await fetch(
           `${API_BASE_URL}/api/payments/notifications/${user.profileId}`,
         );
         const data = await res.json();
-        const count = Array.isArray(data)
+        tradeCount = Array.isArray(data)
           ? data.filter((notification) => !notification.is_read).length
           : 0;
-        setUnreadCount(count);
       } catch {
+        tradeCount = 0;
       }
+
+      try {
+        const { count, error } = await supabase
+          .from("messages")
+          .select("id", { count: "exact", head: true })
+          .eq("receiver_id", user.id)
+          .eq("is_read", false)
+          .neq("sender_id", user.id);
+
+        if (error) throw error;
+        messageCount = count ?? 0;
+      } catch {
+        messageCount = 0;
+      }
+
+      setNotificationCount(tradeCount + messageCount);
     };
 
     fetchUnread();
-  }, [user?.profileId, activeNav]);
+  }, [user?.profileId, user?.id, activeNav]);
 
   const handleNavigate = (item) => {
     setActiveNav(item);
@@ -108,10 +123,21 @@ export default function StudentDashboard() {
   ].filter(Boolean).length;
 
   return (
-    <main className="flex min-h-screen flex-col overflow-hidden bg-gray-50" aria-label="Student dashboard">
-      <Navbar user={user} searchValue={search} onSearch={setSearch} />
+    <main
+      className="flex min-h-screen flex-col overflow-hidden bg-gray-50"
+      aria-label="Student dashboard"
+    >
+      <Navbar
+        user={user}
+        searchValue={search}
+        onSearch={setSearch}
+        notificationCount={notificationCount}
+      />
 
-      <section className="flex flex-1 overflow-hidden" aria-label="Dashboard workspace">
+      <section
+        className="flex flex-1 overflow-hidden"
+        aria-label="Dashboard workspace"
+      >
         <button
           type="button"
           onClick={() => setIsSidebarVisible((current) => !current)}
@@ -134,11 +160,7 @@ export default function StudentDashboard() {
             isSidebarVisible ? "translate-x-0" : "-translate-x-full"
           }`}
         >
-          <Sidebar
-            activeItem={activeNav}
-            onNavigate={handleNavigate}
-            unreadCount={unreadCount}
-          />
+          <Sidebar activeItem={activeNav} onNavigate={handleNavigate} />
         </aside>
 
         <section className="flex-1 overflow-y-auto px-4 py-6 sm:px-6 lg:px-8">
@@ -179,7 +201,10 @@ export default function StudentDashboard() {
                   </section>
 
                   {showFilters ? (
-                    <section id="listings-filter-controls" className="flex flex-col gap-4">
+                    <section
+                      id="listings-filter-controls"
+                      className="flex flex-col gap-4"
+                    >
                       <CategoryFilter
                         categories={CATEGORIES}
                         selected={selectedCategory}
@@ -208,44 +233,66 @@ export default function StudentDashboard() {
                   loading ? (
                     <ListingsGrid listings={[]} loading />
                   ) : (
-                    <section className="flex flex-col gap-6" aria-label="My listings sections">
+                    <section
+                      className="flex flex-col gap-6"
+                      aria-label="My listings sections"
+                    >
                       <section className="flex flex-col gap-3">
                         <header className="flex items-center justify-between">
-                          <h3 className="text-sm font-semibold text-gray-600">Active</h3>
+                          <h3 className="text-sm font-semibold text-gray-600">
+                            Active
+                          </h3>
                           <small className="text-xs text-gray-400">
                             {activeListings.length}
                           </small>
                         </header>
                         {activeListings.length > 0 ? (
-                          <ListingsGrid listings={activeListings} loading={false} />
+                          <ListingsGrid
+                            listings={activeListings}
+                            loading={false}
+                          />
                         ) : (
-                          <p className="text-sm text-gray-400">No active listings yet.</p>
+                          <p className="text-sm text-gray-400">
+                            No active listings yet.
+                          </p>
                         )}
                       </section>
 
                       <section className="flex flex-col gap-3">
                         <header className="flex items-center justify-between">
-                          <h3 className="text-sm font-semibold text-gray-600">Reserved</h3>
+                          <h3 className="text-sm font-semibold text-gray-600">
+                            Reserved
+                          </h3>
                           <small className="text-xs text-gray-400">
                             {reservedListings.length}
                           </small>
                         </header>
                         {reservedListings.length > 0 ? (
-                          <ListingsGrid listings={reservedListings} loading={false} />
+                          <ListingsGrid
+                            listings={reservedListings}
+                            loading={false}
+                          />
                         ) : (
-                          <p className="text-sm text-gray-400">No reserved listings yet.</p>
+                          <p className="text-sm text-gray-400">
+                            No reserved listings yet.
+                          </p>
                         )}
                       </section>
 
                       {otherListings.length > 0 ? (
                         <section className="flex flex-col gap-3">
                           <header className="flex items-center justify-between">
-                            <h3 className="text-sm font-semibold text-gray-600">Other</h3>
+                            <h3 className="text-sm font-semibold text-gray-600">
+                              Other
+                            </h3>
                             <small className="text-xs text-gray-400">
                               {otherListings.length}
                             </small>
                           </header>
-                          <ListingsGrid listings={otherListings} loading={false} />
+                          <ListingsGrid
+                            listings={otherListings}
+                            loading={false}
+                          />
                         </section>
                       ) : null}
                     </section>
@@ -260,10 +307,8 @@ export default function StudentDashboard() {
               <MyPurchases profileId={user?.profileId} />
             ) : null}
 
-            {activeNav === "my-sales" ? <MySales profileId={user?.profileId} /> : null}
-
-            {activeNav === "notifications" ? (
-              <InAppNotifications profileId={user?.profileId} />
+            {activeNav === "my-sales" ? (
+              <MySales profileId={user?.profileId} />
             ) : null}
 
             {isProfileView ? <ProfileSettings user={user} /> : null}

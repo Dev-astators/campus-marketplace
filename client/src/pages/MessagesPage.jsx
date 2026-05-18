@@ -131,6 +131,7 @@ export default function MessagesPage() {
     try {
       sessionStorage.removeItem("chatBackTarget");
     } catch {
+      // Ignore sessionStorage errors (e.g. in private mode)
     }
 
     navigate(`/chat/${conversation.listing_id}?seller=${conversation.otherUserId}`);

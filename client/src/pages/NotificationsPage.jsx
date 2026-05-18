@@ -1,6 +1,7 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { supabase } from "../config/supabaseClient";
 import { useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "../config/apiBaseUrl";
 
 const getNotificationIcon = (type) => {
   if (type === "message") return "Message";
@@ -8,6 +9,10 @@ const getNotificationIcon = (type) => {
   if (type === "booking") return "Booking";
   if (type === "payment") return "Payment";
   if (type === "rating") return "Rating";
+  if (type === "sale") return "Sale";
+  if (type === "purchase") return "Purchase";
+  if (type === "dropoff") return "Drop-off";
+  if (type === "collection") return "Collection";
 
   return "Alert";
 };
@@ -24,6 +29,8 @@ export default function NotificationsPage() {
   const [user, setUser] = useState(null);
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [toastMessage, setToastMessage] = useState(null);
+  const toastTimeoutRef = useRef(null);
 
   const formatTime = useCallback((dateString) => {
     return new Date(dateString).toLocaleString([], {
@@ -32,6 +39,27 @@ export default function NotificationsPage() {
       hour: "2-digit",
       minute: "2-digit",
     });
+  }, []);
+
+  const showToast = useCallback((message) => {
+    if (!message) return;
+    setToastMessage(message);
+
+    if (toastTimeoutRef.current) {
+      clearTimeout(toastTimeoutRef.current);
+    }
+
+    toastTimeoutRef.current = setTimeout(() => {
+      setToastMessage(null);
+    }, 4000);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (toastTimeoutRef.current) {
+        clearTimeout(toastTimeoutRef.current);
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -54,7 +82,8 @@ export default function NotificationsPage() {
       try {
         const { data, error } = await supabase
           .from("facility_bookings")
-          .select(`
+          .select(
+            `
             id,
             status,
             booking_type,
@@ -73,7 +102,8 @@ export default function NotificationsPage() {
                 title
               )
             )
-          `)
+          `,
+          )
           .eq("student_id", currentUser.id)
           .in("booking_type", ["collection", "drop_off"])
           .order("confirmed_at", { ascending: false });
@@ -114,12 +144,45 @@ export default function NotificationsPage() {
     [formatTime],
   );
 
+  const fetchTradeNotifications = useCallback(
+    async (currentUser) => {
+      try {
+        const res = await fetch(
+          `${API_BASE_URL}/api/payments/notifications/${currentUser.id}`,
+        );
+
+        if (!res.ok) throw new Error("Failed to fetch trade notifications");
+
+        const data = await res.json();
+        const list = Array.isArray(data) ? data : [];
+
+        return list.map((notification) => ({
+          id: `trade-${notification.id}`,
+          type: notification.type || "system",
+          category: "trade",
+          title: notification.title || "Marketplace update",
+          description: notification.message || "",
+          time: formatTime(notification.created_at),
+          rawTime: notification.created_at,
+          is_read: notification.is_read ?? false,
+          notificationId: notification.id,
+          relatedTransactionId: notification.related_transaction_id,
+        }));
+      } catch (error) {
+        console.error("Error fetching trade notifications:", error);
+        return [];
+      }
+    },
+    [formatTime],
+  );
+
   const fetchNotifications = useCallback(
     async (currentUser) => {
       try {
         const { data, error } = await supabase
           .from("messages")
-          .select(`
+          .select(
+            `
             id,
             content,
             sent_at,
@@ -131,7 +194,8 @@ export default function NotificationsPage() {
             sender:profiles!messages_sender_id_fkey(
               full_name
             )
-          `)
+          `,
+          )
           .eq("receiver_id", currentUser.id)
           .neq("sender_id", currentUser.id)
           .order("sent_at", { ascending: false });
@@ -152,8 +216,14 @@ export default function NotificationsPage() {
           is_read: message.is_read ?? false,
         }));
 
-        const bookingNotifications = await fetchBookingNotifications(currentUser);
-        const combined = [...formattedMessages, ...bookingNotifications];
+        const bookingNotifications =
+          await fetchBookingNotifications(currentUser);
+        const tradeNotifications = await fetchTradeNotifications(currentUser);
+        const combined = [
+          ...formattedMessages,
+          ...bookingNotifications,
+          ...tradeNotifications,
+        ];
 
         combined.sort(
           (first, second) =>
@@ -168,7 +238,7 @@ export default function NotificationsPage() {
         setLoading(false);
       }
     },
-    [formatTime, fetchBookingNotifications],
+    [formatTime, fetchBookingNotifications, fetchTradeNotifications],
   );
 
   useEffect(() => {
@@ -179,7 +249,7 @@ export default function NotificationsPage() {
     };
 
     loadNotifications();
-  }, [user, fetchNotifications]);
+  }, [user, fetchNotifications, showToast]);
 
   useEffect(() => {
     if (!user) return;
@@ -198,12 +268,26 @@ export default function NotificationsPage() {
           if (payload.new.sender_id === user.id) return;
 
           await fetchNotifications(user);
+          showToast("New message received.");
 
           if (Notification.permission === "granted") {
             new Notification("New Message", {
               body: "You received a new marketplace message.",
             });
           }
+        },
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "notifications",
+          filter: `user_id=eq.${user.id}`,
+        },
+        async (payload) => {
+          await fetchNotifications(user);
+          showToast(payload.new?.title || "New trade notification.");
         },
       )
       .on(
@@ -226,6 +310,8 @@ export default function NotificationsPage() {
               ? "Collection"
               : "Drop-off";
 
+          showToast(`${type} booking updated.`);
+
           if (Notification.permission === "granted") {
             new Notification(`${type} Booking Updated`, {
               body: "Your booking has been updated.",
@@ -242,7 +328,7 @@ export default function NotificationsPage() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, fetchNotifications]);
+  }, [user, fetchNotifications, showToast]);
 
   const markAllAsRead = async () => {
     try {
@@ -251,6 +337,24 @@ export default function NotificationsPage() {
         .update({ is_read: true })
         .eq("receiver_id", user.id)
         .eq("is_read", false);
+
+      const tradeUnreadIds = notifications
+        .filter(
+          (notification) =>
+            notification.category === "trade" && !notification.is_read,
+        )
+        .map((notification) => notification.notificationId)
+        .filter(Boolean);
+
+      if (tradeUnreadIds.length > 0) {
+        await Promise.all(
+          tradeUnreadIds.map((id) =>
+            fetch(`${API_BASE_URL}/api/payments/notifications/${id}/read`, {
+              method: "PATCH",
+            }),
+          ),
+        );
+      }
 
       const bookingIds = notifications
         .filter((notification) => notification.type === "booking")
@@ -271,7 +375,34 @@ export default function NotificationsPage() {
           .update({ is_read: true })
           .eq("id", notification.id);
 
-        navigate(`/chat/${notification.listing_id}?seller=${notification.sender_id}`);
+        navigate(
+          `/chat/${notification.listing_id}?seller=${notification.sender_id}`,
+        );
+        return;
+      }
+
+      if (notification.category === "trade") {
+        if (!notification.is_read && notification.notificationId) {
+          await fetch(
+            `${API_BASE_URL}/api/payments/notifications/${notification.notificationId}/read`,
+            { method: "PATCH" },
+          );
+        }
+
+        if (notification.relatedTransactionId) {
+          if (notification.type === "sale") {
+            navigate("/student-dashboard", { state: { tab: "my-sales" } });
+          } else {
+            navigate("/student-dashboard", { state: { tab: "my-purchases" } });
+          }
+        }
+
+        setNotifications((previous) =>
+          previous.map((entry) =>
+            entry.id === notification.id ? { ...entry, is_read: true } : entry,
+          ),
+        );
+
         return;
       }
 
@@ -310,6 +441,15 @@ export default function NotificationsPage() {
 
   return (
     <main className="min-h-screen px-4 py-6 sm:px-6 sm:py-8">
+      {toastMessage ? (
+        <aside
+          role="status"
+          aria-live="polite"
+          className="fixed right-4 top-4 z-50 rounded-xl bg-slate-900 px-4 py-3 text-sm text-white shadow-lg"
+        >
+          {toastMessage}
+        </aside>
+      ) : null}
       <article className="mx-auto max-w-4xl">
         <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <section>

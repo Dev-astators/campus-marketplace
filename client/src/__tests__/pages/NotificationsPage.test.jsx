@@ -6,6 +6,12 @@ import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import NotificationsPage from "../../pages/NotificationsPage";
 import { supabase } from "../../config/supabaseClient";
 
+const createFetchResponse = (data, ok = true) =>
+  Promise.resolve({
+    ok,
+    json: async () => data,
+  });
+
 const ChatRoute = () => {
   const location = useLocation();
   return <p data-testid="chat-route">{location.search}</p>;
@@ -17,6 +23,7 @@ describe("NotificationsPage", () => {
     global.Notification = function NotificationMock() {};
     global.Notification.permission = "granted";
     global.Notification.requestPermission = jest.fn();
+    global.fetch = jest.fn().mockResolvedValue(createFetchResponse([]));
 
     supabase.auth.getSession.mockResolvedValue({
       data: { session: { user: { id: "user-1" } } },

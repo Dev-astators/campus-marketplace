@@ -273,20 +273,25 @@ router.get("/facilities", async (req, res) => {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GET /api/payments/slots/:facilityId
-// ?type=collection → buyer: slots from tomorrow onwards (gives seller time to drop off)
-// ?type=drop_off   → seller: slots from today onwards
+// ?type=drop_off   → seller: slots from now + 1 hour
+// ?type=collection → buyer: slots on/after ?after (drop-off time)
 // ─────────────────────────────────────────────────────────────────────────────
 router.get("/slots/:facilityId", async (req, res) => {
-  const { type = "collection" } = req.query;
+  const { type = "collection", after } = req.query;
 
-  // Buyer collection slots start tomorrow — ensures seller always has time to drop off first
-  const today = new Date();
-  const tomorrow = new Date(today);
-  tomorrow.setDate(today.getDate() + 1);
-  const minDate =
+  const now = new Date();
+  const minDateTime =
     type === "drop_off"
-      ? today.toISOString().split("T")[0] // seller: from today
-      : tomorrow.toISOString().split("T")[0]; // buyer:  from tomorrow
+      ? new Date(now.getTime() + 60 * 60 * 1000)
+      : after
+        ? new Date(after)
+        : now;
+
+  if (Number.isNaN(minDateTime.getTime())) {
+    return res.status(400).json({ error: "Invalid 'after' timestamp." });
+  }
+
+  const minDate = minDateTime.toISOString().split("T")[0];
 
   const { data, error } = await supabase
     .from("facility_slots")
@@ -325,7 +330,12 @@ router.get("/slots/:facilityId", async (req, res) => {
       ...slot,
       booked_count: bookedBySlot[slot.id] ?? 0,
     }))
-    .filter((slot) => slot.booked_count < slot.capacity);
+    .filter((slot) => slot.booked_count < slot.capacity)
+    .filter((slot) => {
+      const slotDateTime = new Date(`${slot.slot_date}T${slot.slot_time}`);
+      if (Number.isNaN(slotDateTime.getTime())) return false;
+      return slotDateTime >= minDateTime;
+    });
 
   return res.json(available);
 });
@@ -373,18 +383,57 @@ router.post("/book-slot", async (req, res) => {
       .maybeSingle();
 
     if (existingBooking) {
-      return res
-        .status(400)
-        .json({
-          error: "A collection slot is already booked for this transaction.",
-        });
+      return res.status(400).json({
+        error: "A collection slot is already booked for this transaction.",
+      });
+    }
+
+    const { data: dropoffBooking } = await supabase
+      .from("facility_bookings")
+      .select("slot:facility_slots(slot_date, slot_time, facility_id)")
+      .eq("transaction_id", transactionId)
+      .eq("booking_type", "drop_off")
+      .maybeSingle();
+
+    if (!dropoffBooking?.slot) {
+      return res.status(400).json({
+        error: "Seller must book a drop-off slot before collection.",
+      });
     }
 
     const { data: slot } = await supabase
       .from("facility_slots")
-      .select("capacity")
+      .select("capacity, slot_date, slot_time, facility_id")
       .eq("id", slotId)
       .single();
+
+    if (!slot) {
+      return res.status(404).json({ error: "Selected slot not found." });
+    }
+
+    if (slot.facility_id !== dropoffBooking.slot.facility_id) {
+      return res.status(400).json({
+        error: "Collection must be at the same facility as the drop-off.",
+      });
+    }
+
+    const dropoffDateTime = new Date(
+      `${dropoffBooking.slot.slot_date}T${dropoffBooking.slot.slot_time}`,
+    );
+    const collectionDateTime = new Date(`${slot.slot_date}T${slot.slot_time}`);
+
+    if (
+      Number.isNaN(dropoffDateTime.getTime()) ||
+      Number.isNaN(collectionDateTime.getTime())
+    ) {
+      return res.status(400).json({ error: "Invalid slot time." });
+    }
+
+    if (collectionDateTime < dropoffDateTime) {
+      return res.status(400).json({
+        error: "Collection must be scheduled after drop-off.",
+      });
+    }
 
     const { count, error: countError } = await supabase
       .from("facility_bookings")
@@ -432,8 +481,12 @@ router.get("/my-purchases/:profileId", async (req, res) => {
       seller:profiles!transactions_seller_id_fkey ( id, full_name, average_rating ),
       facility_bookings (
         id, booking_type, status, confirmed_at,
-        facility_slots ( slot_date, slot_time ),
-        trade_facilities:facility_slots ( facility_id )
+        facility_slots (
+          slot_date,
+          slot_time,
+          facility_id,
+          trade_facilities ( id, name, location )
+        )
       )
     `,
     )
@@ -473,7 +526,7 @@ router.get("/my-sales/:profileId", async (req, res) => {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // POST /api/payments/book-dropoff
-// Seller books a drop-off slot (must be at same facility as buyer collection)
+// Seller books a drop-off slot (collection may be booked later)
 // ─────────────────────────────────────────────────────────────────────────────
 router.post("/book-dropoff", async (req, res) => {
   const { transactionId, slotId, sellerId } = req.body;
@@ -493,19 +546,15 @@ router.post("/book-dropoff", async (req, res) => {
       .single();
 
     if (!tx || tx.status !== "confirmed") {
-      return res
-        .status(400)
-        .json({
-          error: "Transaction must be confirmed before booking drop-off.",
-        });
+      return res.status(400).json({
+        error: "Transaction must be confirmed before booking drop-off.",
+      });
     }
 
     if (tx.seller_id !== sellerId) {
-      return res
-        .status(403)
-        .json({
-          error: "Only the seller can book a drop-off for this transaction.",
-        });
+      return res.status(403).json({
+        error: "Only the seller can book a drop-off for this transaction.",
+      });
     }
 
     // Prevent duplicate drop-off bookings
@@ -517,38 +566,69 @@ router.post("/book-dropoff", async (req, res) => {
       .maybeSingle();
 
     if (existing) {
-      return res
-        .status(400)
-        .json({
-          error: "A drop-off slot is already booked for this transaction.",
-        });
-    }
-
-    const { data: collection } = await supabase
-      .from("facility_bookings")
-      .select("facility_slots ( facility_id )")
-      .eq("transaction_id", transactionId)
-      .eq("booking_type", "collection")
-      .maybeSingle();
-
-    const collectionFacilityId = collection?.facility_slots?.facility_id;
-    if (!collectionFacilityId) {
-      return res
-        .status(400)
-        .json({ error: "Buyer must book a collection slot before drop-off." });
+      return res.status(400).json({
+        error: "A drop-off slot is already booked for this transaction.",
+      });
     }
 
     const { data: slot } = await supabase
       .from("facility_slots")
-      .select("facility_id")
+      .select("facility_id, slot_date, slot_time, capacity")
       .eq("id", slotId)
       .single();
 
-    if (slot?.facility_id !== collectionFacilityId) {
+    if (!slot) {
+      return res.status(404).json({ error: "Selected slot not found." });
+    }
+
+    const dropoffDateTime = new Date(`${slot.slot_date}T${slot.slot_time}`);
+    if (Number.isNaN(dropoffDateTime.getTime())) {
+      return res.status(400).json({ error: "Invalid slot time." });
+    }
+
+    const minDropoffTime = new Date(Date.now() + 60 * 60 * 1000);
+    if (dropoffDateTime < minDropoffTime) {
       return res.status(400).json({
-        error:
-          "Drop-off must be at the same facility as the buyer's collection.",
+        error: "Drop-off must be at least 1 hour from now.",
       });
+    }
+
+    const { count, error: countError } = await supabase
+      .from("facility_bookings")
+      .select("id", { count: "exact", head: true })
+      .eq("slot_id", slotId);
+
+    if (countError) throw countError;
+    if (slot && Number(count || 0) >= Number(slot.capacity || 0)) {
+      return res.status(400).json({ error: "Selected slot is full." });
+    }
+
+    const { data: collection } = await supabase
+      .from("facility_bookings")
+      .select("slot:facility_slots(slot_date, slot_time, facility_id)")
+      .eq("transaction_id", transactionId)
+      .eq("booking_type", "collection")
+      .maybeSingle();
+
+    if (collection?.slot?.facility_id) {
+      if (slot.facility_id !== collection.slot.facility_id) {
+        return res.status(400).json({
+          error:
+            "Drop-off must be at the same facility as the buyer's collection.",
+        });
+      }
+
+      const collectionDateTime = new Date(
+        `${collection.slot.slot_date}T${collection.slot.slot_time}`,
+      );
+      if (
+        !Number.isNaN(collectionDateTime.getTime()) &&
+        dropoffDateTime > collectionDateTime
+      ) {
+        return res.status(400).json({
+          error: "Drop-off must be before the collection time.",
+        });
+      }
     }
 
     // Create drop-off booking
