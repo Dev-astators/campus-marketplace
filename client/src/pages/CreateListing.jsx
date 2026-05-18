@@ -479,8 +479,8 @@ export default function CreateListing() {
                     className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                   >
                     {CATEGORY_OPTIONS.map((category) => (
-                      <option key={category} value={category}>
-                        {category}
+                      <option key={category.value} value={category.value}>
+                        {category.label}
                       </option>
                     ))}
                   </select>
