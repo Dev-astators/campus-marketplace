@@ -32,7 +32,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>4/4</span>
+                <span class='fraction'>0/0</span>
             </div>
         
             
@@ -158,7 +158,29 @@
 <a name='L93'></a><a href='#L93'>93</a>
 <a name='L94'></a><a href='#L94'>94</a>
 <a name='L95'></a><a href='#L95'>95</a>
-<a name='L96'></a><a href='#L96'>96</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">2x</span>
+<a name='L96'></a><a href='#L96'>96</a>
+<a name='L97'></a><a href='#L97'>97</a>
+<a name='L98'></a><a href='#L98'>98</a>
+<a name='L99'></a><a href='#L99'>99</a>
+<a name='L100'></a><a href='#L100'>100</a>
+<a name='L101'></a><a href='#L101'>101</a>
+<a name='L102'></a><a href='#L102'>102</a>
+<a name='L103'></a><a href='#L103'>103</a>
+<a name='L104'></a><a href='#L104'>104</a>
+<a name='L105'></a><a href='#L105'>105</a>
+<a name='L106'></a><a href='#L106'>106</a>
+<a name='L107'></a><a href='#L107'>107</a>
+<a name='L108'></a><a href='#L108'>108</a>
+<a name='L109'></a><a href='#L109'>109</a>
+<a name='L110'></a><a href='#L110'>110</a>
+<a name='L111'></a><a href='#L111'>111</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -202,18 +224,9 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">8x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">12x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -248,104 +261,136 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">8x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">const CATEGORIES = [
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">12x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import textbooksImage from "../assets/Textbooks.png";
+import techImage from "../assets/tech.png";
+import appliancesImage from "../assets/appliances.png";
+import clothesImage from "../assets/clothes.png";
+import studyImage from "../assets/study.png";
+import homeCookImage from "../assets/homecook.png";
+&nbsp;
+const CATEGORIES = [
   {
     id: "textbooks",
     title: "Academic Textbooks",
-    description: "Save up to 70% on this semester's required reading from students who just finished.",
-    // Bento layout: top-left large card
-    gridClass: "col-span-2 row-span-1",
-    imageUrl: "https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=900&amp;q=80",
-    imagePosition: "object-center",
-    overlayClass: "bg-gradient-to-r from-[#1a3a3a]/90 via-[#1a3a3a]/60 to-transparent",
+    description: "Save on required readings from students who just finished.",
+    image: textbooksImage,
+    alt: "Academic textbooks and bookshelves",
   },
   {
     id: "tech",
     title: "Tech &amp; Electronics",
-    description: "Certified gear for your digital workflow.",
-    // Bento layout: top-right card
-    gridClass: "col-span-1 row-span-1",
-    imageUrl: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=700&amp;q=80",
-    imagePosition: "object-center",
-    overlayClass: "bg-gradient-to-br from-[#0d1f2d]/80 via-[#0d1f2d]/60 to-transparent",
+    description: "Laptops, chargers, calculators, and study gear.",
+    image: techImage,
+    alt: "Laptop and electronic study equipment",
   },
   {
     id: "dorm",
-    title: "Clothing &amp; Dorm Essentials",
-    description: null,
-    // Bento layout: bottom-left small card
-    gridClass: "col-span-1 row-span-1",
-    imageUrl: "https://tse4.mm.bing.net/th/id/OIP.VHU4Gq5KHcx4OBY49_SExQHaLG?rs=1&amp;pid=ImgDetMain&amp;o=7&amp;rm=3",
-    imagePosition: "object-top",
-    overlayClass: "bg-gradient-to-t from-[#0d1f2d]/90 via-[#0d1f2d]/40 to-transparent",
+    title: "Dorm &amp; Apartment",
+    description: "Furniture, storage, appliances, and room essentials.",
+    image: appliancesImage,
+    alt: "Student apartment appliances and room essentials",
   },
   {
-    id: "furniture",
-    title: "Premium Furniture",
-    description: null,
-    // Bento layout: bottom-right large card
-    gridClass: "col-span-2 row-span-1",
-    imageUrl: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=900&amp;q=80",
-    imagePosition: "object-center",
-    overlayClass: "bg-gradient-to-r from-[#1a3a3a]/80 via-[#1a3a3a]/50 to-transparent",
+    id: "fashion",
+    title: "Fashion &amp; Everyday",
+    description: "Clothing, bags, shoes, and daily campus items.",
+    image: clothesImage,
+    alt: "Clothing and everyday fashion items",
+  },
+  {
+    id: "study",
+    title: "Study Essentials",
+    description: "Notes, stationery, printers, and learning tools.",
+    image: studyImage,
+    alt: "Study supplies and stationery",
+  },
+  {
+    id: "kitchen",
+    title: "Home &amp; Kitchen",
+    description: "Cookware, utensils, appliances, and home must-haves.",
+    image: homeCookImage,
+    alt: "Kitchen and cooking essentials",
   },
 ];
 &nbsp;
-function CategoryCard({ title, description, imageUrl, imagePosition, overlayClass, gridClass }) {
+function CategoryCard({ title, description, image, alt }) {
   return (
-    &lt;div
-      className={`relative rounded-2xl overflow-hidden cursor-pointer group ${gridClass}`}
-      style={{ minHeight: "260px" }}
-    &gt;
-      {/* Background image */}
-      &lt;img
-        src={imageUrl}
-        alt={title}
-        className={`absolute inset-0 w-full h-full object-cover ${imagePosition} transition-transform duration-500 group-hover:scale-105`}
-      /&gt;
+    &lt;article className="overflow-hidden rounded-[22px] bg-white shadow-[0_16px_36px_rgba(15,23,42,0.08)] ring-1 ring-slate-200/70 transition duration-300 hover:-translate-y-1 hover:shadow-[0_22px_48px_rgba(15,23,42,0.12)]"&gt;
+      &lt;figure&gt;
+        &lt;img src={image} alt={alt} className="h-28 w-full object-cover" /&gt;
 &nbsp;
-      {/* Dark overlay */}
-      &lt;div className={`absolute inset-0 ${overlayClass}`} /&gt;
+        &lt;figcaption className="p-5"&gt;
+          &lt;h3 className="text-base font-bold text-slate-950"&gt;{title}&lt;/h3&gt;
 &nbsp;
-      {/* Content */}
-      &lt;div className="relative z-10 flex flex-col justify-end h-full p-7"&gt;
-        &lt;h3 className="text-white font-['inter',sans-serif] font-bold text-2xl leading-tight mb-1"&gt;{title}&lt;/h3&gt;
-        {description &amp;&amp; (
-          &lt;p className="text-white/70 font-['inter',sans-serif] text-sm leading-relaxed mb-4 max-w-xs"&gt;{description}&lt;/p&gt;
-        )}
-        {!description &amp;&amp; &lt;div className="mb-4" /&gt;}
-&nbsp;
-      &lt;/div&gt;
-    &lt;/div&gt;
+          &lt;p className="mt-1.5 text-sm leading-6 text-slate-600"&gt;
+            {description}
+          &lt;/p&gt;
+        &lt;/figcaption&gt;
+      &lt;/figure&gt;
+    &lt;/article&gt;
   );
 }
 &nbsp;
 export default function CuratedCategories() {
   return (
-    &lt;section className="bg-blue-500 px-10 py-16 min-h-screen"&gt;
-      {/* Header */}
-      &lt;div className="flex items-start justify-between mb-8"&gt;
-        &lt;div&gt;
-          &lt;h2 className="text-4xl font-['inter',sans-serif] font-bold text-white"&gt;
-            Curated Categories
+    &lt;section
+      className="bg-gradient-to-b from-white via-slate-50 to-blue-50/40 px-8 py-20"
+      aria-labelledby="marketplace-categories-heading"
+    &gt;
+      &lt;section className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-10 lg:grid-cols-[0.85fr_1.4fr]"&gt;
+        &lt;header className="pt-4"&gt;
+          &lt;h2
+            id="marketplace-categories-heading"
+            className="max-w-xl text-5xl font-semibold leading-[1.05] tracking-[-1.8px] text-slate-950"
+          &gt;
+            Browse the essentials students{" "}
+            &lt;em className="not-italic text-blue-600"&gt;actually&lt;/em&gt; trade.
           &lt;/h2&gt;
-          &lt;p className="text-white font-['inter',sans-serif] text-sm mt-1"&gt;
-            Quality items, hand-picked for the academic lifestyle.
-          &lt;/p&gt;
-        &lt;/div&gt;
-      &lt;/div&gt;
 &nbsp;
-      {/* Bento Grid: 3 columns, 2 rows */}
-      &lt;div className="grid grid-cols-3 grid-rows-2 gap-4"&gt;
-        {CATEGORIES.map((cat) =&gt; (
-          &lt;CategoryCard key={cat.id} {...cat} /&gt;
-        ))}
-      &lt;/div&gt;
+          &lt;p className="mt-7 max-w-md text-lg leading-8 text-slate-600"&gt;
+            From textbooks and electronics to room items and everyday finds,
+            UniSquare keeps campus trading simple, verified, and
+            student-focused.
+          &lt;/p&gt;
+&nbsp;
+          &lt;p className="mt-8 max-w-md text-base font-semibold leading-7 text-slate-500"&gt;
+            Built for verified Wits students who want a safer, cleaner way to
+            buy, sell, and connect on campus.
+          &lt;/p&gt;
+        &lt;/header&gt;
+&nbsp;
+        &lt;section
+          id="categories"
+          className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3"
+          aria-label="Marketplace categories"
+        &gt;
+          {CATEGORIES.map((category) =&gt; (
+            &lt;CategoryCard key={category.id} {...category} /&gt;
+          ))}
+        &lt;/section&gt;
+      &lt;/section&gt;
     &lt;/section&gt;
   );
 }</pre></td></tr></table></pre>
@@ -355,7 +400,7 @@ export default function CuratedCategories() {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-05-11T05:01:06.573Z
+                at 2026-05-18T01:25:33.133Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

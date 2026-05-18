@@ -24,9 +24,11 @@ export default function SignUp() {
   };
 
   return (
-    <main className="grid min-h-screen bg-white font-['inter',sans-serif] lg:grid-cols-[1.45fr_0.55fr]">
+    <main className="flex h-screen font-['inter',sans-serif]">
+
+      {/* ── Left Panel — hidden on mobile, visible md+ ── */}
       <aside
-        className="relative hidden min-h-screen overflow-hidden px-12 py-10 text-white lg:flex lg:flex-col lg:justify-between"
+        className="hidden md:flex flex-1 flex-col justify-between p-10 text-white"
         style={{
           backgroundImage: `linear-gradient(120deg, rgba(2, 15, 45, 0.90), rgba(15, 55, 150, 0.62), rgba(2, 15, 45, 0.55)), url('${bgImage}')`,
           backgroundPosition: "center",
@@ -34,128 +36,99 @@ export default function SignUp() {
           backgroundRepeat: "no-repeat",
         }}
       >
-        <header>
-          <a
-            href="/"
-            className="text-xs font-bold uppercase tracking-[0.35em] text-white/80 transition hover:text-white"
-          >
-            UniSquare
-          </a>
-        </header>
+        <p className="text-xs tracking-widest opacity-70 uppercase">Uni Square</p>
 
-        <section className="max-w-2xl">
-          <h1 className="max-w-xl text-6xl font-black leading-[1.03] tracking-[-2.4px]">
-            Elevate your{" "}
-            <mark className="block bg-transparent text-orange-300">
-              Campus
-            </mark>
-            <mark className="block bg-transparent text-orange-300">
-              Experience.
+        <section>
+          <h1 className="text-5xl font-extrabold leading-tight mb-5">
+            Elevate your<br />
+            <mark className="bg-transparent text-orange-300">
+              Campus<br />Experience.
             </mark>
           </h1>
 
-          <em className="mt-8 inline-flex rounded-full border border-white/50 px-5 py-2 text-xs not-italic uppercase tracking-[0.22em] text-white">
+          <p className="not-italic inline-block border border-white/50 rounded-full px-4 py-1 text-[11px] tracking-widest uppercase mb-6">
             Exclusive Access
-          </em>
+          </p>
+          
 
-          <p className="mt-8 max-w-md text-lg font-medium leading-8 text-white/90">
+          <p className="text-sm leading-relaxed opacity-85 max-w-xs mb-8">
             Join a curated marketplace designed specifically for your university
             community. Secure, verified, and strictly academic.
           </p>
 
-          <ul className="mt-12 grid max-w-2xl list-none grid-cols-1 gap-8 p-0 md:grid-cols-2">
-            <li className="flex gap-5">
-              <figure className="m-0 flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-blue-300/40 bg-blue-400/10">
-                <ShieldIcon />
-              </figure>
-
-              <article>
-                <h2 className="text-base font-extrabold leading-6 text-white">
-                  .students.wits.ac.za Verification
-                </h2>
-
-                <p className="mt-2 text-sm leading-6 text-white/75">
-                  Every member is verified through their official university
-                  email for total trust.
-                </p>
-              </article>
-            </li>
-
-            <li className="flex gap-5">
-              <figure className="m-0 flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-blue-300/40 bg-blue-400/10">
-                <UsersIcon />
-              </figure>
-
-              <article>
-                <h2 className="text-base font-extrabold leading-6 text-white">
-                  Peer-to-Peer
-                </h2>
-
-                <p className="mt-2 text-sm leading-6 text-white/75">
-                  Buy, sell, and trade directly with your colleagues and
-                  students on campus.
-                </p>
-              </article>
-            </li>
+          <ul className="flex gap-8 list-none p-0 m-0">
+            {[
+              {
+                title: ".students.wits.ac.za Verification",
+                desc: "Every member is verified through their official university email for total trust.",
+              },
+              {
+                title: "Peer-to-Peer",
+                desc: "Buy, sell, and trade directly with your colleagues and students on campus.",
+              },
+            ].map((f) => (
+              <li key={f.title} className="flex gap-3 max-w-40">
+                <article>
+                  <p className="text-[13px] font-bold m-0">{f.title}</p>
+                  <p className="text-[12px] opacity-75 leading-snug mt-1 m-0">{f.desc}</p>
+                </article>
+              </li>
+            ))}
           </ul>
         </section>
 
         <footer>
-          <small className="text-xs font-semibold uppercase tracking-[0.28em] text-white/60">
-            UniSquare © 2026
+          <small className="text-[11px] tracking-widest opacity-60 uppercase">
+            Uni Square © 2026
           </small>
         </footer>
       </aside>
 
-      <section className="flex min-h-screen items-center justify-center bg-gradient-to-br from-white via-slate-50 to-blue-50/40 px-6 py-10">
-        <article className="w-full max-w-[385px] rounded-[28px] border border-slate-200/80 bg-white/95 px-7 py-9 shadow-[0_18px_50px_rgba(15,23,42,0.10)] backdrop-blur-xl">
-          <header className="text-center">
-            <a
-              href="/"
-              className="text-3xl font-black tracking-[-1px] text-slate-950"
-              aria-label="UniSquare home"
-            >
-              Uni
-              <strong className="font-black text-blue-600">Square</strong>
-            </a>
+      {/* ── Right Panel — full width on mobile, fixed width on md+ ── */}
+      <section className="flex-1 md:flex-none md:w-105 bg-white flex flex-col justify-between p-8 md:p-10 md:shadow-[-4px_0_20px_rgba(0,0,0,0.08)]">
 
-            <h1 className="mt-10 text-2xl font-extrabold tracking-[-0.6px] text-slate-950">
+        {/* Logo */}
+        <header>
+          <a href="/" className="text-[15px] font-bold text-blue-600 no-underline hover:opacity-80 transition-opacity">
+            UniSquare
+          </a>
+        </header>
+
+        {/* Form area */}
+        <form
+          onSubmit={(e) => { e.preventDefault(); handleGoogle(); }}
+          noValidate
+          className="flex flex-col gap-5"
+        >
+          <hgroup>
+            <h2 className="text-3xl md:text-[1.8rem] font-extrabold text-gray-900 m-0">
               Create Account
-            </h1>
-
-            <p className="mt-2 text-sm text-slate-500">
+            </h2>
+            <p className="text-sm text-gray-500 mt-1 m-0">
               Join your campus community today.
             </p>
-          </header>
+          </hgroup>
 
-          <form
-            onSubmit={(event) => {
-              event.preventDefault();
-              handleGoogle();
-            }}
-            noValidate
-            className="mt-8"
-          >
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex w-full items-center justify-center gap-3 rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-800 shadow-[0_10px_24px_rgba(15,23,42,0.06)] transition hover:bg-slate-50 active:scale-[.98] disabled:cursor-not-allowed disabled:opacity-60"
+          <p className="text-[13px] text-gray-500 m-0">
+            Already have an account?{" "}
+            <a
+              onClick={() => navigate("/signin")}
+              className="text-blue-600 font-semibold cursor-pointer hover:underline"
             >
-              <GoogleIcon />
-              {loading ? "Redirecting..." : "Sign up with Google"}
-            </button>
+              Sign In
+            </a>
+          </p>
 
-            <p className="mt-7 text-center text-sm text-slate-500">
-              Already have an account?{" "}
-              <a
-                onClick={() => navigate("/signin")}
-                className="cursor-pointer font-bold text-blue-600 hover:underline"
-              >
-                Sign In
-              </a>
-            </p>
-          </form>
-        </article>
+          <button
+            type="submit"
+            disabled={loading}
+            className="flex items-center gap-3 border-[1.5px] border-gray-200 rounded-full px-6 py-2.5 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 active:scale-[.98] transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer w-full md:w-fit justify-center md:justify-start mb-60"
+          >
+            <GoogleIcon />
+            {loading ? "Redirecting..." : "Sign up with Google"}
+          </button>
+        </form>
+
       </section>
     </main>
   );

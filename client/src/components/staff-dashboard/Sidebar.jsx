@@ -9,9 +9,7 @@ export default function Sidebar({
   isMobileOpen = false,
 }) {
   const filteredNavItems = NAV_ITEMS.filter(
-    (item) =>
-      item.label !== "Marketplace" &&
-      item.label !== "My Listings"
+    (item) => item.label !== "Marketplace" && item.label !== "My Listings",
   );
 
   return (
@@ -47,41 +45,41 @@ export default function Sidebar({
         </button>
       </section>
 
-      <nav className="flex-1 space-y-2 px-3 py-6">
-        {filteredNavItems.map((item) => {
-          const isActive = activeNav === item.id;
+      <nav className="flex-1 px-3 py-6">
+        <ul className="space-y-2">
+          {filteredNavItems.map((item) => {
+            const isActive = activeNav === item.id;
 
-          return (
-            <button
-              key={item.id}
-              onClick={() => onNavChange(item.id)}
-              title={item.label}
-              aria-label={item.label}
-              className={`flex w-full items-center rounded-2xl px-4 py-3 text-left transition-all duration-200 ${
-                isCollapsed ? "justify-center lg:px-3" : "gap-3"
-              }
-              ${
-                isActive
-                  ? "bg-blue-50 text-blue-600 shadow-sm font-semibold"
-                  : "text-slate-500 hover:bg-slate-100 hover:text-slate-800"
-              }`}
-            >
-              <Icon
-                name={item.icon}
-                size={19}
-                className={
-                  isActive
-                    ? "text-blue-600"
-                    : "text-slate-400"
-                }
-              />
+            return (
+              <li key={item.id}>
+                <button
+                  onClick={() => onNavChange(item.id)}
+                  title={item.label}
+                  aria-label={item.label}
+                  className={`flex w-full items-center rounded-2xl px-4 py-3 text-left transition-all duration-200 ${
+                    isCollapsed ? "justify-center lg:px-3" : "gap-3"
+                  } ${
+                    isActive
+                      ? "bg-blue-50 font-semibold text-blue-600 shadow-sm"
+                      : "text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+                  }`}
+                >
+                  <figure>
+                    <Icon
+                      name={item.icon}
+                      size={19}
+                      className={isActive ? "text-blue-600" : "text-slate-400"}
+                    />
+                  </figure>
 
-              <span className={`text-[15px] ${isCollapsed ? "lg:hidden" : ""}`}>
-                {item.label}
-              </span>
-            </button>
-          );
-        })}
+                  <p className={`text-[15px] ${isCollapsed ? "lg:hidden" : ""}`}>
+                    {item.label}
+                  </p>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
       </nav>
     </aside>
   );

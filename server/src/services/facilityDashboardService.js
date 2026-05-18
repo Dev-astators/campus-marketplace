@@ -193,11 +193,9 @@ const deriveTransactionStage = (transaction, bookings) => {
   }
 
   if (
-    [
-      "item_received",
-      "ready_for_collection",
-      "collection_booked",
-    ].includes(rawTransactionStatus) ||
+    ["item_received", "ready_for_collection", "collection_booked"].includes(
+      rawTransactionStatus,
+    ) ||
     dropOffConfirmed
   ) {
     return "collection_booked";
@@ -219,7 +217,9 @@ const buildSlotMap = (slots) =>
   }, new Map());
 
 const mapSlotRecord = (slot, facility, bookings, transactionMap) => {
-  const slotBookings = bookings.filter((booking) => booking.slot_id === slot.id);
+  const slotBookings = bookings.filter(
+    (booking) => booking.slot_id === slot.id,
+  );
   const dropOffCount = slotBookings.filter(
     (booking) => normalizeBookingType(booking.booking_type) === "dropoff",
   ).length;
@@ -264,7 +264,8 @@ const mapSlotRecord = (slot, facility, bookings, transactionMap) => {
 
 const buildPriceDisplay = (transaction, listing) => {
   const totalValue =
-    Number(transaction.online_amount || 0) + Number(transaction.cash_shortfall || 0);
+    Number(transaction.online_amount || 0) +
+    Number(transaction.cash_shortfall || 0);
 
   if (totalValue > 0) {
     return formatCurrency(totalValue);
@@ -323,7 +324,9 @@ const buildActivityFeed = ({
   facility,
 }) => {
   const activityEntries = [];
-  const transactionMap = new Map(transactions.map((transaction) => [transaction.id, transaction]));
+  const transactionMap = new Map(
+    transactions.map((transaction) => [transaction.id, transaction]),
+  );
   const activeSlotCounts = countBookingsBySlotId(activeBookings);
 
   for (const booking of bookings) {
@@ -433,9 +436,7 @@ const fetchFacilityRecord = async (facilityId) => {
     .eq("is_active", true);
 
   if (facilityId) {
-    return facilityQuery
-      .eq("id", facilityId)
-      .maybeSingle();
+    return facilityQuery.eq("id", facilityId).maybeSingle();
   }
 
   return facilityQuery
@@ -464,10 +465,7 @@ const fetchUpcomingSlots = async (facilityId, fromDate) =>
 
 const fetchBookingsForSlotIds = async (slotIds) =>
   slotIds.length
-    ? supabase
-        .from("facility_bookings")
-        .select("*")
-        .in("slot_id", slotIds)
+    ? supabase.from("facility_bookings").select("*").in("slot_id", slotIds)
     : { data: [], error: null };
 
 const getFacilityDashboard = async (
@@ -485,9 +483,8 @@ const getFacilityDashboard = async (
     };
   }
 
-  const { data: facility, error: facilityError } = await fetchFacilityRecord(
-    facilityId,
-  );
+  const { data: facility, error: facilityError } =
+    await fetchFacilityRecord(facilityId);
 
   if (facilityError) {
     return { data: null, error: facilityError };
@@ -588,7 +585,9 @@ const getFacilityDashboard = async (
     );
   }
 
-  const transactionIds = [...new Set((bookings || []).map((booking) => booking.transaction_id))];
+  const transactionIds = [
+    ...new Set((bookings || []).map((booking) => booking.transaction_id)),
+  ];
   const { data: transactions, error: transactionsError } =
     await fetchDashboardTransactions(transactionIds);
 
@@ -616,18 +615,22 @@ const getFacilityDashboard = async (
 
   const operatingHours = normalizeOperatingHours(facility.operating_hours);
   const normalizedTransactions = (transactions || []).map((transaction) => {
-    const transactionBookings = (bookingsByTransactionId[transaction.id] || []).map(
-      (booking) => ({
-        id: booking.id,
-        bookingType: booking.booking_type,
-        status: booking.status,
-        confirmedAt: booking.confirmed_at,
-        staffConfirmedBy: booking.staff_confirmed_by,
-        slot: (slots || []).find((slot) => slot.id === booking.slot_id) || null,
-      }),
-    );
+    const transactionBookings = (
+      bookingsByTransactionId[transaction.id] || []
+    ).map((booking) => ({
+      id: booking.id,
+      bookingType: booking.booking_type,
+      status: booking.status,
+      confirmedAt: booking.confirmed_at,
+      staffConfirmedBy: booking.staff_confirmed_by,
+      slot: (slots || []).find((slot) => slot.id === booking.slot_id) || null,
+    }));
 
-    return mapTransactionRecord(transaction, transactionBookings, normalizedFacility);
+    return mapTransactionRecord(
+      transaction,
+      transactionBookings,
+      normalizedFacility,
+    );
   });
   const activeTransactionIds = new Set(
     normalizedTransactions
@@ -649,7 +652,9 @@ const getFacilityDashboard = async (
     (sum, slot) => sum + Number(slot.booked || 0),
     0,
   );
-  const fullSlots = normalizedSlots.filter((slot) => slot.status === "Full").length;
+  const fullSlots = normalizedSlots.filter(
+    (slot) => slot.status === "Full",
+  ).length;
   const pendingTransactions = normalizedTransactions.filter(
     (transaction) => transaction.stage !== "complete",
   ).length;
@@ -730,7 +735,11 @@ const getTransactionWithBookings = async (transactionId) =>
     .eq("id", transactionId)
     .single();
 
-const updateBookingConfirmation = async (bookingId, nextStatus, staffIdentifier) =>
+const updateBookingConfirmation = async (
+  bookingId,
+  nextStatus,
+  staffIdentifier,
+) =>
   supabase
     .from("facility_bookings")
     .update({
@@ -741,10 +750,7 @@ const updateBookingConfirmation = async (bookingId, nextStatus, staffIdentifier)
     .eq("id", bookingId);
 
 const updateTransactionRecord = async (transactionId, updates) =>
-  supabase
-    .from("transactions")
-    .update(updates)
-    .eq("id", transactionId);
+  supabase.from("transactions").update(updates).eq("id", transactionId);
 
 const advanceFacilityTransaction = async ({
   transactionId,
@@ -764,9 +770,7 @@ const advanceFacilityTransaction = async ({
   const bookings = transaction.bookings || [];
   const bookingFacilityIds = [
     ...new Set(
-      bookings
-        .map((booking) => booking.slot?.facility_id)
-        .filter(Boolean),
+      bookings.map((booking) => booking.slot?.facility_id).filter(Boolean),
     ),
   ];
   const transactionFacilityId = bookingFacilityIds[0];
@@ -948,6 +952,28 @@ const advanceFacilityTransaction = async ({
 
     if (transactionUpdateError) {
       return { data: null, error: transactionUpdateError };
+    }
+
+    if (transaction?.seller?.id) {
+      await supabase.from("notifications").insert({
+        user_id: transaction.seller.id,
+        title: "Buyer collected item",
+        message: `${transaction.buyer?.full_name || "The buyer"} collected "${transaction.listing?.title || "your item"}".`,
+        type: "collection",
+        related_transaction_id: transactionId,
+        is_read: false,
+      });
+    }
+
+    if (transaction?.buyer?.id) {
+      await supabase.from("notifications").insert({
+        user_id: transaction.buyer.id,
+        title: "Collection confirmed",
+        message: `You collected "${transaction.listing?.title || "your item"}". Thanks for using the marketplace!`,
+        type: "collection",
+        related_transaction_id: transactionId,
+        is_read: false,
+      });
     }
   }
 
