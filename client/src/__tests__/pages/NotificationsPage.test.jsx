@@ -243,4 +243,109 @@ describe("NotificationsPage", () => {
     expect(screen.queryByTestId("chat-route")).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /^read$/i })).toBeInTheDocument();
   });
+
+  it("stops loading without a signed-in user", async () => {
+    supabase.auth.getSession.mockResolvedValueOnce({
+      data: { session: null },
+    });
+
+    render(
+      <MemoryRouter initialEntries={["/notifications"]}>
+        <Routes>
+          <Route path="/notifications" element={<NotificationsPage />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    expect(
+      await screen.findByRole("heading", { name: /notifications/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /mark all as read/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("opens purchase trade notifications and routes to purchases", async () => {
+    const user = userEvent.setup();
+
+    global.fetch
+      .mockResolvedValueOnce(
+        createFetchResponse([
+          {
+            id: "notif-3",
+            title: "Purchase confirmed",
+            message: "Choose a collection slot",
+            type: "purchase",
+            is_read: false,
+            created_at: "2026-05-12T12:00:00.000Z",
+            related_transaction_id: "tx-3",
+          },
+        ]),
+      )
+      .mockResolvedValueOnce(createFetchResponse({ ok: true }));
+
+    const DashboardRoute = () => {
+      const location = useLocation();
+      return <p data-testid="dashboard-route">{location.state?.tab || ""}</p>;
+    };
+
+    render(
+      <MemoryRouter initialEntries={["/notifications"]}>
+        <Routes>
+          <Route path="/notifications" element={<NotificationsPage />} />
+          <Route path="/student-dashboard" element={<DashboardRoute />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    await user.click(
+      await screen.findByRole("button", { name: /purchase confirmed/i }),
+    );
+
+    expect(await screen.findByTestId("dashboard-route")).toHaveTextContent(
+      "my-purchases",
+    );
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.stringContaining("/api/payments/notifications/notif-3/read"),
+      expect.objectContaining({ method: "PATCH" }),
+    );
+  });
+
+  it("keeps locally read booking notifications in the read list", async () => {
+    localStorage.setItem(
+      "read_booking_notifications",
+      JSON.stringify(["booking-booking-1"]),
+    );
+
+    render(
+      <MemoryRouter initialEntries={["/notifications"]}>
+        <Routes>
+          <Route path="/notifications" element={<NotificationsPage />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    expect(
+      await screen.findByRole("heading", { name: /^read$/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /collection booking confirmed/i }),
+    ).toBeInTheDocument();
+  });
+
+  it("requests browser notification permission when it is not granted", async () => {
+    global.Notification.permission = "default";
+
+    render(
+      <MemoryRouter initialEntries={["/notifications"]}>
+        <Routes>
+          <Route path="/notifications" element={<NotificationsPage />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    await screen.findByRole("heading", { name: /notifications/i });
+
+    expect(global.Notification.requestPermission).toHaveBeenCalledTimes(1);
+  });
 });

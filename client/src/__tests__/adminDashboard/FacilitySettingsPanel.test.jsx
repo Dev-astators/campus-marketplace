@@ -49,4 +49,57 @@ describe("FacilitySettingsPanel", () => {
     expect(handleSave).toHaveBeenCalledTimes(1);
     expect(screen.getByText(/last saved/i)).toBeInTheDocument();
   });
+
+  it("renders new and saving states with inactive hours", () => {
+    const handleSettingChange = jest.fn();
+    const handleHoursChange = jest.fn();
+    const handleSave = jest.fn();
+
+    const { rerender } = render(
+      <FacilitySettingsPanel
+        settings={{
+          name: "Quiet Room",
+          location: "Library",
+          slotCapacity: 4,
+          isActive: false,
+        }}
+        operatingHours={[
+          { day: "Sat", open: "", close: "", active: false },
+        ]}
+        onSettingChange={handleSettingChange}
+        onHoursChange={handleHoursChange}
+        onSave={handleSave}
+        isNew
+      />,
+    );
+
+    expect(
+      screen.getByText(/configure a new trade facility/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /create facility/i }),
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Facility Active")).not.toBeChecked();
+    expect(screen.getAllByDisplayValue("")[0]).toBeDisabled();
+
+    rerender(
+      <FacilitySettingsPanel
+        settings={{
+          name: "Quiet Room",
+          location: "Library",
+          slotCapacity: 4,
+          isActive: false,
+        }}
+        operatingHours={[
+          { day: "Sat", open: "", close: "", active: false },
+        ]}
+        onSettingChange={handleSettingChange}
+        onHoursChange={handleHoursChange}
+        onSave={handleSave}
+        isSaving
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: /saving/i })).toBeDisabled();
+  });
 });

@@ -85,4 +85,28 @@ describe("PaymentPage", () => {
     expect(await screen.findByText(/payment issue/i)).toBeInTheDocument();
     expect(screen.getByText(/bad gateway/i)).toBeInTheDocument();
   });
+
+  it("confirms a production payment from the status endpoint", async () => {
+    process.env.VITE_PAYFAST_SANDBOX = "false";
+    global.fetch.mockResolvedValueOnce(
+      createFetchResponse({ status: "complete" }, true),
+    );
+
+    renderPaymentPage();
+
+    expect(await screen.findByText(/payment confirmed/i)).toBeInTheDocument();
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.stringContaining("/api/payments/status/tx-1"),
+    );
+  });
+
+  it("shows a failure when the status endpoint does not respond", async () => {
+    process.env.VITE_PAYFAST_SANDBOX = "false";
+    global.fetch.mockResolvedValueOnce(null);
+
+    renderPaymentPage();
+
+    expect(await screen.findByText(/payment issue/i)).toBeInTheDocument();
+    expect(screen.getByText(/no response from server/i)).toBeInTheDocument();
+  });
 });
