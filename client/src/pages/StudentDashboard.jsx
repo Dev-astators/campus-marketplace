@@ -64,6 +64,7 @@ export default function StudentDashboard() {
           : 0;
         setUnreadCount(count);
       } catch {
+        // unread badge is optional, so fail silently if this request errors
       }
     };
 
