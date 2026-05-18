@@ -63,6 +63,7 @@ export default function StudentDashboard() {
           : 0;
       } catch {
         tradeCount = 0;
+        // unread badge is optional, so fail silently if this request errors
       }
 
       try {

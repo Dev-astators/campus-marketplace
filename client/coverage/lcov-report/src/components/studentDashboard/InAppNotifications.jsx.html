@@ -23,16 +23,16 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">61.97% </span>
+                <span class="strong">61.42% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>44/71</span>
+                <span class='fraction'>43/70</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">40.9% </span>
+                <span class="strong">38.09% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>18/44</span>
+                <span class='fraction'>16/42</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">62.06% </span>
+                <span class="strong">61.4% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>36/58</span>
+                <span class='fraction'>35/57</span>
             </div>
         
             
@@ -309,14 +309,12 @@
 <a name='L244'></a><a href='#L244'>244</a>
 <a name='L245'></a><a href='#L245'>245</a>
 <a name='L246'></a><a href='#L246'>246</a>
-<a name='L247'></a><a href='#L247'>247</a>
-<a name='L248'></a><a href='#L248'>248</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L247'></a><a href='#L247'>247</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -562,8 +560,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../../config/supabaseClient";
 import { useNavigate } from "react-router-dom";
-&nbsp;
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
+import { API_BASE_URL } from "../../config/apiBaseUrl";
 &nbsp;
 const TYPE_ICON = {
   sale: "💰",
@@ -583,7 +580,7 @@ export default function InAppNotifications({ profileId }) {
 <span class="cstat-no" title="statement not covered" >    if (!profileId) <span class="cstat-no" title="statement not covered" >return;</span></span>
 <span class="cstat-no" title="statement not covered" >    try {</span>
       const res = <span class="cstat-no" title="statement not covered" >await fetch(</span>
-        `${API_URL}/api/payments/notifications/${profileId}`,
+        `${API_BASE_URL}/api/payments/notifications/${profileId}`,
       );
       const data = <span class="cstat-no" title="statement not covered" >await res.json();</span>
 <span class="cstat-no" title="statement not covered" >      setNotifications(Array.isArray(data) ? data : []);</span>
@@ -605,7 +602,7 @@ export default function InAppNotifications({ profileId }) {
 &nbsp;
       try {
         const res = await fetch(
-          `${API_URL}/api/payments/notifications/${profileId}`,
+          `${API_BASE_URL}/api/payments/notifications/${profileId}`,
         );
         const data = await res.json();
         <span class="missing-if-branch" title="else path not taken" >E</span>if (active) setNotifications(Array.isArray(data) ? data : <span class="branch-1 cbranch-no" title="branch not covered" >[])</span>;
@@ -647,7 +644,7 @@ export default function InAppNotifications({ profileId }) {
   }, [profileId, fetchNotifications]);
 &nbsp;
   const markAsRead = <span class="fstat-no" title="function not covered" >as</span>ync (id) =&gt; {
-<span class="cstat-no" title="statement not covered" >    await fetch(`${API_URL}/api/payments/notifications/${id}/read`, {</span>
+<span class="cstat-no" title="statement not covered" >    await fetch(`${API_BASE_URL}/api/payments/notifications/${id}/read`, {</span>
       method: "PATCH",
     });
 <span class="cstat-no" title="statement not covered" >    setNotifications(<span class="fstat-no" title="function not covered" >(p</span>rev) =&gt;</span>
@@ -659,7 +656,7 @@ export default function InAppNotifications({ profileId }) {
     const unread = notifications.filter((n) =&gt; !n.is_read);
     await Promise.all(
       unread.map((n) =&gt;
-        fetch(`${API_URL}/api/payments/notifications/${n.id}/read`, {
+        fetch(`${API_BASE_URL}/api/payments/notifications/${n.id}/read`, {
           method: "PATCH",
         }),
       ),
@@ -811,7 +808,7 @@ export default function InAppNotifications({ profileId }) {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-05-11T05:01:06.573Z
+                at 2026-05-18T01:25:33.133Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

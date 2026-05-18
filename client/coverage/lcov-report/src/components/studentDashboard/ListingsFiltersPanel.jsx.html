@@ -148,10 +148,7 @@
 <a name='L83'></a><a href='#L83'>83</a>
 <a name='L84'></a><a href='#L84'>84</a>
 <a name='L85'></a><a href='#L85'>85</a>
-<a name='L86'></a><a href='#L86'>86</a>
-<a name='L87'></a><a href='#L87'>87</a>
-<a name='L88'></a><a href='#L88'>88</a>
-<a name='L89'></a><a href='#L89'>89</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L86'></a><a href='#L86'>86</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -164,10 +161,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -182,7 +176,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">12x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -221,7 +215,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">10x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -241,9 +235,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { CONDITIONS, SORT_OPTIONS } from "./listingFiltersConfig";
 &nbsp;
-// Stateless/controlled filter panel.
-// All values and handlers are provided by the parent hook/page, which keeps
-// business logic in one place and UI rendering in this component.
 export default function ListingsFiltersPanel({
   selectedCondition,
   onConditionChange,
@@ -256,18 +247,18 @@ export default function ListingsFiltersPanel({
   onClearFilters,
 }) {
   return (
-    &lt;section className="bg-white border border-gray-200 rounded-xl p-4"&gt;
+    &lt;section className="rounded-xl border border-gray-200 bg-white p-4"&gt;
       &lt;form
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 items-end"
+        className="grid grid-cols-1 items-end gap-3 md:grid-cols-2 lg:grid-cols-5"
         aria-label="Listings filters"
-        onSubmit={<span class="fstat-no" title="function not covered" >(e</span>) =&gt; <span class="cstat-no" title="statement not covered" >e.preventDefault()}</span>
+        onSubmit={<span class="fstat-no" title="function not covered" >(e</span>vent) =&gt; <span class="cstat-no" title="statement not covered" >event.preventDefault()}</span>
       &gt;
         &lt;label className="flex flex-col gap-1 text-sm text-gray-700"&gt;
-          &lt;span&gt;Condition&lt;/span&gt;
+          &lt;p&gt;Condition&lt;/p&gt;
           &lt;select
             value={selectedCondition}
-            onChange={(e) =&gt; onConditionChange(e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-2"
+            onChange={(event) =&gt; onConditionChange(event.target.value)}
+            className="rounded-lg border border-gray-300 px-3 py-2"
           &gt;
             {CONDITIONS.map((option) =&gt; (
               &lt;option key={option.value} value={option.value}&gt;
@@ -278,35 +269,35 @@ export default function ListingsFiltersPanel({
         &lt;/label&gt;
 &nbsp;
         &lt;label className="flex flex-col gap-1 text-sm text-gray-700"&gt;
-          &lt;span&gt;Min Price (R)&lt;/span&gt;
+          &lt;p&gt;Min Price (R)&lt;/p&gt;
           &lt;input
             type="number"
             min="0"
             value={minPrice}
-            onChange={(e) =&gt; onMinPriceChange(e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-2"
+            onChange={(event) =&gt; onMinPriceChange(event.target.value)}
+            className="rounded-lg border border-gray-300 px-3 py-2"
             placeholder="0"
           /&gt;
         &lt;/label&gt;
 &nbsp;
         &lt;label className="flex flex-col gap-1 text-sm text-gray-700"&gt;
-          &lt;span&gt;Max Price (R)&lt;/span&gt;
+          &lt;p&gt;Max Price (R)&lt;/p&gt;
           &lt;input
             type="number"
             min="0"
             value={maxPrice}
-            onChange={(e) =&gt; onMaxPriceChange(e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-2"
+            onChange={(event) =&gt; onMaxPriceChange(event.target.value)}
+            className="rounded-lg border border-gray-300 px-3 py-2"
             placeholder="10000"
           /&gt;
         &lt;/label&gt;
 &nbsp;
         &lt;label className="flex flex-col gap-1 text-sm text-gray-700"&gt;
-          &lt;span&gt;Sort By&lt;/span&gt;
+          &lt;p&gt;Sort By&lt;/p&gt;
           &lt;select
             value={sortBy}
-            onChange={(e) =&gt; onSortByChange(e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-2"
+            onChange={(event) =&gt; onSortByChange(event.target.value)}
+            className="rounded-lg border border-gray-300 px-3 py-2"
           &gt;
             {SORT_OPTIONS.map((option) =&gt; (
               &lt;option key={option.value} value={option.value}&gt;
@@ -319,7 +310,7 @@ export default function ListingsFiltersPanel({
         &lt;button
           type="button"
           onClick={onClearFilters}
-          className="border border-gray-300 hover:border-gray-400 rounded-lg px-4 py-2 text-sm text-gray-700"
+          className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:border-gray-400"
         &gt;
           Clear Filters
         &lt;/button&gt;
@@ -334,7 +325,7 @@ export default function ListingsFiltersPanel({
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-05-11T05:01:06.573Z
+                at 2026-05-18T01:25:33.133Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>
