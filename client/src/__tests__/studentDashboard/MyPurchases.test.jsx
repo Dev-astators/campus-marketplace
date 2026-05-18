@@ -123,10 +123,10 @@ describe("MyPurchases", () => {
       error: null,
     });
     const ratingsInsert = jest.fn().mockResolvedValue({ error: null });
-    const ratingsSelectScores = jest.fn().mockResolvedValue({
-      data: [{ score: 5 }, { score: 4 }],
-      error: null,
-    });
+    // const ratingsSelectScores = jest.fn().mockResolvedValue({
+    //   data: [{ score: 5 }, { score: 4 }],
+    //   error: null,
+    // });
     const profilesUpdate = jest.fn().mockReturnValue({
       eq: jest.fn().mockResolvedValue({ error: null }),
     });
