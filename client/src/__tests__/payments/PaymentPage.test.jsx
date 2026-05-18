@@ -1,5 +1,5 @@
 import "@testing-library/jest-dom";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import {
   beforeEach,
@@ -26,6 +26,18 @@ const renderPaymentPage = (path = "/payment/success?transaction_id=tx-1") =>
         <Route
           path="/payment/success"
           element={<PaymentPage result="success" />}
+        />
+      </Routes>
+    </MemoryRouter>,
+  );
+
+const renderCancelledPaymentPage = () =>
+  render(
+    <MemoryRouter initialEntries={["/payment/success"]}>
+      <Routes>
+        <Route
+          path="/payment/success"
+          element={<PaymentPage result="cancel" />}
         />
       </Routes>
     </MemoryRouter>,
@@ -99,5 +111,97 @@ describe("PaymentPage", () => {
       studentId: "user-1",
       bookingType: "collection",
     });
+  });
+
+  it("renders the cancelled state", async () => {
+    renderCancelledPaymentPage();
+
+    expect(screen.getByText(/payment cancelled/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /back to listing/i })).toBeInTheDocument();
+  });
+
+  it("shows a session-expired error when booking without a session", async () => {
+    const user = userEvent.setup();
+
+    supabase.auth.getSession.mockResolvedValue({
+      data: { session: null },
+    });
+
+    global.fetch
+      .mockResolvedValueOnce(createFetchResponse({ status: "confirmed" }))
+      .mockResolvedValueOnce(
+        createFetchResponse([
+          { id: "fac-1", name: "Main Campus", location: "Braamfontein" },
+        ]),
+      )
+      .mockResolvedValueOnce(
+        createFetchResponse([
+          {
+            id: "slot-1",
+            slot_date: "2026-05-11",
+            slot_time: "09:00:00",
+            capacity: 2,
+            booked_count: 0,
+          },
+        ]),
+      );
+
+    renderPaymentPage();
+
+    await screen.findByText(/payment confirmed/i);
+    await user.click(screen.getByText(new RegExp(new Date("2026-05-11").toDateString())));
+    await user.click(
+      screen.getByRole("button", { name: /confirm collection slot/i }),
+    );
+
+    expect(
+      await screen.findByText(/your session expired\. please sign in again\./i),
+    ).toBeInTheDocument();
+  });
+
+  it("shows the server error when slot booking fails", async () => {
+    const user = userEvent.setup();
+
+    supabase.auth.getSession.mockResolvedValue({
+      data: { session: { user: { id: "user-1" } } },
+    });
+    supabase.from.mockReturnValue({
+      select: jest.fn().mockReturnThis(),
+      eq: jest.fn().mockReturnThis(),
+      single: jest.fn().mockResolvedValue({
+        data: { id: "user-1" },
+        error: null,
+      }),
+    });
+
+    global.fetch
+      .mockResolvedValueOnce(createFetchResponse({ status: "confirmed" }))
+      .mockResolvedValueOnce(
+        createFetchResponse([
+          { id: "fac-1", name: "Main Campus", location: "Braamfontein" },
+        ]),
+      )
+      .mockResolvedValueOnce(
+        createFetchResponse([
+          {
+            id: "slot-1",
+            slot_date: "2026-05-11",
+            slot_time: "09:00:00",
+            capacity: 2,
+            booked_count: 0,
+          },
+        ]),
+      )
+      .mockResolvedValueOnce(createFetchResponse({ error: "Slot taken" }, false));
+
+    renderPaymentPage();
+
+    await screen.findByText(/payment confirmed/i);
+    await user.click(screen.getByText(new RegExp(new Date("2026-05-11").toDateString())));
+    await user.click(
+      screen.getByRole("button", { name: /confirm collection slot/i }),
+    );
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(/slot taken/i);
   });
 });

@@ -23,16 +23,16 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">53.84% </span>
+                <span class="strong">57.14% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>7/13</span>
+                <span class='fraction'>8/14</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">42.1% </span>
+                <span class="strong">42.85% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>8/19</span>
+                <span class='fraction'>12/28</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">53.84% </span>
+                <span class="strong">57.14% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>7/13</span>
+                <span class='fraction'>8/14</span>
             </div>
         
             
@@ -310,10 +310,19 @@
 <a name='L245'></a><a href='#L245'>245</a>
 <a name='L246'></a><a href='#L246'>246</a>
 <a name='L247'></a><a href='#L247'>247</a>
-<a name='L248'></a><a href='#L248'>248</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L248'></a><a href='#L248'>248</a>
+<a name='L249'></a><a href='#L249'>249</a>
+<a name='L250'></a><a href='#L250'>250</a>
+<a name='L251'></a><a href='#L251'>251</a>
+<a name='L252'></a><a href='#L252'>252</a>
+<a name='L253'></a><a href='#L253'>253</a>
+<a name='L254'></a><a href='#L254'>254</a>
+<a name='L255'></a><a href='#L255'>255</a>
+<a name='L256'></a><a href='#L256'>256</a>
+<a name='L257'></a><a href='#L257'>257</a>
+<a name='L258'></a><a href='#L258'>258</a>
+<a name='L259'></a><a href='#L259'>259</a>
+<a name='L260'></a><a href='#L260'>260</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -367,6 +376,25 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -435,10 +463,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -465,7 +490,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -564,6 +588,7 @@ import FacilitySettingsPanel from "../components/adminDashboard/FacilitySettings
 import ModerationPanel from "../components/adminDashboard/ModerationPanel";
 import AnalyticsPanel from "../components/adminDashboard/AnalyticsPanel";
 import UserManagement from "../components/adminDashboard/UserManagement";
+import AdminProfileSettings from "../components/adminDashboard/AdminProfileSettings";
 import useAdminDashboard from "../hooks/useAdminDashboard";
 &nbsp;
 export default function AdminDashboard() {
@@ -571,8 +596,8 @@ export default function AdminDashboard() {
     navItems,
     activeSection,
     setActiveSection,
+    user,
     summaryCards,
-&nbsp;
     facilities,
     selectedFacilityId,
     facilitySettings,
@@ -583,22 +608,18 @@ export default function AdminDashboard() {
     updateOperatingHours,
     saveFacilitySettings,
     selectFacility,
-&nbsp;
     flaggedListings,
     flaggedReviews,
     resolveListingFlag,
     resolveReviewFlag,
-&nbsp;
     analytics,
     exportCsv,
     exportPdf,
-&nbsp;
     users,
     togglingRole,
     updateUserRole,
-&nbsp;
     loadingStates,
-    errors=<span class="branch-0 cbranch-no" title="branch not covered" >{},</span>
+    errors = <span class="branch-0 cbranch-no" title="branch not covered" >{},</span>
   } = useAdminDashboard();
 &nbsp;
   const handleNavigate = useCallback(
@@ -612,206 +633,221 @@ export default function AdminDashboard() {
     [setActiveSection],
   );
 &nbsp;
+  const firstName = user?.fullName?.split(" ")[0] || <span class="branch-1 cbranch-no" title="branch not covered" >user?.name </span>|| <span class="branch-2 cbranch-no" title="branch not covered" >"Admin";</span>
+&nbsp;
   return (
-    &lt;section
-      className="h-screen flex flex-col bg-gray-50 overflow-hidden"
-      aria-label="Admin dashboard"
-    &gt;
-      {/* ── Top bar ──────────────────────────────────────────────────────── */}
-      &lt;header className="w-full bg-gray-100 px-6 py-3 flex items-center gap-6 border-b border-gray-200"&gt;
-        &lt;a
-          href="/"
-          className="text-2xl font-extrabold text-blue-700 tracking-tight shrink-0"
-          style={{ fontFamily: "Inter, sans-serif" }}
-        &gt;
-          UniSquare
-        &lt;/a&gt;
-        &lt;span className="text-sm font-medium text-gray-500"&gt;Admin Console&lt;/span&gt;
-        &lt;div className="ml-auto flex items-center gap-3"&gt;
-          &lt;span className="text-sm font-medium text-gray-800"&gt;Admin&lt;/span&gt;
-          &lt;figure className="w-9 h-9 rounded-full bg-gray-300 overflow-hidden flex items-center justify-center"&gt;
-            &lt;svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-              className="w-6 h-6 text-gray-500"
-              aria-hidden="true"
-            &gt;
-              &lt;path
-                fillRule="evenodd"
-                d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm-7 8a7 7 0 0 1 14 0H5Z"
-                clipRule="evenodd"
-              /&gt;
-            &lt;/svg&gt;
-            &lt;figcaption className="sr-only"&gt;Admin profile picture&lt;/figcaption&gt;
-          &lt;/figure&gt;
-        &lt;/div&gt;
+    &lt;main className="flex min-h-screen flex-col overflow-hidden bg-gray-50" aria-label="Admin dashboard"&gt;
+      &lt;header className="w-full border-b border-gray-200 bg-gray-100 px-4 py-3 sm:px-6"&gt;
+        &lt;section className="flex flex-wrap items-center gap-3 sm:gap-6"&gt;
+          &lt;a
+            href="/"
+            className="shrink-0 text-2xl font-extrabold tracking-tight text-blue-700"
+            style={{ fontFamily: "Inter, sans-serif" }}
+          &gt;
+            UniSquare
+          &lt;/a&gt;
+          &lt;p className="text-sm font-medium text-gray-500"&gt;Admin Console&lt;/p&gt;
+          &lt;section className="ml-auto flex items-center gap-3"&gt;
+            &lt;p className="hidden text-sm font-medium text-gray-800 sm:block"&gt;
+              {user?.fullName}
+            &lt;/p&gt;
+            &lt;figure className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-gray-300"&gt;
+              {user?.avatarUrl ? (
+<span class="branch-0 cbranch-no" title="branch not covered" >                &lt;img</span>
+                  src={user.avatarUrl}
+                  alt={`${user?.fullName} avatar`}
+                  className="h-full w-full object-cover"
+                /&gt;
+              ) : (
+                &lt;svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  className="h-6 w-6 text-gray-500"
+                  aria-hidden="true"
+                &gt;
+                  &lt;path
+                    fillRule="evenodd"
+                    d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm-7 8a7 7 0 0 1 14 0H5Z"
+                    clipRule="evenodd"
+                  /&gt;
+                &lt;/svg&gt;
+              )}
+              &lt;figcaption className="sr-only"&gt;Admin profile picture&lt;/figcaption&gt;
+            &lt;/figure&gt;
+          &lt;/section&gt;
+        &lt;/section&gt;
       &lt;/header&gt;
 &nbsp;
-      &lt;section
-        className="flex flex-1 overflow-hidden"
-        aria-label="Dashboard workspace"
-      &gt;
-        &lt;AdminSidebar
-          items={navItems}
-          activeItem={activeSection}
-          onNavigate={handleNavigate}
-        /&gt;
-&nbsp;
-        &lt;main className="flex-1 overflow-y-auto px-8 py-6 flex flex-col gap-6"&gt;
-          {/* ── Overview heading ─────────────────────────────────────────── */}
-          &lt;section id="overview"&gt;
-            &lt;h1 className="text-2xl font-bold text-gray-800"&gt;Hello, Admin&lt;/h1&gt;
-            &lt;p className="text-sm text-gray-400"&gt;
-              Overview of marketplace activity and operations.
-            &lt;/p&gt;
-          &lt;/section&gt;
-&nbsp;
-          {/* ── Global error banner ──────────────────────────────────────── */}
-          {Object.entries(errors || <span class="branch-1 cbranch-no" title="branch not covered" >{})</span>.some(<span class="fstat-no" title="function not covered" >([</span>, msg]) =&gt; <span class="cstat-no" title="statement not covered" >!!msg)</span> &amp;&amp; (
-<span class="branch-1 cbranch-no" title="branch not covered" >            &lt;div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"&gt;</span>
-              &lt;strong&gt;Some data failed to load:&lt;/strong&gt;{" "}
-              {Object.entries(errors)
-                .filter(<span class="fstat-no" title="function not covered" >([</span>, msg]) =&gt; <span class="cstat-no" title="statement not covered" >!!msg)</span>
-                .map(<span class="fstat-no" title="function not covered" >([</span>key, msg]) =&gt; <span class="cstat-no" title="statement not covered" >`${key}: ${msg}`)</span>
-                .join(" · ")}
-            &lt;/div&gt;
-          )}
-&nbsp;
-          {/* ── Summary cards ────────────────────────────────────────────── */}
-          &lt;section className="flex flex-col gap-4"&gt;
-            {loadingStates.summary ? (
-<span class="branch-0 cbranch-no" title="branch not covered" >              &lt;div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4"&gt;</span>
-                {Array.from({ length: 4 }).map(<span class="fstat-no" title="function not covered" >(_</span>, i) =&gt; (
-<span class="cstat-no" title="statement not covered" >                  &lt;div</span>
-                    key={i}
-                    className="h-24 animate-pulse rounded-lg border border-gray-200 bg-gray-100"
-                  /&gt;
-                ))}
-              &lt;/div&gt;
-            ) : (
-              &lt;AdminSummaryCards cards={summaryCards} /&gt;
-            )}
-          &lt;/section&gt;
-&nbsp;
-          {/* ── Facility settings ─────────────────────────────────────────── */}
-          {/* Facility selector when there are multiple facilities */}
-          {facilities.length &gt; 1 &amp;&amp; (
-<span class="branch-1 cbranch-no" title="branch not covered" >            &lt;section className="flex items-center gap-3" id="facility-selector"&gt;</span>
-              &lt;label
-                className="text-sm font-medium text-gray-600"
-                htmlFor="facility-select"
-              &gt;
-                Editing facility:
-              &lt;/label&gt;
-              &lt;select
-                id="facility-select"
-                value={selectedFacilityId ?? ""}
-                onChange={<span class="fstat-no" title="function not covered" >(e</span>) =&gt; <span class="cstat-no" title="statement not covered" >selectFacility(e.target.value)}</span>
-                className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-300"
-              &gt;
-                {facilities.map(<span class="fstat-no" title="function not covered" >(f</span>) =&gt; (
-<span class="cstat-no" title="statement not covered" >                  &lt;option key={f.id} value={f.id}&gt;</span>
-                    {f.name} — {f.location}
-                  &lt;/option&gt;
-                ))}
-              &lt;/select&gt;
-            &lt;/section&gt;
-          )}
-&nbsp;
-          &lt;FacilitySettingsPanel
-            settings={facilitySettings}
-            operatingHours={operatingHours}
-            onSettingChange={updateFacilitySetting}
-            onHoursChange={updateOperatingHours}
-            onSave={saveFacilitySettings}
-            lastSavedAt={lastSavedAt}
-            isSaving={savingFacility}
-            isNew={!selectedFacilityId}
+      &lt;section className="flex flex-1 overflow-hidden" aria-label="Dashboard workspace"&gt;
+        &lt;aside className="hidden w-44 shrink-0 md:block"&gt;
+          &lt;AdminSidebar
+            items={navItems}
+            activeItem={activeSection}
+            onNavigate={handleNavigate}
           /&gt;
+        &lt;/aside&gt;
 &nbsp;
-          {/* ── Moderation ────────────────────────────────────────────────── */}
-          {loadingStates.moderation ? (
-<span class="branch-0 cbranch-no" title="branch not covered" >            &lt;div className="h-40 animate-pulse rounded-lg border border-gray-200 bg-gray-100" /&gt;</span>
-          ) : (
-            &lt;ModerationPanel
-              flaggedListings={flaggedListings}
-              flaggedReviews={flaggedReviews}
-              onResolveListing={resolveListingFlag}
-              onResolveReview={resolveReviewFlag}
-            /&gt;
-          )}
+        &lt;section className="flex-1 overflow-y-auto px-4 py-6 sm:px-6 lg:px-8"&gt;
+          &lt;article className="flex flex-col gap-6"&gt;
+            {activeSection === "profile" ? (
+<span class="branch-0 cbranch-no" title="branch not covered" >              &lt;section id="profile"&gt;</span>
+                &lt;h1 className="mb-4 text-2xl font-bold text-gray-800"&gt;Profile&lt;/h1&gt;
+                &lt;AdminProfileSettings user={user} /&gt;
+              &lt;/section&gt;
+            ) : null}
 &nbsp;
-          {/* ── Analytics ─────────────────────────────────────────────────── */}
-          {loadingStates.analytics ? (
-<span class="branch-0 cbranch-no" title="branch not covered" >            &lt;div className="h-64 animate-pulse rounded-lg border border-gray-200 bg-gray-100" /&gt;</span>
-          ) : (
-            &lt;AnalyticsPanel
-              analytics={analytics}
-              onExportCsv={exportCsv}
-              onExportPdf={exportPdf}
-            /&gt;
-          )}
+            {activeSection !== "profile" ? (
+              &lt;section id="overview"&gt;
+                &lt;h1 className="text-2xl font-bold text-gray-800"&gt;Hello, {firstName}&lt;/h1&gt;
+                &lt;p className="text-sm text-gray-400"&gt;
+                  Overview of marketplace activity and operations.
+                &lt;/p&gt;
+              &lt;/section&gt;
+            ) : <span class="branch-1 cbranch-no" title="branch not covered" >null}</span>
 &nbsp;
-          {/* ── User management ───────────────────────────────────────────── */}
-          {loadingStates.users ? (
-<span class="branch-0 cbranch-no" title="branch not covered" >            &lt;div className="h-64 animate-pulse rounded-lg border border-gray-200 bg-gray-100" /&gt;</span>
-          ) : (
-            &lt;UserManagement
-              users={users}
-              togglingRole={togglingRole}
-              onRoleChange={updateUserRole}
-            /&gt;
-          )}
+            {activeSection !== "profile" ? (
+              &lt;&gt;
+                {Object.entries(errors).some(<span class="fstat-no" title="function not covered" >([</span>, message]) =&gt; <span class="cstat-no" title="statement not covered" >!!message)</span> ? (
+<span class="branch-0 cbranch-no" title="branch not covered" >                  &lt;aside className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"&gt;</span>
+                    &lt;strong&gt;Some data failed to load:&lt;/strong&gt;{" "}
+                    {Object.entries(errors)
+                      .filter(<span class="fstat-no" title="function not covered" >([</span>, message]) =&gt; <span class="cstat-no" title="statement not covered" >!!message)</span>
+                      .map(<span class="fstat-no" title="function not covered" >([</span>key, message]) =&gt; <span class="cstat-no" title="statement not covered" >`${key}: ${message}`)</span>
+                      .join(" · ")}
+                  &lt;/aside&gt;
+                ) : null}
 &nbsp;
-          {/* ── Platform settings ─────────────────────────────────────────── */}
-          &lt;section
-            className="rounded-lg border border-gray-200 bg-white p-6"
-            id="settings"
-          &gt;
-            &lt;header className="flex flex-col gap-2"&gt;
-              &lt;h2 className="text-lg font-semibold text-gray-900"&gt;
-                Platform Settings
-              &lt;/h2&gt;
-              &lt;p className="text-sm text-gray-500"&gt;
-                Manage platform-wide preferences and security settings.
-              &lt;/p&gt;
-            &lt;/header&gt;
-            &lt;div className="mt-5 grid gap-3"&gt;
-              &lt;label className="flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm font-medium text-gray-700 cursor-pointer"&gt;
-                &lt;input
-                  type="checkbox"
-                  className="h-4 w-4 text-blue-600"
-                  defaultChecked
+                &lt;section className="flex flex-col gap-4"&gt;
+                  {loadingStates.summary ? (
+<span class="branch-0 cbranch-no" title="branch not covered" >                    &lt;section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4"&gt;</span>
+                      {Array.from({ length: 4 }).map(<span class="fstat-no" title="function not covered" >(_</span>, index) =&gt; (
+<span class="cstat-no" title="statement not covered" >                        &lt;article</span>
+                          key={index}
+                          className="h-24 animate-pulse rounded-lg border border-gray-200 bg-gray-100"
+                        /&gt;
+                      ))}
+                    &lt;/section&gt;
+                  ) : (
+                    &lt;AdminSummaryCards cards={summaryCards} /&gt;
+                  )}
+                &lt;/section&gt;
+&nbsp;
+                {facilities.length &gt; 1 ? (
+<span class="branch-0 cbranch-no" title="branch not covered" >                  &lt;section className="flex flex-col gap-3 sm:flex-row sm:items-center" id="facility-selector"&gt;</span>
+                    &lt;label
+                      className="text-sm font-medium text-gray-600"
+                      htmlFor="facility-select"
+                    &gt;
+                      Editing facility:
+                    &lt;/label&gt;
+                    &lt;select
+                      id="facility-select"
+                      value={selectedFacilityId ?? ""}
+                      onChange={<span class="fstat-no" title="function not covered" >(e</span>vent) =&gt; <span class="cstat-no" title="statement not covered" >selectFacility(event.target.value)}</span>
+                      className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                    &gt;
+                      {facilities.map(<span class="fstat-no" title="function not covered" >(f</span>acility) =&gt; (
+<span class="cstat-no" title="statement not covered" >                        &lt;option key={facility.id} value={facility.id}&gt;</span>
+                          {facility.name} — {facility.location}
+                        &lt;/option&gt;
+                      ))}
+                    &lt;/select&gt;
+                  &lt;/section&gt;
+                ) : null}
+&nbsp;
+                &lt;FacilitySettingsPanel
+                  settings={facilitySettings}
+                  operatingHours={operatingHours}
+                  onSettingChange={updateFacilitySetting}
+                  onHoursChange={updateOperatingHours}
+                  onSave={saveFacilitySettings}
+                  lastSavedAt={lastSavedAt}
+                  isSaving={savingFacility}
+                  isNew={!selectedFacilityId}
                 /&gt;
-                &lt;span&gt;Require student email verification&lt;/span&gt;
-              &lt;/label&gt;
-              &lt;label className="flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm font-medium text-gray-700 cursor-pointer"&gt;
-                &lt;input
-                  type="checkbox"
-                  className="h-4 w-4 text-blue-600"
-                  defaultChecked
-                /&gt;
-                &lt;span&gt;Enable automated pricing suggestions&lt;/span&gt;
-              &lt;/label&gt;
-              &lt;label className="flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm font-medium text-gray-700 cursor-pointer"&gt;
-                &lt;input type="checkbox" className="h-4 w-4 text-blue-600" /&gt;
-                &lt;span&gt;Enable cash shortfall reminders&lt;/span&gt;
-              &lt;/label&gt;
-            &lt;/div&gt;
-          &lt;/section&gt;
-        &lt;/main&gt;
+&nbsp;
+                {loadingStates.moderation ? (
+<span class="branch-0 cbranch-no" title="branch not covered" >                  &lt;article className="h-40 animate-pulse rounded-lg border border-gray-200 bg-gray-100" /&gt;</span>
+                ) : (
+                  &lt;ModerationPanel
+                    flaggedListings={flaggedListings}
+                    flaggedReviews={flaggedReviews}
+                    onResolveListing={resolveListingFlag}
+                    onResolveReview={resolveReviewFlag}
+                  /&gt;
+                )}
+&nbsp;
+                {loadingStates.analytics ? (
+<span class="branch-0 cbranch-no" title="branch not covered" >                  &lt;article className="h-64 animate-pulse rounded-lg border border-gray-200 bg-gray-100" /&gt;</span>
+                ) : (
+                  &lt;AnalyticsPanel
+                    analytics={analytics}
+                    onExportCsv={exportCsv}
+                    onExportPdf={exportPdf}
+                  /&gt;
+                )}
+&nbsp;
+                {loadingStates.users ? (
+<span class="branch-0 cbranch-no" title="branch not covered" >                  &lt;article className="h-64 animate-pulse rounded-lg border border-gray-200 bg-gray-100" /&gt;</span>
+                ) : (
+                  &lt;UserManagement
+                    users={users}
+                    facilities={facilities}
+                    togglingRole={togglingRole}
+                    onRoleChange={updateUserRole}
+                  /&gt;
+                )}
+&nbsp;
+                &lt;section className="rounded-lg border border-gray-200 bg-white p-6" id="settings"&gt;
+                  &lt;header className="flex flex-col gap-2"&gt;
+                    &lt;h2 className="text-lg font-semibold text-gray-900"&gt;
+                      Platform Settings
+                    &lt;/h2&gt;
+                    &lt;p className="text-sm text-gray-500"&gt;
+                      Manage platform-wide preferences and security settings.
+                    &lt;/p&gt;
+                  &lt;/header&gt;
+&nbsp;
+                  &lt;section className="mt-5 grid gap-3"&gt;
+                    &lt;label className="flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm font-medium text-gray-700"&gt;
+                      &lt;input
+                        type="checkbox"
+                        className="h-4 w-4 text-blue-600"
+                        defaultChecked
+                      /&gt;
+                      &lt;p&gt;Require student email verification&lt;/p&gt;
+                    &lt;/label&gt;
+                    &lt;label className="flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm font-medium text-gray-700"&gt;
+                      &lt;input
+                        type="checkbox"
+                        className="h-4 w-4 text-blue-600"
+                        defaultChecked
+                      /&gt;
+                      &lt;p&gt;Enable automated pricing suggestions&lt;/p&gt;
+                    &lt;/label&gt;
+                    &lt;label className="flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm font-medium text-gray-700"&gt;
+                      &lt;input type="checkbox" className="h-4 w-4 text-blue-600" /&gt;
+                      &lt;p&gt;Enable cash shortfall reminders&lt;/p&gt;
+                    &lt;/label&gt;
+                  &lt;/section&gt;
+                &lt;/section&gt;
+              &lt;/&gt;
+            ) : <span class="branch-1 cbranch-no" title="branch not covered" >null}</span>
+          &lt;/article&gt;
+        &lt;/section&gt;
       &lt;/section&gt;
-    &lt;/section&gt;
+    &lt;/main&gt;
   );
-}</pre></td></tr></table></pre>
+}
+&nbsp;</pre></td></tr></table></pre>
 
                 <div class='push'></div><!-- for sticky footer -->
             </div><!-- /wrapper -->
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-05-11T05:01:06.573Z
+                at 2026-05-18T01:25:33.133Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

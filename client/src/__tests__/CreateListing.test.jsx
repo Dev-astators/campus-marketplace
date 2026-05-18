@@ -4,10 +4,22 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { describe, it, expect, beforeEach, afterEach, jest } from "@jest/globals";
 import CreateListing from "../pages/CreateListing";
+import { supabase } from "../config/supabaseClient";
 
 describe("CreateListing", () => {
   beforeEach(() => {
     jest.useFakeTimers();
+    global.alert = jest.fn();
+    URL.createObjectURL = jest.fn(() => "blob:preview");
+    URL.revokeObjectURL = jest.fn();
+    supabase.auth.getSession.mockResolvedValue({
+      data: { session: { user: { id: "seller-1" } } },
+    });
+    supabase.storage = {
+      from: jest.fn(() => ({
+        upload: jest.fn().mockResolvedValue({ error: null }),
+      })),
+    };
     global.fetch = jest.fn().mockResolvedValue({
       ok: true,
       json: async () => ({
@@ -55,5 +67,150 @@ describe("CreateListing", () => {
     expect(screen.getByText(/R\s*530,00/i)).toBeInTheDocument();
     expect(screen.getByText("2024-12")).toBeInTheDocument();
     expect(screen.getByText("175.3")).toBeInTheDocument();
+  });
+
+  it("shows the invalid price message for non-positive values", async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+
+    render(
+      <MemoryRouter>
+        <CreateListing />
+      </MemoryRouter>,
+    );
+
+    const priceInput = screen.getByLabelText(/asking price \(zar\)/i);
+    await user.clear(priceInput);
+    await user.type(priceInput, "0");
+
+    expect(
+      screen.getByText(/enter a valid positive price to get a suggestion/i),
+    ).toBeInTheDocument();
+    expect(global.fetch).not.toHaveBeenCalled();
+  });
+
+  it("previews and removes an uploaded image", async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const file = new File(["image"], "item.png", { type: "image/png" });
+
+    render(
+      <MemoryRouter>
+        <CreateListing />
+      </MemoryRouter>,
+    );
+
+    await user.upload(screen.getByLabelText(/listing image/i), file);
+
+    expect(screen.getByText("item.png")).toBeInTheDocument();
+    expect(screen.getByText("0.00 MB")).toBeInTheDocument();
+    expect(URL.createObjectURL).toHaveBeenCalledWith(file);
+
+    await user.click(screen.getByRole("button", { name: /remove image/i }));
+
+    expect(screen.getByText(/no image selected yet/i)).toBeInTheDocument();
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:preview");
+  });
+
+  it("alerts when an unauthenticated user tries to submit", async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    supabase.auth.getSession.mockResolvedValue({
+      data: { session: null },
+    });
+
+    render(
+      <MemoryRouter>
+        <CreateListing />
+      </MemoryRouter>,
+    );
+
+    await user.type(screen.getByLabelText(/title/i), "Campus Chair");
+    await user.type(screen.getByLabelText(/asking price \(zar\)/i), "500");
+    await user.click(screen.getByRole("button", { name: /^create listing$/i }));
+
+    expect(global.alert).toHaveBeenCalledWith("You must be logged in");
+  });
+
+  it("submits a listing with an uploaded image", async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const upload = jest.fn().mockResolvedValue({ error: null });
+    const file = new File(["image"], "desk.png", { type: "image/png" });
+
+    supabase.storage = {
+      from: jest.fn(() => ({ upload })),
+    };
+
+    global.fetch = jest
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          listing: { id: "listing-1" },
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ ok: true }),
+      });
+
+    render(
+      <MemoryRouter>
+        <CreateListing />
+      </MemoryRouter>,
+    );
+
+    await user.upload(screen.getByLabelText(/listing image/i), file);
+    await user.type(screen.getByLabelText(/title/i), "Study Desk");
+    await user.type(screen.getByLabelText(/asking price \(zar\)/i), "1200");
+    await user.click(screen.getByRole("button", { name: /^create listing$/i }));
+
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenNthCalledWith(
+        1,
+        expect.stringContaining("/api/listings"),
+        expect.objectContaining({
+          method: "POST",
+          body: expect.stringContaining("\"sellerId\":\"seller-1\""),
+        }),
+      );
+      expect(upload).toHaveBeenCalledWith("listing-1.png", file);
+      expect(global.fetch).toHaveBeenNthCalledWith(
+        2,
+        expect.stringContaining("/api/listings/listing-1/images"),
+        expect.objectContaining({ method: "POST" }),
+      );
+    });
+  });
+
+  it("shows an alert when image upload fails", async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const upload = jest.fn().mockResolvedValue({
+      error: { message: "storage failed" },
+    });
+    const file = new File(["image"], "desk.png", { type: "image/png" });
+
+    supabase.storage = {
+      from: jest.fn(() => ({ upload })),
+    };
+
+    global.fetch = jest.fn().mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        listing: { id: "listing-2" },
+      }),
+    });
+
+    render(
+      <MemoryRouter>
+        <CreateListing />
+      </MemoryRouter>,
+    );
+
+    await user.upload(screen.getByLabelText(/listing image/i), file);
+    await user.type(screen.getByLabelText(/title/i), "Lamp");
+    await user.type(screen.getByLabelText(/asking price \(zar\)/i), "300");
+    await user.click(screen.getByRole("button", { name: /^create listing$/i }));
+
+    await waitFor(() => {
+      expect(global.alert).toHaveBeenCalledWith("Image upload failed");
+    });
   });
 });
