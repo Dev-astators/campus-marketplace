@@ -23,15 +23,27 @@ const mockFrom         = jest.fn();
 const chain = () => {
   const c = {
     select:      (...a) => { mockSelect(...a);     return c; },
-    insert:      (...a) => { mockInsert(...a);      return c; },
-    update:      (...a) => { mockUpdate(...a);      return c; },
+    insert:      (...a) => {
+      const result = mockInsert(...a);
+      return result === undefined ? c : result;
+    },
+    update:      (...a) => {
+      const result = mockUpdate(...a);
+      return result === undefined ? c : result;
+    },
     eq:          (...a) => { mockEq(...a);          return c; },
     in:          (...a) => { mockIn(...a);          return c; },
     gte:         (...a) => { mockGte(...a);         return c; },
-    order:       (...a) => { mockOrder(...a);       return c; },
-    limit:       (...a) => { mockLimit(...a);       return c; },
-    single:      mockSingle,
-    maybeSingle: mockMaybeSingle,
+    order:       (...a) => {
+      const result = mockOrder(...a);
+      return result === undefined ? c : result;
+    },
+    limit:       (...a) => {
+      const result = mockLimit(...a);
+      return result === undefined ? c : result;
+    },
+    single:      () => mockSingle(),
+    maybeSingle: () => mockMaybeSingle(),
   };
   return c;
 };
@@ -88,7 +100,7 @@ describe("POST /payments/initiate", () => {
       .mockResolvedValueOnce({ data: activeListing, error: null })
       .mockResolvedValueOnce({ data: buyerProfile,  error: null })
       .mockResolvedValueOnce({ data: { id: "txn-1" }, error: null });
-    mockInsert.mockResolvedValueOnce({ error: null });
+    mockInsert.mockImplementationOnce(() => undefined).mockResolvedValueOnce({ error: null });
     mockBuildPaymentPayload.mockReturnValue(payfastPayload);
   }
 
@@ -166,7 +178,7 @@ describe("POST /payments/initiate", () => {
       .mockResolvedValueOnce({ data: activeListing, error: null })
       .mockResolvedValueOnce({ data: buyerProfile,  error: null })
       .mockResolvedValueOnce({ data: { id: "txn-2" }, error: null });
-    mockInsert.mockResolvedValueOnce({ error: null });
+    mockInsert.mockImplementationOnce(() => undefined).mockResolvedValueOnce({ error: null });
     mockBuildPaymentPayload.mockReturnValue(payfastPayload);
 
     const res = await request(app)
@@ -182,7 +194,7 @@ describe("POST /payments/initiate", () => {
       .mockResolvedValueOnce({ data: activeListing, error: null })
       .mockResolvedValueOnce({ data: buyerProfile,  error: null })
       .mockResolvedValueOnce({ data: { id: "txn-3" }, error: null });
-    mockInsert.mockResolvedValueOnce({ error: null });
+    mockInsert.mockImplementationOnce(() => undefined).mockResolvedValueOnce({ error: null });
     mockBuildPaymentPayload.mockReturnValue(payfastPayload);
 
     const res = await request(app)
@@ -253,7 +265,7 @@ describe("POST /payments/confirm-dev", () => {
     freshApp.use(express.json());
     freshApp.use("/payments", freshRouter);
 
-    const res = await freshApp
+    const res = await request(freshApp)
       .post("/payments/confirm-dev")
       .send({ transactionId: "txn-1" });
 
@@ -283,7 +295,7 @@ describe("GET /payments/status/:transactionId", () => {
     const res = await request(app).get("/payments/status/bad-id");
 
     expect(res.status).toBe(404);
-    expect(res.body.error).toBe("Transaction not found");
+    expect(res.body.error).toBe("Transaction not found.");
   });
 });
 

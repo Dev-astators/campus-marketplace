@@ -17,8 +17,14 @@ const chainable = () => {
   const obj = {
     select: (...args) => { mockSelect(...args); return obj; },
     eq:     (...args) => { mockEq(...args);     return obj; },
-    order:  (...args) => { mockOrder(...args);  return obj; },
-    insert: (...args) => { mockInsert(...args); return obj; },
+    order:  (...args) => {
+      const result = mockOrder(...args);
+      return result === undefined ? obj : result;
+    },
+    insert: (...args) => {
+      const result = mockInsert(...args);
+      return result === undefined ? obj : result;
+    },
     single: () => mockSingle(),
   };
   return obj;
@@ -216,8 +222,8 @@ describe("createListing", () => {
 
     // 1st call → listings.insert.select.single
     mockSingle.mockResolvedValueOnce({ data: createdListing, error: null });
-    // 2nd call → listing_images.insert (no .single() — returns { error })
-    mockInsert.mockResolvedValueOnce({ error: null });
+    // make the first insert chainable, then return a result for the image insert
+    mockInsert.mockImplementationOnce(() => undefined).mockResolvedValueOnce({ error: null });
 
     const { data, error } = await createListing({ ...baseInput, images });
 
@@ -239,7 +245,7 @@ describe("createListing", () => {
   it("returns error when image insert fails", async () => {
     const imageError = new Error("storage error");
     mockSingle.mockResolvedValueOnce({ data: createdListing, error: null });
-    mockInsert.mockResolvedValueOnce({ error: imageError });
+    mockInsert.mockImplementationOnce(() => undefined).mockResolvedValueOnce({ error: imageError });
 
     const { data, error } = await createListing({
       ...baseInput,
