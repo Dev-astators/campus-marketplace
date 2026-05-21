@@ -143,6 +143,9 @@ function AdminDashboardActionsHarness() {
       <button type="button" onClick={() => exportPdf("transactions")}>
         Export transactions PDF
       </button>
+      <button type="button" onClick={() => exportPdf("all")}>
+        Export all PDF
+      </button>
       <button type="button" onClick={() => exportPdf("missing")}>
         Export missing PDF
       </button>
@@ -438,16 +441,42 @@ describe("useAdminDashboard", () => {
     await user.click(
       screen.getByRole("button", { name: /export transactions pdf/i }),
     );
+    await user.click(screen.getByRole("button", { name: /export all pdf/i }));
     await user.click(screen.getByRole("button", { name: /export missing pdf/i }));
 
     expect(createObjectUrlSpy).toHaveBeenCalledTimes(1);
     expect(anchorClickSpy).toHaveBeenCalledTimes(1);
     expect(revokeObjectUrlSpy).toHaveBeenCalledWith("blob:admin-report");
-    expect(openSpy).toHaveBeenCalledTimes(1);
+    expect(openSpy).toHaveBeenCalledTimes(2);
     expect(popup.document.write).toHaveBeenCalledWith(
       expect.stringContaining("Transactions Over Time"),
     );
-    expect(popup.print).toHaveBeenCalledTimes(1);
+    const pdfMarkup = popup.document.write.mock.calls[0][0];
+    expect(pdfMarkup).toEqual(
+      expect.stringContaining("UniSquare Admin Analytics"),
+    );
+    expect(pdfMarkup).toEqual(expect.stringContaining("metric-card"));
+    expect(pdfMarkup).toEqual(
+      expect.stringContaining(
+        "Completed marketplace transactions grouped by month",
+      ),
+    );
+    expect(pdfMarkup).toEqual(expect.stringContaining("<th>Label</th>"));
+    expect(pdfMarkup).toEqual(expect.stringContaining("<th>Count</th>"));
+    const fullReportMarkup = popup.document.write.mock.calls[1][0];
+    expect(fullReportMarkup).toEqual(
+      expect.stringContaining("Complete Analytics Report"),
+    );
+    expect(fullReportMarkup).toEqual(
+      expect.stringContaining("Popular Categories"),
+    );
+    expect(fullReportMarkup).toEqual(
+      expect.stringContaining("Facility Utilisation"),
+    );
+    expect(fullReportMarkup).toEqual(
+      expect.stringContaining("Flagged Content Summary"),
+    );
+    expect(popup.print).toHaveBeenCalledTimes(2);
 
     anchorClickSpy.mockRestore();
     createObjectUrlSpy.mockRestore();

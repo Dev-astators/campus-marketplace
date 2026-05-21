@@ -176,7 +176,12 @@
 <a name='L111'></a><a href='#L111'>111</a>
 <a name='L112'></a><a href='#L112'>112</a>
 <a name='L113'></a><a href='#L113'>113</a>
-<a name='L114'></a><a href='#L114'>114</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<a name='L114'></a><a href='#L114'>114</a>
+<a name='L115'></a><a href='#L115'>115</a>
+<a name='L116'></a><a href='#L116'>116</a>
+<a name='L117'></a><a href='#L117'>117</a>
+<a name='L118'></a><a href='#L118'>118</a>
+<a name='L119'></a><a href='#L119'>119</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -241,24 +246,28 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -280,6 +289,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -312,25 +322,25 @@ export default function VerificationItem({
   onDecline,
 }) {
   return (
-    &lt;div className="px-5 py-5 hover:bg-white/10 transition-all duration-200"&gt;
+    &lt;article className="px-5 py-5 hover:bg-white/10 transition-all duration-200"&gt;
       
       {/* ================= ITEM ROW ================= */}
-      &lt;div className="flex items-start gap-4"&gt;
+      &lt;section className="flex items-start gap-4"&gt;
 &nbsp;
         {/* Thumbnail */}
-        &lt;div className="w-14 h-14 shrink-0 rounded-2xl bg-white/10 border border-slate-700 flex items-center justify-center text-2xl shadow-sm select-none"&gt;
+        &lt;figure className="w-14 h-14 shrink-0 rounded-2xl bg-white/10 border border-slate-700 flex items-center justify-center text-2xl shadow-sm select-none"&gt;
           {emoji}
-        &lt;/div&gt;
+        &lt;/figure&gt;
 &nbsp;
         {/* ================= META ================= */}
-        &lt;div className="flex-1 min-w-0"&gt;
+        &lt;section className="flex-1 min-w-0"&gt;
           
           {/* Priority Badge */}
-          &lt;span
+          &lt;mark
             className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider mb-2 ${priorityStyles[priority]}`}
           &gt;
             {priorityLabel}
-          &lt;/span&gt;
+          &lt;/mark&gt;
 &nbsp;
           {/* Item Name */}
           &lt;h3 className="text-[14px] font-semibold text-white leading-snug truncate"&gt;
@@ -341,75 +351,80 @@ export default function VerificationItem({
           &lt;p className="text-[12px] text-slate-400 mt-1"&gt;
             {dropper}
           &lt;/p&gt;
-        &lt;/div&gt;
-      &lt;/div&gt;
+        &lt;/section&gt;
+      &lt;/section&gt;
 &nbsp;
       {/* ================= ACTIONS ================= */}
-      &lt;div className="mt-4"&gt;
+      &lt;section className="mt-4"&gt;
         
         {status === "verified" &amp;&amp; &lt;VerifiedState /&gt;}
 &nbsp;
         {status === "pending" &amp;&amp; (
-          &lt;div className="flex gap-3"&gt;
+          &lt;menu className="m-0 flex list-none gap-3 p-0"&gt;
 &nbsp;
             {/* Decline */}
-            &lt;button
-              onClick={() =&gt; onDecline(id)}
-              className="
-                flex-1 py-2.5 rounded-xl
-                border border-slate-700
-                bg-white/10
-                text-[12px] font-semibold text-black/80
-                hover:bg-red-500/10
-                hover:border-red-500/30
-                hover:text-red-400
-                transition-all duration-200
-              "
-            &gt;
-              Decline
-            &lt;/button&gt;
+            &lt;li className="flex-1"&gt;
+              &lt;button
+                onClick={() =&gt; onDecline(id)}
+                className="
+                  w-full py-2.5 rounded-xl
+                  border border-slate-700
+                  bg-white/10
+                  text-[12px] font-semibold text-black/80
+                  hover:bg-red-500/10
+                  hover:border-red-500/30
+                  hover:text-red-400
+                  transition-all duration-200
+                "
+              &gt;
+                Decline
+              &lt;/button&gt;
+            &lt;/li&gt;
 &nbsp;
             {/* Verify */}
-            &lt;button
-              onClick={() =&gt; onVerify(id)}
-              className="
-                flex-1 py-2.5 rounded-xl
-                bg-blue-600
-                text-[12px] font-semibold text-white
-                hover:bg-blue-500
-                shadow-md shadow-blue-900/20
-                transition-all duration-200
-              "
-            &gt;
-              Verify Item
-            &lt;/button&gt;
-          &lt;/div&gt;
+            &lt;li className="flex-1"&gt;
+              &lt;button
+                onClick={() =&gt; onVerify(id)}
+                className="
+                  w-full py-2.5 rounded-xl
+                  bg-blue-600
+                  text-[12px] font-semibold text-white
+                  hover:bg-blue-500
+                  shadow-md shadow-blue-900/20
+                  transition-all duration-200
+                "
+              &gt;
+                Verify Item
+              &lt;/button&gt;
+            &lt;/li&gt;
+          &lt;/menu&gt;
         )}
-      &lt;/div&gt;
-    &lt;/div&gt;
+      &lt;/section&gt;
+    &lt;/article&gt;
   );
 }
 /* ================= VERIFIED STATE ================= */
 &nbsp;
 function VerifiedState() {
   return (
-    &lt;div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20"&gt;
+    &lt;section className="flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20"&gt;
       
-      &lt;span className="text-sm"&gt;✅&lt;/span&gt;
+      &lt;strong className="text-sm"&gt;✅&lt;/strong&gt;
 &nbsp;
-      &lt;span className="text-[12px] font-medium text-emerald-400"&gt;
+      &lt;strong className="text-[12px] font-medium text-emerald-400"&gt;
         Item verified successfully
-      &lt;/span&gt;
-    &lt;/div&gt;
+      &lt;/strong&gt;
+    &lt;/section&gt;
   );
-}</pre></td></tr></table></pre>
+}
+&nbsp;</pre></td></tr></table></pre>
 
                 <div class='push'></div><!-- for sticky footer -->
             </div><!-- /wrapper -->
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-05-21T16:19:52.710Z
+                at 2026-05-21T19:44:09.786Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

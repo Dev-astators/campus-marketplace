@@ -135,7 +135,7 @@ export default function BuyButton({ listing }) {
             How much can you pay online? (Total: R{totalPrice.toFixed(2)})
           </label>
           <section className="flex items-center gap-2">
-            <span className="text-sm font-bold text-slate-600">R</span>
+            <strong className="text-sm font-bold text-slate-600">R</strong>
             <input
               id="online-amount"
               type="number"

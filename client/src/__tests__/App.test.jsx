@@ -28,6 +28,21 @@ describe("App routing", () => {
     expect(screen.getByText(/exclusive to wits students/i)).toBeInTheDocument();
   });
 
+  it("renders the about route for signed-out users", async () => {
+    window.history.pushState({}, "", "/about");
+
+    render(<App />);
+
+    expect(
+      await screen.findByRole("heading", {
+        name: /a safer campus marketplace built for everyday student trade/i,
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /built by dev-astators/i }),
+    ).toBeInTheDocument();
+  });
+
   it("renders the payment cancel route", async () => {
     window.history.pushState({}, "", "/payment/cancel");
 

@@ -16,25 +16,25 @@ const ROLE_LABELS = {
 
 function RoleBadge({ role }) {
   return (
-    <span
+    <mark
       className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
         ROLE_STYLES[role] ?? "bg-gray-100 text-gray-600"
       }`}
     >
       {ROLE_LABELS[role] ?? role}
-    </span>
+    </mark>
   );
 }
 
 function StarRating({ value }) {
   return (
-    <span className="text-sm text-gray-700">
+    <output className="text-sm text-gray-700">
       {"★".repeat(Math.round(value || 0))}
       {"☆".repeat(5 - Math.round(value || 0))}
-      <span className="ml-1 text-xs text-gray-400">
+      <small className="ml-1 text-xs text-gray-400">
         ({Number(value || 0).toFixed(1)})
-      </span>
-    </span>
+      </small>
+    </output>
   );
 }
 
@@ -88,21 +88,21 @@ export default function UserManagement({ users, facilities=[], togglingRole, onR
     >
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
+        <section>
           <h2 className="text-lg font-semibold text-gray-900">
             User Management
           </h2>
           <p className="text-sm text-gray-500">
             View all registered users and manage their platform roles.
           </p>
-        </div>
-        <span className="shrink-0 text-sm text-gray-400">
+        </section>
+        <output className="shrink-0 text-sm text-gray-400">
           {filtered.length} / {users.length} users
-        </span>
+        </output>
       </header>
 
       {/* ── Filters ────────────────────────────────────────────────────────── */}
-      <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+      <section className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
         <input
           type="search"
           placeholder="Search by name, email, or student number…"
@@ -122,10 +122,10 @@ export default function UserManagement({ users, facilities=[], togglingRole, onR
             </option>
           ))}
         </select>
-      </div>
+      </section>
 
       {/* ── Table ──────────────────────────────────────────────────────────── */}
-      <div className="mt-4 overflow-x-auto rounded-lg border border-gray-200">
+      <section className="mt-4 overflow-x-auto rounded-lg border border-gray-200">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-100 bg-gray-50 text-left text-xs font-semibold uppercase tracking-wide text-gray-400">
@@ -181,7 +181,9 @@ export default function UserManagement({ users, facilities=[], togglingRole, onR
                       {user.total_ratings > 0 ? (
                         <StarRating value={user.average_rating} />
                       ) : (
-                        <span className="text-xs text-gray-400">No ratings</span>
+                        <small className="text-xs text-gray-400">
+                          No ratings
+                        </small>
                       )}
                     </td>
 
@@ -195,7 +197,7 @@ export default function UserManagement({ users, facilities=[], togglingRole, onR
                     {/* Role dropdown */}
                     <td className="px-4 py-3">
                       {isChanging ? (
-                        <span className="inline-flex items-center gap-1.5 text-xs text-blue-600">
+                        <output className="inline-flex items-center gap-1.5 text-xs text-blue-600">
                           <svg
                             className="h-3.5 w-3.5 animate-spin"
                             viewBox="0 0 24 24"
@@ -216,9 +218,9 @@ export default function UserManagement({ users, facilities=[], togglingRole, onR
                             />
                           </svg>
                           Saving…
-                        </span>
+                        </output>
                       ) : (
-                        <div className="flex items-center gap-2">
+                        <section className="flex items-center gap-2">
                           <RoleBadge role={user.role} />
                           <select
                             value={user.role}
@@ -234,7 +236,7 @@ export default function UserManagement({ users, facilities=[], togglingRole, onR
                               </option>
                             ))}
                           </select>
-                        </div>
+                        </section>
                       )}
                     </td>
                   </tr>
@@ -243,17 +245,17 @@ export default function UserManagement({ users, facilities=[], togglingRole, onR
             )}
           </tbody>
         </table>
-      </div>
+      </section>
 
       {/* ── Confirmation modal ─────────────────────────────────────────────── */}
       {confirmChange && (
-        <div
+        <aside
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
           role="dialog"
           aria-modal="true"
           aria-labelledby="role-modal-title"
         >
-          <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-xl">
+          <article className="w-full max-w-sm rounded-xl bg-white p-6 shadow-xl">
             <h3
               id="role-modal-title"
               className="text-base font-semibold text-gray-900"
@@ -262,18 +264,18 @@ export default function UserManagement({ users, facilities=[], togglingRole, onR
             </h3>
             <p className="mt-2 text-sm text-gray-500">
               Change{" "}
-              <span className="font-semibold text-gray-800">
+              <strong className="font-semibold text-gray-800">
                 {confirmChange.userName}
-              </span>{" "}
+              </strong>{" "}
               to{" "}
-              <span className="font-semibold text-gray-800">
+              <strong className="font-semibold text-gray-800">
                 {ROLE_LABELS[confirmChange.newRole]}
-              </span>
+              </strong>
               ? This affects what they can access on the platform.
             </p>
 
             {confirmChange.newRole==="facility_staff" && (
-            <div className="mt-4">
+            <section className="mt-4">
 
             <label className="block text-sm font-medium text-gray-700 mb-2">
 
@@ -313,10 +315,10 @@ export default function UserManagement({ users, facilities=[], togglingRole, onR
 
             </select>
 
-            </div>
+            </section>
             )}
 
-            <div className="mt-5 flex justify-end gap-3">
+            <footer className="mt-5 flex justify-end gap-3">
               <button
                 type="button"
                 onClick={() => setConfirmChange(null)}
@@ -336,9 +338,9 @@ export default function UserManagement({ users, facilities=[], togglingRole, onR
               >
                 Confirm
               </button>
-            </div>
-          </div>
-        </div>
+            </footer>
+          </article>
+        </aside>
       )}
     </article>
   );

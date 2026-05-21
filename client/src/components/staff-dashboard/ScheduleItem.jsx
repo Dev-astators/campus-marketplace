@@ -47,11 +47,11 @@ export default function ScheduleItem({
 
       {/* Right */}
       <section className="flex items-center gap-3">
-        <span
+        <mark
           className={`px-3 py-1.5 rounded-full text-[11px] font-semibold ${boothStyles[boothVariant]}`}
         >
           {booth}
-        </span>
+        </mark>
 
         <button
           onClick={() => setChecked((prev) => !prev)}
@@ -83,9 +83,9 @@ function PersonTag({ icon, children }) {
         className="text-slate-400"
       />
 
-      <span className="text-[11.5px] text-slate-600 font-medium">
+      <strong className="text-[11.5px] text-slate-600 font-medium">
         {children}
-      </span>
+      </strong>
     </section>
   );
 }

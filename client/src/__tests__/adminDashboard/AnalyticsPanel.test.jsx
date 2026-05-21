@@ -23,6 +23,10 @@ describe("AnalyticsPanel", () => {
       />,
     );
 
+    await user.click(
+      screen.getByRole("button", { name: /create full report/i }),
+    );
+
     const categoriesCard = screen
       .getByRole("heading", { name: /popular categories/i })
       .closest("article");
@@ -45,6 +49,7 @@ describe("AnalyticsPanel", () => {
       within(transactionsCard).getByRole("button", { name: /export csv/i }),
     );
 
+    expect(handleExportPdf).toHaveBeenCalledWith("all");
     expect(handleExportCsv).toHaveBeenCalledWith("categories");
     expect(handleExportCsv).toHaveBeenCalledWith("transactions");
     expect(handleExportPdf).toHaveBeenCalledWith("categories");

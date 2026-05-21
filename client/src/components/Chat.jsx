@@ -110,7 +110,7 @@ export default function Chat({
                       </time>
 
                       {isMe && (
-                        <span
+                        <output
                           className={`text-xs ${
                             msg.status === "read"
                               ? "text-blue-200"
@@ -118,7 +118,7 @@ export default function Chat({
                           }`}
                         >
                           {msg.status === "read" ? "✔✔" : "✔"}
-                        </span>
+                        </output>
                       )}
                     </footer>
                   </article>

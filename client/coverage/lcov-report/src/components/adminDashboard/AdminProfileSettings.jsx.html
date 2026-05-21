@@ -139,17 +139,7 @@
 <a name='L74'></a><a href='#L74'>74</a>
 <a name='L75'></a><a href='#L75'>75</a>
 <a name='L76'></a><a href='#L76'>76</a>
-<a name='L77'></a><a href='#L77'>77</a>
-<a name='L78'></a><a href='#L78'>78</a>
-<a name='L79'></a><a href='#L79'>79</a>
-<a name='L80'></a><a href='#L80'>80</a>
-<a name='L81'></a><a href='#L81'>81</a>
-<a name='L82'></a><a href='#L82'>82</a>
-<a name='L83'></a><a href='#L83'>83</a>
-<a name='L84'></a><a href='#L84'>84</a>
-<a name='L85'></a><a href='#L85'>85</a>
-<a name='L86'></a><a href='#L86'>86</a>
-<a name='L87'></a><a href='#L87'>87</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L77'></a><a href='#L77'>77</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">3x</span>
@@ -177,16 +167,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -265,7 +245,7 @@ export default function AdminProfileSettings({ user }) {
   return (
     &lt;section className="bg-white border border-gray-200 rounded-xl p-6 max-w-2xl"&gt;
       &lt;header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"&gt;
-        &lt;div className="flex items-center gap-4"&gt;
+        &lt;section className="flex items-center gap-4"&gt;
           &lt;figure className="w-16 h-16 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center"&gt;
             {user?.avatarUrl ? (
               &lt;img
@@ -274,15 +254,15 @@ export default function AdminProfileSettings({ user }) {
                 className="w-full h-full object-cover"
               /&gt;
             ) : (
-              &lt;span className="text-gray-400 text-sm"&gt;No photo&lt;/span&gt;
+              &lt;small className="text-gray-400 text-sm"&gt;No photo&lt;/small&gt;
             )}
             &lt;figcaption className="sr-only"&gt;Profile picture&lt;/figcaption&gt;
           &lt;/figure&gt;
-          &lt;div&gt;
+          &lt;section&gt;
             &lt;h2 className="text-lg font-semibold text-gray-800"&gt;{fullName}&lt;/h2&gt;
             &lt;p className="text-sm text-gray-500"&gt;{email}&lt;/p&gt;
-          &lt;/div&gt;
-        &lt;/div&gt;
+          &lt;/section&gt;
+        &lt;/section&gt;
         &lt;button
           type="button"
           onClick={handleSignOut}
@@ -293,30 +273,20 @@ export default function AdminProfileSettings({ user }) {
       &lt;/header&gt;
 &nbsp;
       &lt;dl className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 text-sm"&gt;
-        &lt;div&gt;
-          &lt;dt className="text-gray-500"&gt;Full name&lt;/dt&gt;
-          &lt;dd className="font-medium text-gray-800"&gt;{fullName}&lt;/dd&gt;
-        &lt;/div&gt;
-        &lt;div&gt;
-          &lt;dt className="text-gray-500"&gt;Email&lt;/dt&gt;
-          &lt;dd className="font-medium text-gray-800"&gt;{email}&lt;/dd&gt;
-        &lt;/div&gt;
-        &lt;div&gt;
-          &lt;dt className="text-gray-500"&gt;Role&lt;/dt&gt;
-          &lt;dd className="font-medium text-gray-800"&gt;{roleLabel}&lt;/dd&gt;
-        &lt;/div&gt;
-        &lt;div&gt;
-          &lt;dt className="text-gray-500"&gt;Member since&lt;/dt&gt;
-          &lt;dd className="font-medium text-gray-800"&gt;
-            {formatDate(user?.createdAt)}
-          &lt;/dd&gt;
-        &lt;/div&gt;
-        &lt;div&gt;
-          &lt;dt className="text-gray-500"&gt;Last sign-in&lt;/dt&gt;
-          &lt;dd className="font-medium text-gray-800"&gt;
-            {formatDateTime(user?.lastSignInAt)}
-          &lt;/dd&gt;
-        &lt;/div&gt;
+        &lt;dt className="text-gray-500"&gt;Full name&lt;/dt&gt;
+        &lt;dd className="font-medium text-gray-800"&gt;{fullName}&lt;/dd&gt;
+        &lt;dt className="text-gray-500"&gt;Email&lt;/dt&gt;
+        &lt;dd className="font-medium text-gray-800"&gt;{email}&lt;/dd&gt;
+        &lt;dt className="text-gray-500"&gt;Role&lt;/dt&gt;
+        &lt;dd className="font-medium text-gray-800"&gt;{roleLabel}&lt;/dd&gt;
+        &lt;dt className="text-gray-500"&gt;Member since&lt;/dt&gt;
+        &lt;dd className="font-medium text-gray-800"&gt;
+          {formatDate(user?.createdAt)}
+        &lt;/dd&gt;
+        &lt;dt className="text-gray-500"&gt;Last sign-in&lt;/dt&gt;
+        &lt;dd className="font-medium text-gray-800"&gt;
+          {formatDateTime(user?.lastSignInAt)}
+        &lt;/dd&gt;
       &lt;/dl&gt;
     &lt;/section&gt;
   );
@@ -328,7 +298,7 @@ export default function AdminProfileSettings({ user }) {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-05-21T16:19:52.710Z
+                at 2026-05-21T19:44:09.786Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

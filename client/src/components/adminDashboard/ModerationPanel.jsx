@@ -31,14 +31,14 @@ export default function ModerationPanel({
       id="moderation"
     >
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
+        <section>
           <h2 className="text-lg font-semibold text-gray-900">
             Moderation Queue
           </h2>
           <p className="text-sm text-gray-500">
             Review flagged listings and reviews before they go live.
           </p>
-        </div>
+        </section>
         <button
           className="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors"
           type="button"
@@ -47,14 +47,14 @@ export default function ModerationPanel({
         </button>
       </header>
 
-      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <section className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
         <section className="overflow-hidden rounded-lg border border-gray-200">
-          <div className="border-b border-gray-200 bg-gray-50 px-4 py-3">
+          <header className="border-b border-gray-200 bg-gray-50 px-4 py-3">
             <h3 className="text-sm font-semibold text-gray-700">
               Flagged Listings
             </h3>
-          </div>
-          <div className="overflow-x-auto">
+          </header>
+          <section className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-xs font-semibold text-gray-400">
@@ -77,16 +77,16 @@ export default function ModerationPanel({
                 )}
               </tbody>
             </table>
-          </div>
+          </section>
         </section>
 
         <section className="overflow-hidden rounded-lg border border-gray-200">
-          <div className="border-b border-gray-200 bg-gray-50 px-4 py-3">
+          <header className="border-b border-gray-200 bg-gray-50 px-4 py-3">
             <h3 className="text-sm font-semibold text-gray-700">
               Flagged Reviews
             </h3>
-          </div>
-          <div className="overflow-x-auto">
+          </header>
+          <section className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-xs font-semibold text-gray-400">
@@ -109,9 +109,9 @@ export default function ModerationPanel({
                 )}
               </tbody>
             </table>
-          </div>
+          </section>
         </section>
-      </div>
+      </section>
     </article>
   );
 }

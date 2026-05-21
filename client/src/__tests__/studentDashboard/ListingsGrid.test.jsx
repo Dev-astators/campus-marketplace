@@ -6,7 +6,7 @@ import ListingsGrid from "../../components/studentDashboard/ListingsGrid";
 jest.mock("../../components/studentDashboard/ListingCard", () => ({
   __esModule: true,
   default: ({ listing }) => (
-    <div data-testid="listing-card">{listing.title}</div>
+    <article data-testid="listing-card">{listing.title}</article>
   ),
 }));
 
