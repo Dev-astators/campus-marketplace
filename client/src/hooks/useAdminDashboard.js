@@ -275,31 +275,320 @@ const triggerDownload = (filename, content, mimeType) => {
   URL.revokeObjectURL(url);
 };
 
-const openPrintWindow = (title, rows) => {
-  if (typeof window === "undefined" || !rows.length) return;
+const escapeHtml = (value) =>
+  String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+
+const formatPdfLabel = (value) =>
+  String(value ?? "")
+    .replace(/[_-]/g, " ")
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+
+const formatPdfValue = (value) => {
+  if (typeof value === "number") {
+    return new Intl.NumberFormat("en-ZA").format(value);
+  }
+  if (typeof value === "boolean") {
+    return value ? "Yes" : "No";
+  }
+  return String(value ?? "N/A");
+};
+
+const buildPdfMetricCards = (rows, headers) => {
+  const cardData =
+    rows.length === 1
+      ? headers.map((header) => ({
+          label: formatPdfLabel(header),
+          value: formatPdfValue(rows[0][header]),
+        }))
+      : rows.slice(0, 4).map((row) => ({
+          label: formatPdfValue(
+            row.label ?? row.category ?? row.month ?? "Item",
+          ),
+          value: formatPdfValue(row.count ?? row.value ?? row.total ?? ""),
+        }));
+
+  if (!cardData.length) return "";
+
+  return `
+    <section class="metric-grid" aria-label="Report highlights">
+      ${cardData
+        .map(
+          (card) => `
+            <article class="metric-card">
+              <p>${escapeHtml(card.label)}</p>
+              <strong>${escapeHtml(card.value)}</strong>
+            </article>
+          `,
+        )
+        .join("")}
+    </section>
+  `;
+};
+
+const buildPdfRows = (rows, headers) =>
+  rows
+    .map(
+      (row) => `
+        <tr>
+          ${headers
+            .map(
+              (header) => `<td>${escapeHtml(formatPdfValue(row[header]))}</td>`,
+            )
+            .join("")}
+        </tr>
+      `,
+    )
+    .join("");
+
+const buildPdfTable = ({ rows = [] }) => {
+  if (!rows.length) {
+    return `
+      <p class="empty-state">
+        No analytics data is available for this section yet.
+      </p>
+    `;
+  }
+
+  const headers = Object.keys(rows[0]);
+
+  return `
+    ${buildPdfMetricCards(rows, headers)}
+    <table>
+      <thead>
+        <tr>
+          ${headers
+            .map(
+              (header) => `<th>${escapeHtml(formatPdfLabel(header))}</th>`,
+            )
+            .join("")}
+        </tr>
+      </thead>
+      <tbody>${buildPdfRows(rows, headers)}</tbody>
+    </table>
+  `;
+};
+
+const buildPdfSections = (sections) =>
+  sections
+    .map(
+      (section, index) => `
+        <section class="report-section ${index > 0 ? "section-break" : ""}">
+          <header class="section-header">
+            <h2>${escapeHtml(section.title)}</h2>
+            ${
+              section.description
+                ? `<p>${escapeHtml(section.description)}</p>`
+                : ""
+            }
+          </header>
+          ${buildPdfTable(section)}
+        </section>
+      `,
+    )
+    .join("");
+
+const openPrintWindow = ({ title, description, rows, sections }) => {
+  const reportSections = sections ?? [{ title, description, rows }];
+  const hasPrintableRows = reportSections.some(
+    (section) => section.rows?.length,
+  );
+
+  if (typeof window === "undefined" || !hasPrintableRows) return;
   const popup = window.open("", "_blank", "width=900,height=700");
   if (!popup) return;
-  const headers = Object.keys(rows[0]);
+  const generatedAt = new Intl.DateTimeFormat("en-ZA", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date());
+  const content = sections
+    ? buildPdfSections(reportSections)
+    : buildPdfTable({ rows });
+
   popup.document.write(`
     <html>
       <head>
-        <title>${title}</title>
+        <title>${escapeHtml(title)}</title>
         <style>
-          body { font-family: Arial, sans-serif; padding: 24px; }
-          h1 { font-size: 20px; margin-bottom: 16px; }
-          table { width: 100%; border-collapse: collapse; }
-          th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 13px; }
-          th { background: #f4f4f4; font-weight: 600; }
+          @page { margin: 18mm; }
+          * { box-sizing: border-box; }
+          body {
+            margin: 0;
+            background: #f8fafc;
+            color: #0f172a;
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            padding: 28px;
+          }
+          .report {
+            max-width: 920px;
+            margin: 0 auto;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 24px 70px rgba(15, 23, 42, 0.08);
+          }
+          .hero {
+            background: linear-gradient(
+              135deg,
+              #0d1b4b 0%,
+              #1c3faa 55%,
+              #2563eb 100%
+            );
+            color: #ffffff;
+            padding: 30px 34px;
+          }
+          .eyebrow {
+            margin: 0 0 10px;
+            color: #bfdbfe;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+          }
+          h1 {
+            margin: 0;
+            font-size: 30px;
+            line-height: 1.12;
+          }
+          .description {
+            max-width: 680px;
+            margin: 12px 0 0;
+            color: #dbeafe;
+            font-size: 14px;
+            line-height: 1.6;
+          }
+          .generated {
+            display: inline-flex;
+            margin-top: 20px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.14);
+            padding: 8px 12px;
+            color: #eff6ff;
+            font-size: 12px;
+            font-weight: 700;
+          }
+          .content { padding: 28px 34px 34px; }
+          .report-section {
+            break-inside: avoid;
+            margin-bottom: 30px;
+          }
+          .report-section:last-child { margin-bottom: 0; }
+          .section-break {
+            border-top: 1px solid #e2e8f0;
+            padding-top: 26px;
+          }
+          .section-header {
+            margin-bottom: 18px;
+          }
+          .section-header h2 {
+            margin: 0;
+            color: #0f172a;
+            font-size: 20px;
+            line-height: 1.25;
+          }
+          .section-header p {
+            max-width: 680px;
+            margin: 8px 0 0;
+            color: #64748b;
+            font-size: 13px;
+            line-height: 1.55;
+          }
+          .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 14px;
+            margin-bottom: 24px;
+          }
+          .metric-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 18px;
+            background: #f8fafc;
+            padding: 16px;
+          }
+          .metric-card p {
+            margin: 0 0 8px;
+            color: #64748b;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+          }
+          .metric-card strong {
+            color: #0f172a;
+            font-size: 24px;
+            line-height: 1;
+          }
+          table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+            border-radius: 18px;
+          }
+          th, td {
+            padding: 13px 15px;
+            text-align: left;
+            font-size: 13px;
+            border-bottom: 1px solid #e2e8f0;
+          }
+          th {
+            background: #eff6ff;
+            color: #1d4ed8;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+          }
+          tbody tr:nth-child(even) td { background: #f8fafc; }
+          tbody tr:last-child td { border-bottom: 0; }
+          .footer {
+            margin-top: 18px;
+            color: #94a3b8;
+            font-size: 11px;
+          }
+          .empty-state {
+            border: 1px dashed #cbd5e1;
+            border-radius: 18px;
+            background: #f8fafc;
+            color: #64748b;
+            margin: 0;
+            padding: 18px;
+            font-size: 13px;
+          }
+          @media print {
+            body { background: #ffffff; padding: 0; }
+            .report { box-shadow: none; border-radius: 0; border: 0; }
+            .hero { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+            tbody tr:nth-child(even) td, th, .metric-card {
+              print-color-adjust: exact;
+              -webkit-print-color-adjust: exact;
+            }
+          }
         </style>
       </head>
       <body>
-        <h1>${title}</h1>
-        <table>
-          <thead><tr>${headers.map((h) => `<th>${h}</th>`).join("")}</tr></thead>
-          <tbody>
-            ${rows.map((row) => `<tr>${headers.map((h) => `<td>${row[h] ?? ""}</td>`).join("")}</tr>`).join("")}
-          </tbody>
-        </table>
+        <main class="report">
+          <header class="hero">
+            <p class="eyebrow">UniSquare Admin Analytics</p>
+            <h1>${escapeHtml(title)}</h1>
+            <p class="description">${escapeHtml(
+              description ||
+                "A snapshot of marketplace activity exported from the admin dashboard.",
+            )}</p>
+            <p class="generated">Generated ${escapeHtml(generatedAt)}</p>
+          </header>
+          <section class="content">
+            ${content}
+            <p class="footer">Prepared automatically from live admin dashboard data.</p>
+          </section>
+        </main>
       </body>
     </html>
   `);
@@ -637,26 +926,50 @@ export default function useAdminDashboard() {
 
   const exportPdf = useCallback(
     (reportId) => {
-      const configs = {
+      const reportSections = {
         categories: {
           title: "Popular Categories",
+          description:
+            "Top marketplace categories by listing activity for the selected reporting window.",
           rows: analytics.popularCategories,
         },
         transactions: {
           title: "Transactions Over Time",
+          description:
+            "Completed marketplace transactions grouped by month for recent platform performance.",
           rows: analytics.transactionsOverTime,
         },
         utilization: {
           title: "Facility Utilisation",
+          description:
+            "Booked trade facility slots compared with available capacity for the current operating period.",
           rows: [analytics.facilityUtilization],
         },
         moderation: {
           title: "Flagged Content Summary",
+          description:
+            "Listings, reviews, and messages currently awaiting moderation review.",
           rows: [analytics.flaggedSummary],
         },
       };
+      const configs = {
+        ...reportSections,
+        all: {
+          title: "Complete Analytics Report",
+          description:
+            "A combined report covering category demand, transaction activity, facility utilisation, and flagged content.",
+          sections: [
+            reportSections.categories,
+            reportSections.transactions,
+            reportSections.utilization,
+            reportSections.moderation,
+          ],
+        },
+      };
       const config = configs[reportId];
-      if (config?.rows?.length) openPrintWindow(config.title, config.rows);
+      if (config?.rows?.length || config?.sections?.length) {
+        openPrintWindow(config);
+      }
     },
     [analytics],
   );

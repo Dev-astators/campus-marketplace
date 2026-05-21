@@ -37,7 +37,7 @@ export default function StaffProfileSettings({ user }) {
                 className="w-full h-full object-cover"
               />
             ) : (
-              <span className="text-gray-400 text-sm">No photo</span>
+              <small className="text-gray-400 text-sm">No photo</small>
             )}
             <figcaption className="sr-only">Profile picture</figcaption>
 
@@ -57,26 +57,20 @@ export default function StaffProfileSettings({ user }) {
       </header>
 
       <dl className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 text-sm">
-        <section>
-          <dt className="text-gray-500">Full name</dt>
-          <dd className="font-medium text-gray-800">{fullName}</dd>
-        </section>
-        <section>
-          <dt className="text-gray-500">Email</dt>
-          <dd className="font-medium text-gray-800">{email}</dd>
-        </section>
-        <section>
-          <dt className="text-gray-500">Role</dt>
-          <dd className="font-medium text-gray-800">{roleLabel}</dd>
-        </section>
-        <section>
-          <dt className="text-gray-500">Member since</dt>
-          <dd className="font-medium text-gray-800">{formatDate(user?.createdAt)}</dd>
-        </section>
-        <section>
-          <dt className="text-gray-500">Last sign-in</dt>
-          <dd className="font-medium text-gray-800">{formatDateTime(user?.lastSignInAt)}</dd>
-        </section>
+        <dt className="text-gray-500">Full name</dt>
+        <dd className="font-medium text-gray-800">{fullName}</dd>
+        <dt className="text-gray-500">Email</dt>
+        <dd className="font-medium text-gray-800">{email}</dd>
+        <dt className="text-gray-500">Role</dt>
+        <dd className="font-medium text-gray-800">{roleLabel}</dd>
+        <dt className="text-gray-500">Member since</dt>
+        <dd className="font-medium text-gray-800">
+          {formatDate(user?.createdAt)}
+        </dd>
+        <dt className="text-gray-500">Last sign-in</dt>
+        <dd className="font-medium text-gray-800">
+          {formatDateTime(user?.lastSignInAt)}
+        </dd>
       </dl>
     </section>
   );

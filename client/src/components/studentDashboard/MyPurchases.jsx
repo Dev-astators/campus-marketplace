@@ -541,13 +541,13 @@ export default function MyPurchases({ profileId }) {
                           onChange={() => setSelectedSlot(slot.id)}
                           className="sr-only"
                         />
-                        <span className="text-sm font-medium text-[#0D1B4B]">
+                        <strong className="text-sm font-medium text-[#0D1B4B]">
                           {new Date(slot.slot_date).toDateString()} ·{" "}
                           {slot.slot_time?.slice(0, 5)}
-                        </span>
-                        <span className="text-xs text-slate-400">
+                        </strong>
+                        <small className="text-xs text-slate-400">
                           {slot.capacity - slot.booked_count} left
-                        </span>
+                        </small>
                       </label>
                     </li>
                   ))}

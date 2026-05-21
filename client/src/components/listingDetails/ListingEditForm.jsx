@@ -17,7 +17,7 @@ export default function ListingEditForm({
   return (
     <form className="mt-4 flex flex-col gap-3" onSubmit={onSaveEdit}>
       <label className="text-sm text-gray-700 flex flex-col gap-1">
-        <span>Title</span>
+        <strong>Title</strong>
         <input
           name="title"
           value={editForm.title}
@@ -28,7 +28,7 @@ export default function ListingEditForm({
       </label>
 
       <label className="text-sm text-gray-700 flex flex-col gap-1">
-        <span>Description</span>
+        <strong>Description</strong>
         <textarea
           name="description"
           value={editForm.description}
@@ -39,7 +39,7 @@ export default function ListingEditForm({
       </label>
 
       <label className="text-sm text-gray-700 flex flex-col gap-1">
-        <span>Price (ZAR)</span>
+        <strong>Price (ZAR)</strong>
         <input
           name="askingPrice"
           type="number"
@@ -52,7 +52,7 @@ export default function ListingEditForm({
       </label>
 
       <label className="text-sm text-gray-700 flex flex-col gap-1">
-        <span>Category</span>
+        <strong>Category</strong>
         <select
           name="category"
           value={editForm.category}
@@ -68,7 +68,7 @@ export default function ListingEditForm({
       </label>
 
       <label className="text-sm text-gray-700 flex flex-col gap-1">
-        <span>Condition</span>
+        <strong>Condition</strong>
         <select
           name="condition"
           value={editForm.condition}
@@ -84,7 +84,7 @@ export default function ListingEditForm({
       </label>
 
       <label className="text-sm text-gray-700 flex flex-col gap-1">
-        <span>Listing Type</span>
+        <strong>Listing Type</strong>
         <select
           name="listingType"
           value={editForm.listingType}

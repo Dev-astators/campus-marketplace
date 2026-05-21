@@ -251,7 +251,21 @@
 <a name='L186'></a><a href='#L186'>186</a>
 <a name='L187'></a><a href='#L187'>187</a>
 <a name='L188'></a><a href='#L188'>188</a>
-<a name='L189'></a><a href='#L189'>189</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L189'></a><a href='#L189'>189</a>
+<a name='L190'></a><a href='#L190'>190</a>
+<a name='L191'></a><a href='#L191'>191</a>
+<a name='L192'></a><a href='#L192'>192</a>
+<a name='L193'></a><a href='#L193'>193</a>
+<a name='L194'></a><a href='#L194'>194</a>
+<a name='L195'></a><a href='#L195'>195</a>
+<a name='L196'></a><a href='#L196'>196</a>
+<a name='L197'></a><a href='#L197'>197</a>
+<a name='L198'></a><a href='#L198'>198</a>
+<a name='L199'></a><a href='#L199'>199</a>
+<a name='L200'></a><a href='#L200'>200</a>
+<a name='L201'></a><a href='#L201'>201</a>
+<a name='L202'></a><a href='#L202'>202</a>
+<a name='L203'></a><a href='#L203'>203</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -383,6 +397,10 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -413,7 +431,17 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -455,7 +483,7 @@
       id="facility"
     &gt;
       &lt;header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"&gt;
-        &lt;div&gt;
+        &lt;section&gt;
           &lt;h2 className="text-lg font-semibold text-gray-900"&gt;
             Trade Facility Settings
           &lt;/h2&gt;
@@ -464,7 +492,7 @@
               ? "Configure a new trade facility for this campus."
               : "Update operating hours and slot capacity for the selected facility."}
           &lt;/p&gt;
-        &lt;/div&gt;
+        &lt;/section&gt;
         &lt;button
           className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
           type="button"
@@ -503,11 +531,11 @@
         &lt;/button&gt;
       &lt;/header&gt;
 &nbsp;
-      &lt;div className="mt-6 flex flex-col gap-6"&gt;
+      &lt;section className="mt-6 flex flex-col gap-6"&gt;
         {/* ── Basic fields ──────────────────────────────────────────────── */}
-        &lt;div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3"&gt;
+        &lt;section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3"&gt;
           &lt;label className="flex flex-col gap-1 text-sm font-medium text-gray-600"&gt;
-            &lt;span&gt;Facility Name&lt;/span&gt;
+            &lt;strong&gt;Facility Name&lt;/strong&gt;
             &lt;input
               className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-300"
               value={settings.name}
@@ -517,7 +545,7 @@
           &lt;/label&gt;
 &nbsp;
           &lt;label className="flex flex-col gap-1 text-sm font-medium text-gray-600"&gt;
-            &lt;span&gt;Location&lt;/span&gt;
+            &lt;strong&gt;Location&lt;/strong&gt;
             &lt;input
               className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-300"
               value={settings.location}
@@ -527,7 +555,7 @@
           &lt;/label&gt;
 &nbsp;
           &lt;label className="flex flex-col gap-1 text-sm font-medium text-gray-600"&gt;
-            &lt;span&gt;Slot Capacity&lt;/span&gt;
+            &lt;strong&gt;Slot Capacity&lt;/strong&gt;
             &lt;input
               type="number"
               min="1"
@@ -547,37 +575,41 @@
               checked={settings.isActive}
               onChange={(e) =&gt; onSettingChange("isActive", e.target.checked)}
             /&gt;
-            &lt;span&gt;Facility Active&lt;/span&gt;
-            &lt;span
+            &lt;strong&gt;Facility Active&lt;/strong&gt;
+            &lt;mark
+              aria-hidden="true"
               className={`ml-1 inline-block h-2 w-2 rounded-full ${
                 settings.isActive ? "bg-green-500" : "bg-gray-400"
               }`}
             /&gt;
           &lt;/label&gt;
-        &lt;/div&gt;
+        &lt;/section&gt;
 &nbsp;
         {/* ── Operating hours ───────────────────────────────────────────── */}
-        &lt;div className="border-t border-gray-200 pt-4"&gt;
-          &lt;div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"&gt;
+        &lt;section className="border-t border-gray-200 pt-4"&gt;
+          &lt;header className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"&gt;
             &lt;h3 className="text-base font-semibold text-gray-900"&gt;
               Operating Hours
             &lt;/h3&gt;
             {lastSavedAt &amp;&amp; (
-              &lt;span className="text-xs text-gray-400"&gt;
+              &lt;time
+                className="text-xs text-gray-400"
+                dateTime={lastSavedAt.toISOString()}
+              &gt;
                 Last saved {lastSavedAt.toLocaleTimeString("en-ZA")}
-              &lt;/span&gt;
+              &lt;/time&gt;
             )}
-          &lt;/div&gt;
+          &lt;/header&gt;
 &nbsp;
-          &lt;div className="mt-3 flex flex-col gap-3"&gt;
+          &lt;section className="mt-3 flex flex-col gap-3"&gt;
             {operatingHours.map((entry) =&gt; (
-              &lt;div
+              &lt;article
                 className="grid grid-cols-1 items-center gap-3 md:grid-cols-[160px_1fr_1fr]"
                 key={entry.day}
               &gt;
                 {/* Day toggle */}
-                &lt;div className="flex items-center justify-between gap-3 text-sm font-semibold text-gray-700"&gt;
-                  &lt;span&gt;{entry.day}&lt;/span&gt;
+                &lt;section className="flex items-center justify-between gap-3 text-sm font-semibold text-gray-700"&gt;
+                  &lt;p&gt;{entry.day}&lt;/p&gt;
                   &lt;label className="relative inline-flex cursor-pointer items-center"&gt;
                     &lt;input
                       type="checkbox"
@@ -587,14 +619,22 @@
                         onHoursChange(entry.day, "active", e.target.checked)
                       }
                     /&gt;
-                    &lt;span className="h-6 w-10 rounded-full bg-gray-200 transition-colors peer-checked:bg-blue-600" /&gt;
-                    &lt;span className="pointer-events-none absolute left-1 top-1 h-4 w-4 rounded-full bg-white shadow transition-transform peer-checked:translate-x-4" /&gt;
+                    &lt;mark
+                      aria-hidden="true"
+                      className="inline-block h-6 w-10 rounded-full bg-gray-200 transition-colors peer-checked:bg-blue-600"
+                    /&gt;
+                    &lt;mark
+                      aria-hidden="true"
+                      className="pointer-events-none absolute left-1 top-1 inline-block h-4 w-4 rounded-full bg-white shadow transition-transform peer-checked:translate-x-4"
+                    /&gt;
                   &lt;/label&gt;
-                &lt;/div&gt;
+                &lt;/section&gt;
 &nbsp;
                 {/* Open time */}
-                &lt;div className="flex flex-col gap-0.5"&gt;
-                  &lt;span className="text-xs text-gray-400 md:sr-only"&gt;Open&lt;/span&gt;
+                &lt;label className="flex flex-col gap-0.5"&gt;
+                  &lt;strong className="text-xs text-gray-400 md:sr-only"&gt;
+                    Open
+                  &lt;/strong&gt;
                   &lt;input
                     type="time"
                     value={entry.open}
@@ -604,11 +644,13 @@
                       onHoursChange(entry.day, "open", e.target.value)
                     }
                   /&gt;
-                &lt;/div&gt;
+                &lt;/label&gt;
 &nbsp;
                 {/* Close time */}
-                &lt;div className="flex flex-col gap-0.5"&gt;
-                  &lt;span className="text-xs text-gray-400 md:sr-only"&gt;Close&lt;/span&gt;
+                &lt;label className="flex flex-col gap-0.5"&gt;
+                  &lt;strong className="text-xs text-gray-400 md:sr-only"&gt;
+                    Close
+                  &lt;/strong&gt;
                   &lt;input
                     type="time"
                     value={entry.close}
@@ -618,12 +660,12 @@
                       onHoursChange(entry.day, "close", e.target.value)
                     }
                   /&gt;
-                &lt;/div&gt;
-              &lt;/div&gt;
+                &lt;/label&gt;
+              &lt;/article&gt;
             ))}
-          &lt;/div&gt;
-        &lt;/div&gt;
-      &lt;/div&gt;
+          &lt;/section&gt;
+        &lt;/section&gt;
+      &lt;/section&gt;
     &lt;/article&gt;
   );
 }
@@ -634,7 +676,7 @@
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-05-21T16:19:52.710Z
+                at 2026-05-21T18:15:34.693Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

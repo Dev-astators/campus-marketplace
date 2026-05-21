@@ -14,7 +14,7 @@ export default function FacilitySettingsPanel({
       id="facility"
     >
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
+        <section>
           <h2 className="text-lg font-semibold text-gray-900">
             Trade Facility Settings
           </h2>
@@ -23,7 +23,7 @@ export default function FacilitySettingsPanel({
               ? "Configure a new trade facility for this campus."
               : "Update operating hours and slot capacity for the selected facility."}
           </p>
-        </div>
+        </section>
         <button
           className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
           type="button"
@@ -62,11 +62,11 @@ export default function FacilitySettingsPanel({
         </button>
       </header>
 
-      <div className="mt-6 flex flex-col gap-6">
+      <section className="mt-6 flex flex-col gap-6">
         {/* ── Basic fields ──────────────────────────────────────────────── */}
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
           <label className="flex flex-col gap-1 text-sm font-medium text-gray-600">
-            <span>Facility Name</span>
+            <strong>Facility Name</strong>
             <input
               className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-300"
               value={settings.name}
@@ -76,7 +76,7 @@ export default function FacilitySettingsPanel({
           </label>
 
           <label className="flex flex-col gap-1 text-sm font-medium text-gray-600">
-            <span>Location</span>
+            <strong>Location</strong>
             <input
               className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-300"
               value={settings.location}
@@ -86,7 +86,7 @@ export default function FacilitySettingsPanel({
           </label>
 
           <label className="flex flex-col gap-1 text-sm font-medium text-gray-600">
-            <span>Slot Capacity</span>
+            <strong>Slot Capacity</strong>
             <input
               type="number"
               min="1"
@@ -106,37 +106,41 @@ export default function FacilitySettingsPanel({
               checked={settings.isActive}
               onChange={(e) => onSettingChange("isActive", e.target.checked)}
             />
-            <span>Facility Active</span>
-            <span
+            <strong>Facility Active</strong>
+            <mark
+              aria-hidden="true"
               className={`ml-1 inline-block h-2 w-2 rounded-full ${
                 settings.isActive ? "bg-green-500" : "bg-gray-400"
               }`}
             />
           </label>
-        </div>
+        </section>
 
         {/* ── Operating hours ───────────────────────────────────────────── */}
-        <div className="border-t border-gray-200 pt-4">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <section className="border-t border-gray-200 pt-4">
+          <header className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <h3 className="text-base font-semibold text-gray-900">
               Operating Hours
             </h3>
             {lastSavedAt && (
-              <span className="text-xs text-gray-400">
+              <time
+                className="text-xs text-gray-400"
+                dateTime={lastSavedAt.toISOString()}
+              >
                 Last saved {lastSavedAt.toLocaleTimeString("en-ZA")}
-              </span>
+              </time>
             )}
-          </div>
+          </header>
 
-          <div className="mt-3 flex flex-col gap-3">
+          <section className="mt-3 flex flex-col gap-3">
             {operatingHours.map((entry) => (
-              <div
+              <article
                 className="grid grid-cols-1 items-center gap-3 md:grid-cols-[160px_1fr_1fr]"
                 key={entry.day}
               >
                 {/* Day toggle */}
-                <div className="flex items-center justify-between gap-3 text-sm font-semibold text-gray-700">
-                  <span>{entry.day}</span>
+                <section className="flex items-center justify-between gap-3 text-sm font-semibold text-gray-700">
+                  <p>{entry.day}</p>
                   <label className="relative inline-flex cursor-pointer items-center">
                     <input
                       type="checkbox"
@@ -146,14 +150,22 @@ export default function FacilitySettingsPanel({
                         onHoursChange(entry.day, "active", e.target.checked)
                       }
                     />
-                    <span className="h-6 w-10 rounded-full bg-gray-200 transition-colors peer-checked:bg-blue-600" />
-                    <span className="pointer-events-none absolute left-1 top-1 h-4 w-4 rounded-full bg-white shadow transition-transform peer-checked:translate-x-4" />
+                    <mark
+                      aria-hidden="true"
+                      className="inline-block h-6 w-10 rounded-full bg-gray-200 transition-colors peer-checked:bg-blue-600"
+                    />
+                    <mark
+                      aria-hidden="true"
+                      className="pointer-events-none absolute left-1 top-1 inline-block h-4 w-4 rounded-full bg-white shadow transition-transform peer-checked:translate-x-4"
+                    />
                   </label>
-                </div>
+                </section>
 
                 {/* Open time */}
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-xs text-gray-400 md:sr-only">Open</span>
+                <label className="flex flex-col gap-0.5">
+                  <strong className="text-xs text-gray-400 md:sr-only">
+                    Open
+                  </strong>
                   <input
                     type="time"
                     value={entry.open}
@@ -163,11 +175,13 @@ export default function FacilitySettingsPanel({
                       onHoursChange(entry.day, "open", e.target.value)
                     }
                   />
-                </div>
+                </label>
 
                 {/* Close time */}
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-xs text-gray-400 md:sr-only">Close</span>
+                <label className="flex flex-col gap-0.5">
+                  <strong className="text-xs text-gray-400 md:sr-only">
+                    Close
+                  </strong>
                   <input
                     type="time"
                     value={entry.close}
@@ -177,12 +191,12 @@ export default function FacilitySettingsPanel({
                       onHoursChange(entry.day, "close", e.target.value)
                     }
                   />
-                </div>
-              </div>
+                </label>
+              </article>
             ))}
-          </div>
-        </div>
-      </div>
+          </section>
+        </section>
+      </section>
     </article>
   );
 }

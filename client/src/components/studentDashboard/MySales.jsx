@@ -240,9 +240,9 @@ export default function MySales({ profileId }) {
                   {dropSlot ? (
                     `${new Date(dropSlot.slot_date).toDateString()} · ${dropSlot.slot_time?.slice(0, 5)}`
                   ) : (
-                    <span className="text-orange-500 font-medium">
+                    <strong className="text-orange-500 font-medium">
                       Not booked yet
-                    </span>
+                    </strong>
                   )}
                 </dd>
               </dl>
@@ -366,13 +366,13 @@ export default function MySales({ profileId }) {
                           onChange={() => setSelectedSlot(slot.id)}
                           className="sr-only"
                         />
-                        <span className="text-sm font-medium text-[#0D1B4B]">
+                        <strong className="text-sm font-medium text-[#0D1B4B]">
                           {new Date(slot.slot_date).toDateString()} ·{" "}
                           {slot.slot_time?.slice(0, 5)}
-                        </span>
-                        <span className="text-xs text-slate-400">
+                        </strong>
+                        <small className="text-xs text-slate-400">
                           {slot.capacity - slot.booked_count} left
-                        </span>
+                        </small>
                       </label>
                     </li>
                   ))}
