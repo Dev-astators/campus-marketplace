@@ -124,9 +124,48 @@ describe("CreateListing", () => {
 
     await user.type(screen.getByLabelText(/title/i), "Campus Chair");
     await user.type(screen.getByLabelText(/asking price \(zar\)/i), "500");
-    await user.click(screen.getByRole("button", { name: /^create listing$/i }));
+    await user.click(screen.getByRole("button", { name: /^post item$/i }));
 
     expect(global.alert).toHaveBeenCalledWith("You must be logged in");
+  });
+
+  it("shows a loading state while posting the item", async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    let resolveCreateListing;
+
+    global.fetch = jest.fn(
+      () =>
+        new Promise((resolve) => {
+          resolveCreateListing = resolve;
+        }),
+    );
+
+    render(
+      <MemoryRouter>
+        <CreateListing />
+      </MemoryRouter>,
+    );
+
+    await user.type(screen.getByLabelText(/title/i), "Study Desk");
+    await user.type(screen.getByLabelText(/asking price \(zar\)/i), "1200");
+    await user.click(screen.getByRole("button", { name: /^post item$/i }));
+
+    expect(await screen.findByRole("status")).toHaveTextContent(
+      /posting your item/i,
+    );
+    expect(
+      screen.getByRole("button", { name: /posting item/i }),
+    ).toBeDisabled();
+    expect(screen.getByRole("button", { name: /cancel/i })).toBeDisabled();
+
+    await act(async () => {
+      resolveCreateListing({
+        ok: true,
+        json: async () => ({
+          listing: { id: "listing-loading" },
+        }),
+      });
+    });
   });
 
   it("submits a listing with an uploaded image", async () => {
@@ -160,7 +199,7 @@ describe("CreateListing", () => {
     await user.upload(screen.getByLabelText(/listing image/i), file);
     await user.type(screen.getByLabelText(/title/i), "Study Desk");
     await user.type(screen.getByLabelText(/asking price \(zar\)/i), "1200");
-    await user.click(screen.getByRole("button", { name: /^create listing$/i }));
+    await user.click(screen.getByRole("button", { name: /^post item$/i }));
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenNthCalledWith(
@@ -207,7 +246,7 @@ describe("CreateListing", () => {
     await user.upload(screen.getByLabelText(/listing image/i), file);
     await user.type(screen.getByLabelText(/title/i), "Lamp");
     await user.type(screen.getByLabelText(/asking price \(zar\)/i), "300");
-    await user.click(screen.getByRole("button", { name: /^create listing$/i }));
+    await user.click(screen.getByRole("button", { name: /^post item$/i }));
 
     await waitFor(() => {
       expect(global.alert).toHaveBeenCalledWith("Image upload failed");

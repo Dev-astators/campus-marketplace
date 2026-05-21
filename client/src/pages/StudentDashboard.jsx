@@ -293,7 +293,7 @@ export default function StudentDashboard() {
                   onClick={() => navigate("/create-listing")}
                   className="w-fit rounded-lg bg-blue-600 px-4 py-2 text-white"
                 >
-                  + Create Listing
+                  + Post an Item
                 </button>
 
                 <section className="flex flex-col gap-4">

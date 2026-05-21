@@ -116,7 +116,7 @@ describe("StudentDashboard", () => {
       screen.getByRole("button", { name: /sign out/i }),
     ).toBeInTheDocument();
     expect(
-      screen.queryByRole("button", { name: /create listing/i }),
+      screen.queryByRole("button", { name: /post an item/i }),
     ).not.toBeInTheDocument();
   });
 
@@ -178,7 +178,7 @@ describe("StudentDashboard", () => {
     );
 
     await userDriver.click(
-      screen.getByRole("button", { name: /create listing/i }),
+      screen.getByRole("button", { name: /post an item/i }),
     );
 
     expect(mockNavigate).toHaveBeenCalledWith("/create-listing");
