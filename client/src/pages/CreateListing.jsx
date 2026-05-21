@@ -92,6 +92,7 @@ export default function CreateListing() {
   const [suggestionMessage, setSuggestionMessage] = useState(
     DEFAULT_SUGGESTION_MESSAGE,
   );
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [form, setForm] = useState({
     title: "",
@@ -230,15 +231,22 @@ export default function CreateListing() {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    const { data } = await supabase.auth.getSession();
-    const sellerId = data.session?.user?.id;
-
-    if (!sellerId) {
-      alert("You must be logged in");
+    if (isSubmitting) {
       return;
     }
 
+    setIsSubmitting(true);
+    let shouldResetSubmitting = true;
+
     try {
+      const { data } = await supabase.auth.getSession();
+      const sellerId = data.session?.user?.id;
+
+      if (!sellerId) {
+        alert("You must be logged in");
+        return;
+      }
+
       const response = await fetch(`${API_BASE_URL}/api/listings`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -253,7 +261,7 @@ export default function CreateListing() {
 
       if (!response.ok) {
         console.error(payload);
-        alert("Failed to create listing");
+        alert("Failed to post item");
         return;
       }
 
@@ -282,10 +290,15 @@ export default function CreateListing() {
         });
       }
 
+      shouldResetSubmitting = false;
       navigate("/student-dashboard");
     } catch (error) {
       console.error(error);
-      alert("Error creating listing");
+      alert("Error posting item");
+    } finally {
+      if (shouldResetSubmitting) {
+        setIsSubmitting(false);
+      }
     }
   };
 
@@ -293,7 +306,7 @@ export default function CreateListing() {
     <main
       className="min-h-screen bg-white px-4 py-6 sm:px-6 sm:py-8"
       style={{ fontFamily: "Inter, sans-serif" }}
-      aria-label="Create listing page"
+      aria-label="Post item page"
     >
       <article className="mx-auto max-w-4xl">
         <header className="mb-8">
@@ -301,27 +314,33 @@ export default function CreateListing() {
             <button
               type="button"
               onClick={() => navigate(-1)}
-              className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition hover:bg-gray-50"
+              disabled={isSubmitting}
+              className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
             >
               Back
             </button>
           </p>
 
           <h1 className="mt-4 text-2xl font-bold text-gray-900 sm:text-3xl">
-            Create Listing
+            Post an Item
           </h1>
 
           <p className="mt-2 text-sm text-gray-500">
             Add your item details and review the CPI-based price guidance before
-            publishing.
+            posting.
           </p>
         </header>
 
         <form
           onSubmit={handleSubmit}
           className="space-y-6 rounded-3xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8"
+          aria-busy={isSubmitting}
+          aria-describedby={isSubmitting ? "listing-submit-status" : undefined}
         >
-          <fieldset className="m-0 space-y-5 border-0 p-0">
+          <fieldset
+            className="m-0 space-y-5 border-0 p-0"
+            disabled={isSubmitting}
+          >
             <legend className="sr-only">Listing details</legend>
 
             <header className="mb-2">
@@ -456,7 +475,10 @@ export default function CreateListing() {
             </section>
           </fieldset>
 
-          <fieldset className="m-0 space-y-5 border-0 border-t border-gray-100 p-0 pt-8">
+          <fieldset
+            className="m-0 space-y-5 border-0 border-t border-gray-100 p-0 pt-8"
+            disabled={isSubmitting}
+          >
             <legend className="sr-only">Pricing and category</legend>
 
             <header className="mb-2">
@@ -589,7 +611,10 @@ export default function CreateListing() {
             </aside>
           </fieldset>
 
-          <fieldset className="m-0 space-y-5 border-0 border-t border-gray-100 p-0 pt-8">
+          <fieldset
+            className="m-0 space-y-5 border-0 border-t border-gray-100 p-0 pt-8"
+            disabled={isSubmitting}
+          >
             <legend className="sr-only">Item condition</legend>
 
             <header className="mb-2">
@@ -641,21 +666,35 @@ export default function CreateListing() {
             </section>
           </fieldset>
 
-          <footer className="flex flex-col-reverse gap-3 border-t border-gray-100 pt-6 sm:flex-row sm:justify-end">
-            <button
-              type="button"
-              onClick={() => navigate("/student-dashboard")}
-              className="rounded-xl border border-gray-300 bg-white px-5 py-3 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
-            >
-              Cancel
-            </button>
+          <footer className="flex flex-col gap-3 border-t border-gray-100 pt-6 sm:flex-row sm:items-center sm:justify-between">
+            {isSubmitting ? (
+              <p
+                id="listing-submit-status"
+                role="status"
+                className="text-sm font-medium text-blue-700"
+              >
+                Posting your item. Please keep this page open.
+              </p>
+            ) : null}
 
-            <button
-              type="submit"
-              className="rounded-xl bg-blue-700 px-6 py-3 text-sm font-semibold text-white transition hover:bg-blue-800"
-            >
-              Create Listing
-            </button>
+            <section className="flex flex-col-reverse gap-3 sm:ml-auto sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                onClick={() => navigate("/student-dashboard")}
+                disabled={isSubmitting}
+                className="rounded-xl border border-gray-300 bg-white px-5 py-3 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="rounded-xl bg-blue-700 px-6 py-3 text-sm font-semibold text-white transition hover:bg-blue-800 disabled:cursor-wait disabled:opacity-75"
+              >
+                {isSubmitting ? "Posting item..." : "Post Item"}
+              </button>
+            </section>
           </footer>
         </form>
       </article>
