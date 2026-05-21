@@ -379,7 +379,7 @@ export default function ChatPage() {
             onClick={() => navigate(backTarget, { replace: true })}
             className="px-4 py-2 border border-gray-200 rounded-xl shadow-sm hover:bg-gray-50 transition bg-white"
           >
-            ← Back
+            Back
           </button>
         </section>
 
