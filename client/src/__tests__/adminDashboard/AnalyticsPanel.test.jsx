@@ -30,6 +30,9 @@ describe("AnalyticsPanel", () => {
     await user.click(
       within(categoriesCard).getByRole("button", { name: /export csv/i }),
     );
+    await user.click(
+      within(categoriesCard).getByRole("button", { name: /export pdf/i }),
+    );
 
     const transactionsCard = screen
       .getByRole("heading", { name: /transactions over time/i })
@@ -38,8 +41,13 @@ describe("AnalyticsPanel", () => {
     await user.click(
       within(transactionsCard).getByRole("button", { name: /export pdf/i }),
     );
+    await user.click(
+      within(transactionsCard).getByRole("button", { name: /export csv/i }),
+    );
 
     expect(handleExportCsv).toHaveBeenCalledWith("categories");
+    expect(handleExportCsv).toHaveBeenCalledWith("transactions");
+    expect(handleExportPdf).toHaveBeenCalledWith("categories");
     expect(handleExportPdf).toHaveBeenCalledWith("transactions");
   });
 
@@ -82,10 +90,18 @@ describe("AnalyticsPanel", () => {
       within(utilizationCard).getByRole("button", { name: /export pdf/i }),
     );
     await user.click(
+      within(utilizationCard).getByRole("button", { name: /export csv/i }),
+    );
+    await user.click(
+      within(moderationCard).getByRole("button", { name: /export pdf/i }),
+    );
+    await user.click(
       within(moderationCard).getByRole("button", { name: /export csv/i }),
     );
 
     expect(handleExportPdf).toHaveBeenCalledWith("utilization");
+    expect(handleExportPdf).toHaveBeenCalledWith("moderation");
+    expect(handleExportCsv).toHaveBeenCalledWith("utilization");
     expect(handleExportCsv).toHaveBeenCalledWith("moderation");
   });
 });

@@ -39,10 +39,29 @@ describe("FacilitySettingsPanel", () => {
 
     expect(handleSettingChange).toHaveBeenCalledWith("slotCapacity", 8);
 
+    fireEvent.change(screen.getByLabelText("Location"), {
+      target: { value: "East Campus" },
+    });
+
+    expect(handleSettingChange).toHaveBeenCalledWith("location", "East Campus");
+
+    fireEvent.click(screen.getByLabelText("Facility Active"));
+
+    expect(handleSettingChange).toHaveBeenCalledWith("isActive", false);
+
     const openInput = screen.getByDisplayValue("08:00");
     fireEvent.change(openInput, { target: { value: "09:00" } });
 
     expect(handleHoursChange).toHaveBeenCalledWith("Mon", "open", "09:00");
+
+    const closeInput = screen.getByDisplayValue("18:00");
+    fireEvent.change(closeInput, { target: { value: "17:00" } });
+
+    expect(handleHoursChange).toHaveBeenCalledWith("Mon", "close", "17:00");
+
+    fireEvent.click(screen.getAllByRole("checkbox")[1]);
+
+    expect(handleHoursChange).toHaveBeenCalledWith("Mon", "active", false);
 
     await user.click(screen.getByRole("button", { name: /save settings/i }));
 

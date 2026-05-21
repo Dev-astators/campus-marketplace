@@ -34,4 +34,24 @@ describe("Navbar", () => {
 
     expect(handleSearch).toHaveBeenCalledWith("textbook");
   });
+
+  it("renders fallbacks, notification badge, and optional search handling", () => {
+    render(<Navbar user={{ name: "Grace" }} notificationCount={3} />);
+
+    expect(screen.getByText("Grace")).toBeInTheDocument();
+    expect(screen.getByText("3")).toBeInTheDocument();
+    expect(
+      screen.getByLabelText(/3 unread notifications/i),
+    ).toHaveAttribute("href", "/notifications");
+    expect(
+      screen.getByText("Grace profile picture"),
+    ).toBeInTheDocument();
+
+    fireEvent.change(screen.getByPlaceholderText(/search/i), {
+      target: { value: "lamp" },
+    });
+    fireEvent.submit(screen.getByRole("search"));
+
+    expect(screen.queryByAltText(/avatar/i)).not.toBeInTheDocument();
+  });
 });
