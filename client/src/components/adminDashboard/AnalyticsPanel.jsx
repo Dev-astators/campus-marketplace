@@ -1,3 +1,9 @@
+const PROGRESS_BAR_CLASSES =
+  "h-2 flex-1 appearance-none overflow-hidden rounded-full bg-gray-200 accent-blue-600 [&::-moz-progress-bar]:rounded-full [&::-moz-progress-bar]:bg-blue-600 [&::-webkit-progress-bar]:rounded-full [&::-webkit-progress-bar]:bg-gray-200 [&::-webkit-progress-value]:rounded-full [&::-webkit-progress-value]:bg-blue-600";
+
+const TALL_PROGRESS_BAR_CLASSES =
+  "h-3 appearance-none overflow-hidden rounded-full bg-gray-200 accent-blue-600 [&::-moz-progress-bar]:rounded-full [&::-moz-progress-bar]:bg-blue-600 [&::-webkit-progress-bar]:rounded-full [&::-webkit-progress-bar]:bg-gray-200 [&::-webkit-progress-value]:rounded-full [&::-webkit-progress-value]:bg-blue-600";
+
 export default function AnalyticsPanel({
   analytics,
   onExportCsv,
@@ -70,7 +76,7 @@ export default function AnalyticsPanel({
                 <p className="text-xs text-gray-500">{item.count} listings</p>
               </section>
               <progress
-                className="h-2 flex-1 overflow-hidden rounded-full bg-gray-200"
+                className={PROGRESS_BAR_CLASSES}
                 max="100"
                 value={item.count * 2}
                 aria-label={`${item.label} listing share`}
@@ -121,7 +127,7 @@ export default function AnalyticsPanel({
                 </p>
               </section>
               <progress
-                className="h-2 flex-1 overflow-hidden rounded-full bg-gray-200"
+                className={PROGRESS_BAR_CLASSES}
                 max="100"
                 value={item.count * 2}
                 aria-label={`${item.label} transaction share`}
@@ -168,7 +174,7 @@ export default function AnalyticsPanel({
             <p className="text-sm text-gray-500">Slots booked</p>
           </section>
           <progress
-            className="h-3 overflow-hidden rounded-full bg-gray-200"
+            className={TALL_PROGRESS_BAR_CLASSES}
             max={facilityUtilization.capacity}
             value={facilityUtilization.booked}
             aria-label="Facility slot utilisation"
