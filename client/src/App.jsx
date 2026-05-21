@@ -9,6 +9,7 @@ import { useEffect, useRef, useState } from "react";
 import { supabase } from "./config/supabaseClient";
 import "./App.css";
 import WelcomePage from "./pages/WelcomePage";
+import AboutPage from "./pages/AboutPage";
 import SignInPage from "./pages/SignInPage";
 import SignUpPage from "./pages/SignUpPage";
 import StaffDashboard from "./pages/StaffDashboard";
@@ -110,6 +111,7 @@ function AppShell() {
   return (
     <Routes>
       <Route path="/" element={<WelcomePage />} />
+      <Route path="/about" element={<AboutPage />} />
       <Route path="/signin" element={<SignInPage />} />
       <Route path="/signup" element={<SignUpPage />} />
       <Route path="/staff-dashboard" element={<StaffDashboard />} />

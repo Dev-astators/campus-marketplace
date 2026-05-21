@@ -1,6 +1,18 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
+
+const MAIN_LINKS = [
+  { label: "Home", to: "/" },
+  { label: "About", to: "/about" },
+];
+
+const activeNavLinkClass =
+  "relative text-blue-600 transition hover:text-blue-700 after:absolute after:-bottom-4 after:left-0 after:h-[2px] after:w-full after:rounded-full after:bg-blue-600";
+
+const inactiveNavLinkClass = "relative transition hover:text-blue-600";
 
 export default function Navbar() {
+  const { pathname } = useLocation();
+
   return (
     <header className="absolute left-0 top-0 z-50 w-full px-4 pt-4 sm:px-6 sm:pt-5 lg:px-8">
       <nav
@@ -17,20 +29,23 @@ export default function Navbar() {
         </Link>
 
         <ul className="hidden items-center gap-8 text-sm font-semibold text-slate-700 md:flex">
-          <li>
-            <Link
-              to="/"
-              className="relative text-blue-600 transition hover:text-blue-700 after:absolute after:-bottom-4 after:left-0 after:h-[2px] after:w-full after:rounded-full after:bg-blue-600"
-            >
-              Home
-            </Link>
-          </li>
+          {MAIN_LINKS.map((link) => {
+            const isActive = pathname === link.to;
 
-          <li>
-            <Link to="/about" className="transition hover:text-blue-600">
-              About
-            </Link>
-          </li>
+            return (
+              <li key={link.to}>
+                <Link
+                  to={link.to}
+                  className={
+                    isActive ? activeNavLinkClass : inactiveNavLinkClass
+                  }
+                  aria-current={isActive ? "page" : undefined}
+                >
+                  {link.label}
+                </Link>
+              </li>
+            );
+          })}
         </ul>
 
         <menu className="flex list-none items-center gap-2 p-0">

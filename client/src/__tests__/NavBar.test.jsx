@@ -32,4 +32,23 @@ describe("NavBar", () => {
       within(navigation).getByRole("link", { name: /get started/i }),
     ).toHaveAttribute("href", "/signup");
   });
+
+  it("marks the current marketing page", () => {
+    render(
+      <MemoryRouter initialEntries={["/about"]}>
+        <NavBar />
+      </MemoryRouter>,
+    );
+
+    const navigation = screen.getByRole("navigation", {
+      name: /main navigation/i,
+    });
+
+    expect(
+      within(navigation).getByRole("link", { name: /about/i }),
+    ).toHaveAttribute("aria-current", "page");
+    expect(
+      within(navigation).getByRole("link", { name: /^home$/i }),
+    ).not.toHaveAttribute("aria-current");
+  });
 });
