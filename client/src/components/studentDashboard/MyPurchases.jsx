@@ -1,7 +1,7 @@
 // client/src/components/studentDashboard/MyPurchases.jsx
 // Shows a buyer's transaction history with status and collection slot details.
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useId } from "react";
 import { API_BASE_URL } from "../../config/apiBaseUrl";
 import { supabase } from "../../config/supabaseClient";
 
@@ -19,6 +19,10 @@ const BOOKING_STATUS = {
 };
 
 export default function MyPurchases({ profileId }) {
+  const ratingFieldPrefix = useId();
+  const ratingSelectId = `${ratingFieldPrefix}-score`;
+  const reviewTextId = `${ratingFieldPrefix}-review`;
+
   const [purchases, setPurchases] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -417,9 +421,15 @@ export default function MyPurchases({ profileId }) {
             </h2>
 
             <section className="mb-4">
-              <label className="block text-sm font-semibold mb-2">Rating</label>
+              <label
+                htmlFor={ratingSelectId}
+                className="block text-sm font-semibold mb-2"
+              >
+                Rating
+              </label>
 
               <select
+                id={ratingSelectId}
                 value={score}
                 onChange={(e) => setScore(Number(e.target.value))}
                 className="w-full border border-slate-300 rounded-xl px-3 py-2"
@@ -433,9 +443,15 @@ export default function MyPurchases({ profileId }) {
             </section>
 
             <section className="mb-5">
-              <label className="block text-sm font-semibold mb-2">Review</label>
+              <label
+                htmlFor={reviewTextId}
+                className="block text-sm font-semibold mb-2"
+              >
+                Review
+              </label>
 
               <textarea
+                id={reviewTextId}
                 value={reviewText}
                 onChange={(e) => setReviewText(e.target.value)}
                 rows={4}
