@@ -106,42 +106,18 @@ The project adopts a **Given-When-Then** format for acceptance tests, ensuring t
 
 ---
 
-## 4. Code Coverage Summary
+## 4. Code Coverage and Test Results Summary
 
 
 
-> **Screenshot 1:** Jest coverage report (as shown above)  
+> **Screenshot 1:** Jest coverage report   
 > ![Test Results Screenshot](./Server%20tests%20screenshots.png)
 
 ---
 
-## 5. Test Results Summary
+## 5. Middleware & Validation Tests
 
-### 5.1 Overall Test Run
-
-| Metric | Result |
-| :--- | :--- |
-| **Test Suites** | 17 passed, 17 total |
-| **Tests** | 214 passed, 214 total |
-| **Snapshots** | 0 total |
-| **Time** | 8.085 s |
-
-> **Screenshot 2:** Full test suite run – terminal output  
-> *[Insert screenshot showing "17 passed, 214 passed" from your image]*
-
-
-### 5.3 GitHub Actions CI Results
-
-All tests are executed automatically on every pull request. Below is a screenshot of a successful CI workflow run.
-
-> **Screenshot 3:** GitHub Actions workflow – all checks passing  
-> *[Insert screenshot of GitHub Actions green checkmarks]*
-
----
-
-## 6. Middleware & Validation Tests
-
-### 6.1 Authentication Middleware (`middleware.test.js`)
+### 5.1 Authentication Middleware (`middleware.test.js`)
 
 #### verifySession
 
@@ -173,7 +149,7 @@ All tests are executed automatically on every pull request. Below is a screensho
 | No user on request | `req.user = null` | Middleware runs | 401 Unauthorized |
 | Facility staff profile | User role = `facility_staff` | Middleware runs | `req.profile.role = "facility_staff"` |
 
-### 6.2 Listing Validation Middleware (`validateListing.test.js`)
+### 5.2 Listing Validation Middleware (`validateListing.test.js`)
 
 | Test Case | Given | When | Then |
 | :--- | :--- | :--- | :--- |
@@ -188,9 +164,9 @@ All tests are executed automatically on every pull request. Below is a screensho
 
 ---
 
-## 7. Service Layer Tests
+## 6. Service Layer Tests
 
-### 7.1 Admin Service (`adminService.test.js`)
+### 6.1 Admin Service (`adminService.test.js`)
 
 | Function | Test Case | Expected |
 | :--- | :--- | :--- |
@@ -209,7 +185,7 @@ All tests are executed automatically on every pull request. Below is a screensho
 | `upsertFacility` | No ID | Creates new facility |
 | `upsertFacility` | With ID | Updates existing facility |
 
-### 7.2 Listing Service (`listingService.test.js`)
+### 6.2 Listing Service (`listingService.test.js`)
 
 | Function | Test Case | Expected |
 | :--- | :--- | :--- |
@@ -218,7 +194,7 @@ All tests are executed automatically on every pull request. Below is a screensho
 | `createListing` | No images | Creates listing only |
 | `createListing` | With images | Creates listing + inserts images |
 
-### 7.3 Facility Dashboard Service (`facilityDashboardService.test.js`)
+### 6.3 Facility Dashboard Service (`facilityDashboardService.test.js`)
 
 | Function | Test Case | Expected |
 | :--- | :--- | :--- |
@@ -230,7 +206,7 @@ All tests are executed automatically on every pull request. Below is a screensho
 | `advanceFacilityTransaction` | `confirm_cash_handoff` succeeds | Marks cash settled |
 | `advanceFacilityTransaction` | `release_item` succeeds | Completes transaction |
 
-### 7.4 PayFast Service (`payfastService.test.js`)
+### 6.4 PayFast Service (`payfastService.test.js`)
 
 | Function | Test Case | Expected |
 | :--- | :--- | :--- |
@@ -239,7 +215,7 @@ All tests are executed automatically on every pull request. Below is a screensho
 | `verifyITN` | Valid signature + COMPLETE status | Returns `true` |
 | `verifyITN` | Invalid signature | Returns `false` |
 
-### 7.5 SA Data Integration (`sa_data_integration.test.js`)
+### 6.5 SA Data Integration (`sa_data_integration.test.js`)
 
 | Function | Test Case | Expected |
 | :--- | :--- | :--- |
@@ -250,9 +226,9 @@ All tests are executed automatically on every pull request. Below is a screensho
 
 ---
 
-## 8. Route Integration Tests
+## 7. Route Integration Tests
 
-### 8.1 Admin Routes (`admin.route.test.js`)
+### 7.1 Admin Routes (`admin.route.test.js`)
 
 | Endpoint | Method | Test Case | Expected |
 | :--- | :--- | :--- | :--- |
@@ -265,7 +241,7 @@ All tests are executed automatically on every pull request. Below is a screensho
 | `/admin/facilities` | GET | Success | 200 with facility list |
 | `/admin/facilities` | POST | Success | 201 Created |
 
-### 8.2 Listings Routes (`routes.listings.test.js` + `routes.listing.test.js`)
+### 7.2 Listings Routes (`routes.listings.test.js` + `routes.listing.test.js`)
 
 | Endpoint | Method | Test Case | Expected |
 | :--- | :--- | :--- | :--- |
@@ -281,7 +257,7 @@ All tests are executed automatically on every pull request. Below is a screensho
 | `/api/listings/suggested-price` | Missing params | 400 Bad Request |
 | `/api/listings/suggested-price` | Invalid category | 404 Not Found |
 
-### 8.3 Messages Routes (`routes.messages.test.js`)
+### 7.3 Messages Routes (`routes.messages.test.js`)
 
 | Endpoint | Method | Test Case | Expected |
 | :--- | :--- | :--- | :--- |
@@ -290,7 +266,7 @@ All tests are executed automatically on every pull request. Below is a screensho
 | `/:listingId/:userA/:userB` | GET | Success | 200 with messages array |
 | `/user/:userId` | GET | Success | 200 with user's messages |
 
-### 8.4 Payments Routes (`routes.payments.test.js`)
+### 7.4 Payments Routes (`routes.payments.test.js`)
 
 | Endpoint | Method | Test Case | Expected |
 | :--- | :--- | :--- | :--- |
@@ -301,7 +277,7 @@ All tests are executed automatically on every pull request. Below is a screensho
 | `/book-slot` | POST | Success | 200 with bookingId |
 | `/status/:transactionId` | GET | Success | 200 with transaction data |
 
-### 8.5 Facility Dashboard Routes (`routes.facilityDashboard.test.js`)
+### 7.5 Facility Dashboard Routes (`routes.facilityDashboard.test.js`)
 
 | Endpoint | Method | Test Case | Expected |
 | :--- | :--- | :--- | :--- |
@@ -311,7 +287,7 @@ All tests are executed automatically on every pull request. Below is a screensho
 
 ---
 
-## 9. How to Run Tests Locally
+## 8. How to Run Tests Locally
 
 Follow these steps to execute the test suite on your local machine:
 
