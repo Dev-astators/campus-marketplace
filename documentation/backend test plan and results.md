@@ -293,8 +293,8 @@ Follow these steps to execute the test suite on your local machine:
 
 ```bash
 # 1. Clone the repository
-git clone [your-repo-url]
-cd campus-marketplace/backend
+git clone https://github.com/Dev-astators/campus-marketplace.git
+cd campus-marketplace/server
 
 # 2. Install dependencies
 npm install
